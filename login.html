@@ -427,19 +427,19 @@
       position: relative;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       width: fit-content;
-      margin: 0 0 20px;
+      margin: 0 auto 22px;
       animation: logoPop .6s cubic-bezier(.22,.8,.22,1) both;
     }
 
     .brand-logo-wrap::before {
       content: "";
       position: absolute;
-      inset: -14px -22px;
-      border-radius: 24px;
+      inset: -18px -28px;
+      border-radius: 28px;
       background: radial-gradient(circle, rgba(0,150,255,.16), transparent 72%);
-      filter: blur(10px);
+      filter: blur(12px);
       z-index: 0;
       animation: logoGlowPulse 3.6s ease-in-out infinite;
     }
@@ -447,9 +447,9 @@
     .brand-logo {
       position: relative;
       z-index: 1;
-      height: 64px;
+      height: 92px;
       width: auto;
-      max-width: 260px;
+      max-width: 320px;
       object-fit: contain;
       display: block;
       filter:
@@ -457,7 +457,7 @@
         drop-shadow(0 -1px 0 rgba(4,14,30,.55))
         drop-shadow(1px 0 0 rgba(4,14,30,.55))
         drop-shadow(-1px 0 0 rgba(4,14,30,.55))
-        drop-shadow(0 8px 16px rgba(4,14,30,.22));
+        drop-shadow(0 10px 20px rgba(4,14,30,.22));
     }
 
     .brand-divider {
@@ -479,7 +479,7 @@
     }
 
     @media (max-width: 390px) {
-      .brand-logo { height: 52px; }
+      .brand-logo { height: 72px; }
     }
 
 
