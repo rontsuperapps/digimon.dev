@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
-  <title>Login - Monitoring Project</title>
+  <title>Login - DIGIMON</title>
 
   <!-- ============================================================
        PWA — MANIFEST & META (samakan dengan index.html)
@@ -33,9 +33,9 @@
        ============================================================ */
 
     :root {
-      --red: #e30613;
-      --red-2: #ff2635;
-      --red-dark: #a9000b;
+      --accent: #0b84ff;
+      --accent-2: #22c3ff;
+      --accent-dark: #0a4fb0;
       --navy: #07192f;
       --navy-deep: #020b18;
       --white: #ffffff;
@@ -53,7 +53,7 @@
       --card-shadow-1: rgba(20,30,45,.10);
       --card-shadow-2: rgba(20,30,45,.14);
       --card-shadow-3: rgba(20,30,45,.16);
-      --card-glow: rgba(227,6,19,.06);
+      --card-glow: rgba(11,132,255,.06);
       --title-color: #101828;
       --field-label: rgba(20,30,45,.56);
       --field-bg-1: rgba(20,30,45,.045);
@@ -79,8 +79,8 @@
       --theme-toggle-border: rgba(20,30,45,.12);
       --theme-toggle-icon: #344054;
       --theme-toggle-shadow: rgba(20,30,45,.14);
-      --badge-text: #c81525;
-      --title-accent: #d81c28;
+      --badge-text: #0b66c9;
+      --title-accent: #0a58ca;
       --alert-error-text: #b3261e;
       --alert-error-bg: rgba(227,6,19,.08);
       --alert-error-border: rgba(227,6,19,.22);
@@ -104,7 +104,7 @@
       --card-shadow-1: rgba(255,255,255,.16);
       --card-shadow-2: rgba(0,0,0,.30);
       --card-shadow-3: rgba(0,0,0,.46);
-      --card-glow: rgba(227,6,19,.08);
+      --card-glow: rgba(11,132,255,.08);
       --title-color: #ffffff;
       --field-label: rgba(255,255,255,.55);
       --field-bg-1: rgba(255,255,255,.085);
@@ -130,8 +130,8 @@
       --theme-toggle-border: rgba(255,255,255,.18);
       --theme-toggle-icon: #ffffff;
       --theme-toggle-shadow: rgba(0,0,0,.35);
-      --badge-text: #ff7b82;
-      --title-accent: #ff3d48;
+      --badge-text: #6cc8ff;
+      --title-accent: #4fb6ff;
       --alert-error-text: #ffb1b6;
       --alert-error-bg: rgba(227,6,19,.10);
       --alert-error-border: rgba(255,80,90,.22);
@@ -262,7 +262,7 @@
       z-index: 1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 72% 68%, rgba(227,6,19,.08), transparent 25%),
+        radial-gradient(circle at 72% 68%, rgba(0,194,255,.08), transparent 25%),
         radial-gradient(circle at 88% 70%, rgba(0,123,255,.10), transparent 28%),
         linear-gradient(var(--veil-color), var(--veil-color));
       transition: background-color .25s ease;
@@ -385,7 +385,7 @@
       top: -145px;
       right: -105px;
       border-radius: 50%;
-      background: rgba(227,6,19,.12);
+      background: rgba(11,132,255,.12);
       filter: blur(30px);
       pointer-events: none;
     }
@@ -477,8 +477,8 @@
       padding: 6px 11px;
       margin-bottom: 14px;
       border-radius: 999px;
-      background: rgba(227,6,19,.13);
-      border: 1px solid rgba(255,70,80,.30);
+      background: rgba(11,132,255,.13);
+      border: 1px solid rgba(0,180,255,.30);
       color: var(--badge-text);
       font-size: 9px;
       font-weight: 800;
@@ -490,8 +490,8 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--red-2);
-      box-shadow: 0 0 12px rgba(255,38,53,.85);
+      background: var(--accent-2);
+      box-shadow: 0 0 12px rgba(0,194,255,.85);
     }
 
     .brand-title {
@@ -580,10 +580,10 @@
     }
 
     .field-input:focus {
-      border-color: rgba(255,54,67,.82);
+      border-color: rgba(11,132,255,.82);
       background: var(--field-focus-bg);
       box-shadow:
-        0 0 0 3px rgba(227,6,19,.13),
+        0 0 0 3px rgba(11,132,255,.13),
         inset 0 1px 1px var(--field-shadow-1),
         inset 0 -2px 6px var(--field-shadow-2);
     }
@@ -668,9 +668,9 @@
     }
 
     .remember-label input:checked + .custom-check {
-      background: var(--red);
-      border-color: var(--red);
-      box-shadow: 0 0 10px rgba(227,6,19,.25);
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(11,132,255,.25);
     }
 
     .remember-label input:checked + .custom-check::after {
@@ -722,14 +722,14 @@
 
       background:
         linear-gradient(135deg,
-          #f20c1a 0%,
-          #d9000d 50%,
-          #a9000b 100%);
+          #29b6ff 0%,
+          #0b84ff 50%,
+          #0a4fb0 100%);
 
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.28),
         inset 0 -2px 3px rgba(0,0,0,.16),
-        0 7px 18px rgba(227,6,19,.30),
+        0 7px 18px rgba(11,132,255,.30),
         0 2px 4px rgba(0,0,0,.22);
 
       transition:
@@ -744,7 +744,7 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.30),
         inset 0 -2px 3px rgba(0,0,0,.16),
-        0 12px 26px rgba(227,6,19,.42),
+        0 12px 26px rgba(11,132,255,.42),
         0 3px 6px rgba(0,0,0,.25);
     }
 
@@ -1254,7 +1254,7 @@
 
       <!-- FOOTER -->
       <div class="card-footer">
-        <span class="footer-brand">Monitoring Project</span>
+        <span class="footer-brand">DIGIMON</span>
         <span>© 2026</span>
       </div>
 
