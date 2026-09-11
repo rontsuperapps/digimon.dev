@@ -425,11 +425,11 @@
 
     .brand-logo-wrap {
       position: relative;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       width: fit-content;
-      margin-bottom: 18px;
+      margin: 0 auto 20px;
       padding: 10px 18px;
       border-radius: 14px;
       background: linear-gradient(135deg, #071a30 0%, #0c2c52 100%);
@@ -477,29 +477,6 @@
     }
 
 
-    .brand-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 11px;
-      margin-bottom: 14px;
-      border-radius: 999px;
-      background: rgba(11,132,255,.13);
-      border: 1px solid rgba(0,180,255,.30);
-      color: var(--badge-text);
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 1.25px;
-      text-transform: uppercase;
-    }
-
-    .brand-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent-2);
-      box-shadow: 0 0 12px rgba(0,194,255,.85);
-    }
 
     .brand-title {
       font-size: 26px;
@@ -990,7 +967,6 @@
       }
 
       .brand-area { margin-bottom: 13px; }
-      .brand-badge { margin-bottom: 8px; }
       .brand-title { font-size: 21px; }
       .brand-subtitle { display: none; }
       .field-input { height: 42px; }
@@ -1127,11 +1103,6 @@
             alt="DIGIMON - Digital Monitoring"
             onerror="this.parentElement.style.display='none'"
           >
-        </div>
-
-        <div class="brand-badge">
-          <span class="brand-dot"></span>
-          Digital Monitoring
         </div>
 
         <h1 class="brand-title">
