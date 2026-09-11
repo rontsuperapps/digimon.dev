@@ -427,26 +427,19 @@
       position: relative;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       width: fit-content;
       margin: 0 0 20px;
-      padding: 9px 16px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #081b32 0%, #0c2c52 100%);
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow:
-        0 6px 16px rgba(8,30,60,.24),
-        inset 0 1px 0 rgba(255,255,255,.07);
       animation: logoPop .6s cubic-bezier(.22,.8,.22,1) both;
     }
 
     .brand-logo-wrap::before {
       content: "";
       position: absolute;
-      inset: -8px;
-      border-radius: 18px;
+      inset: -14px -22px;
+      border-radius: 24px;
       background: radial-gradient(circle, rgba(0,150,255,.16), transparent 72%);
-      filter: blur(7px);
+      filter: blur(10px);
       z-index: 0;
       animation: logoGlowPulse 3.6s ease-in-out infinite;
     }
@@ -454,11 +447,17 @@
     .brand-logo {
       position: relative;
       z-index: 1;
-      height: 34px;
+      height: 64px;
       width: auto;
-      max-width: 200px;
+      max-width: 260px;
       object-fit: contain;
       display: block;
+      filter:
+        drop-shadow(0 1px 0 rgba(4,14,30,.55))
+        drop-shadow(0 -1px 0 rgba(4,14,30,.55))
+        drop-shadow(1px 0 0 rgba(4,14,30,.55))
+        drop-shadow(-1px 0 0 rgba(4,14,30,.55))
+        drop-shadow(0 8px 16px rgba(4,14,30,.22));
     }
 
     .brand-divider {
@@ -475,13 +474,12 @@
     }
 
     @keyframes logoGlowPulse {
-      0%, 100% { opacity: .6; transform: scale(1); }
-      50%      { opacity: .95; transform: scale(1.05); }
+      0%, 100% { opacity: .5; transform: scale(1); }
+      50%      { opacity: .85; transform: scale(1.05); }
     }
 
     @media (max-width: 390px) {
-      .brand-logo-wrap { padding: 7px 13px; }
-      .brand-logo { height: 30px; }
+      .brand-logo { height: 52px; }
     }
 
 
