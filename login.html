@@ -429,51 +429,59 @@
       align-items: center;
       justify-content: center;
       width: fit-content;
-      margin: 0 auto 20px;
-      padding: 10px 18px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #071a30 0%, #0c2c52 100%);
+      margin: 0 0 20px;
+      padding: 9px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #081b32 0%, #0c2c52 100%);
+      border: 1px solid rgba(255,255,255,.08);
       box-shadow:
-        0 10px 22px rgba(8,30,60,.30),
-        0 2px 6px rgba(8,30,60,.20),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 6px 16px rgba(8,30,60,.24),
+        inset 0 1px 0 rgba(255,255,255,.07);
       animation: logoPop .6s cubic-bezier(.22,.8,.22,1) both;
     }
 
     .brand-logo-wrap::before {
       content: "";
       position: absolute;
-      inset: -10px;
-      border-radius: 20px;
-      background: radial-gradient(circle, rgba(0,150,255,.22), transparent 72%);
-      filter: blur(8px);
+      inset: -8px;
+      border-radius: 18px;
+      background: radial-gradient(circle, rgba(0,150,255,.16), transparent 72%);
+      filter: blur(7px);
       z-index: 0;
-      animation: logoGlowPulse 3.2s ease-in-out infinite;
+      animation: logoGlowPulse 3.6s ease-in-out infinite;
     }
 
     .brand-logo {
       position: relative;
       z-index: 1;
-      height: 40px;
+      height: 34px;
       width: auto;
-      max-width: 220px;
+      max-width: 200px;
       object-fit: contain;
       display: block;
     }
 
+    .brand-divider {
+      height: 1px;
+      margin-bottom: 20px;
+      background: linear-gradient(to right,
+        var(--footer-line) 0%,
+        transparent 78%);
+    }
+
     @keyframes logoPop {
-      from { opacity: 0; transform: scale(.88) translateY(6px); }
+      from { opacity: 0; transform: scale(.9) translateY(4px); }
       to   { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     @keyframes logoGlowPulse {
-      0%, 100% { opacity: .7; transform: scale(1); }
-      50%      { opacity: 1;  transform: scale(1.06); }
+      0%, 100% { opacity: .6; transform: scale(1); }
+      50%      { opacity: .95; transform: scale(1.05); }
     }
 
     @media (max-width: 390px) {
-      .brand-logo-wrap { padding: 8px 14px; }
-      .brand-logo { height: 34px; }
+      .brand-logo-wrap { padding: 7px 13px; }
+      .brand-logo { height: 30px; }
     }
 
 
@@ -1104,6 +1112,8 @@
             onerror="this.parentElement.style.display='none'"
           >
         </div>
+
+        <div class="brand-divider"></div>
 
         <h1 class="brand-title">
           Selamat <strong>Datang.</strong>
