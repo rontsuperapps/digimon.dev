@@ -675,6 +675,50 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 
 .golive-summary-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-card); padding: 14px 14px 16px; margin-bottom: 16px; }
 
+/* ── IMPROVEMENT TAHAP 2 (poin 1) — BADGE TOTAL per bucket MITRA/SDI +
+   TOTAL ORDER. Satuan = LOP (count baris), sumber data SAMA dengan
+   tabel "Rekap Go Live" & chart donut (GRAND TOTAL dari
+   getMonitoringGoLiveSummary), jadi tidak ada request tambahan ke
+   server. Warna border kiri menandai kelompok: biru = total order,
+   oranye = grup MITRA, teal = grup SDI (skema warna sama seperti
+   pivot & donut). ── */
+.golive-badge-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+@media (max-width: 1300px) { .golive-badge-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 700px)  { .golive-badge-grid { grid-template-columns: repeat(2, 1fr); } }
+.golive-badge-item {
+  background: var(--card-bg); border: 1px solid var(--border-color); border-left: 4px solid var(--table-th-bg);
+  border-radius: 10px; padding: 10px 12px; min-width: 0;
+}
+.golive-badge-item.badge-total { border-left-color: var(--pivot-blue); }
+.golive-badge-item.badge-mitra { border-left-color: var(--pivot-orange); }
+.golive-badge-item.badge-sdi   { border-left-color: var(--pivot-teal); }
+.golive-badge-label { font-size: 9px; font-weight: 700; letter-spacing: 0.3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.golive-badge-value { font-size: 19px; font-weight: 800; color: var(--text-title); line-height: 1.1; }
+
+/* ── IMPROVEMENT TAHAP 2 (poin 7) — FILTER TABEL DETAIL ──
+   Baris dropdown filter kolom (DISTRICT s/d STATUS PROYEK) + range
+   tanggal TANGGAL GO LIVE, di atas search-bar yang sudah ada. Semua
+   filter ini murni client-side (data sudah lengkap di
+   activeMonitoringGoLiveRows), tidak menambah panggilan ke server. ── */
+.golive-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding: 12px 12px 4px; }
+.golive-filter-field { display: flex; flex-direction: column; gap: 3px; min-width: 132px; flex: 1 1 132px; max-width: 190px; }
+.golive-filter-field label { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2px; }
+.golive-filter-field select,
+.golive-filter-field input[type="date"] {
+  font-family: 'Poppins', sans-serif; font-size: 11.5px; padding: 7px 8px; border-radius: 8px;
+  border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main);
+}
+.golive-filter-field.golive-filter-daterange { flex-direction: row; align-items: center; gap: 6px; min-width: 220px; }
+.golive-filter-field.golive-filter-daterange input { flex: 1 1 0; min-width: 0; }
+.golive-filter-reset-btn {
+  appearance: none; border: 1px solid var(--border-color); background: var(--table-th-bg); color: var(--text-main);
+  font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; height: 33px;
+}
+.golive-filter-reset-btn:hover { background: var(--border-color); }
+.golive-filter-active-hint { width: 100%; font-size: 10.5px; color: var(--accent-color); font-weight: 600; display: none; padding: 0 12px; }
+.golive-filter-active-hint.show { display: block; }
+
 /* ── TAB DISTRICT / SUB DISTRICT ──
    Dipakai di kartu "Rekap Go Live" & "Perolehan Go Live Harian" untuk
    memisahkan view District dan Sub District (dulu ditumpuk vertikal
@@ -1177,7 +1221,95 @@ tbody tr:hover td { background: var(--table-th-bg); }
     <div class="page-section active-page" id="page-golive-b2c">
 
       <!-- ══════════════════════════════════════════════════════════
-           BARIS 1 — REKAP GO LIVE (tab DISTRICT / SUB DISTRICT)
+           BARIS 1 — BADGE TOTAL (CREATE/REVISION/KENDALA/VALIDATION/
+           DRAWING/TERMINATION/GO LIVE + TOTAL ORDER). Satuan = LOP
+           (count baris), sumber data SAMA dengan tabel "Rekap Go
+           Live" & donut MITRA/SDI di bawah (GRAND TOTAL dari
+           getMonitoringGoLiveSummary) -- diisi oleh
+           renderGoLiveBadgeTotals_() yang dipanggil dari
+           fetchGoLiveSummary() / fetchDashboardBootstrap(), TANPA
+           request tambahan ke server.
+           IMPROVEMENT TAHAP 2 (poin 1).
+           ══════════════════════════════════════════════════════════ -->
+      <div class="golive-summary-card">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Total Go Live (LOP)</div>
+        </div>
+        <div class="golive-badge-grid" id="gl-badge-grid">
+          <div class="golive-badge-item badge-total">
+            <div class="golive-badge-label">Total Order</div>
+            <div class="golive-badge-value" id="gl-badge-totalOrder">0</div>
+          </div>
+          <div class="golive-badge-item badge-mitra">
+            <div class="golive-badge-label">Create ABD</div>
+            <div class="golive-badge-value" id="gl-badge-createAbd">0</div>
+          </div>
+          <div class="golive-badge-item badge-mitra">
+            <div class="golive-badge-label">Revision ABD</div>
+            <div class="golive-badge-value" id="gl-badge-revisionAbd">0</div>
+          </div>
+          <div class="golive-badge-item badge-mitra">
+            <div class="golive-badge-label">Kendala ABD</div>
+            <div class="golive-badge-value" id="gl-badge-kendalaAbd">0</div>
+          </div>
+          <div class="golive-badge-item badge-sdi">
+            <div class="golive-badge-label">Validation</div>
+            <div class="golive-badge-value" id="gl-badge-validation">0</div>
+          </div>
+          <div class="golive-badge-item badge-sdi">
+            <div class="golive-badge-label">Drawing</div>
+            <div class="golive-badge-value" id="gl-badge-drawing">0</div>
+          </div>
+          <div class="golive-badge-item badge-sdi">
+            <div class="golive-badge-label">Termination</div>
+            <div class="golive-badge-value" id="gl-badge-termination">0</div>
+          </div>
+          <div class="golive-badge-item badge-sdi">
+            <div class="golive-badge-label">Go Live</div>
+            <div class="golive-badge-value" id="gl-badge-goLive">0</div>
+          </div>
+        </div>
+      </div>
+
+<!-- ══════════════════════════════════════════════════════════
+           BARIS 2 — 3 CHART DALAM 1 BARIS:
+           Persentase MITRA, Persentase SDI, Run Rate 7 Hari Terakhir.
+           Chart pie sumber data SAMA dengan tabel rekap di bawah
+           (GRAND TOTAL per bucket dari getMonitoringGoLiveSummary),
+           diisi oleh renderGoLiveBucketCharts_() yang dipanggil dari
+           fetchGoLiveSummary(). Chart run rate sumber terpisah:
+           getMonitoringGoLiveRunRate7Hari(), diisi oleh
+           renderGoLiveRunRateChart_() dari fetchGoLiveRunRate().
+           ══════════════════════════════════════════════════════════ -->
+      <div class="golive-charts-row golive-charts-row-3col">
+        <div class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (Nama LOP)</div>
+          </div>
+          <div class="golive-chart-body" id="gl-chart-mitra-body">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+          </div>
+        </div>
+        <div class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase SDI (Nama LOP)</div>
+          </div>
+          <div class="golive-chart-body" id="gl-chart-sdi-body">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+          </div>
+        </div>
+        <div class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Run Rate 7 Hari Terakhir (PORT REAL)</div>
+          </div>
+          <div class="golive-runrate-body" id="gl-runrate-body">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat run rate...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           BARIS 3 — REKAP GO LIVE (tab DISTRICT / SUB DISTRICT)
            Filter wajib: NEW STATUS = FI-OGP GO LIVE / GO LIVE. Dulu 2
            kartu terpisah ditumpuk vertikal, sekarang 1 kartu dengan
            tab supaya tidak perlu scroll panjang untuk bandingkan.
@@ -1269,45 +1401,196 @@ tbody tr:hover td { background: var(--table-th-bg); }
         </div>
       </div>
 
-<!-- ══════════════════════════════════════════════════════════
-           BARIS 3 — 3 CHART DALAM 1 BARIS:
-           Persentase MITRA, Persentase SDI, Run Rate 7 Hari Terakhir.
-           Chart pie sumber data SAMA dengan tabel rekap di atas
-           (GRAND TOTAL per bucket dari getMonitoringGoLiveSummary),
-           diisi oleh renderGoLiveBucketCharts_() yang dipanggil dari
-           fetchGoLiveSummary(). Chart run rate sumber terpisah:
-           getMonitoringGoLiveRunRate7Hari(), diisi oleh
-           renderGoLiveRunRateChart_() dari fetchGoLiveRunRate().
+      <!-- ══════════════════════════════════════════════════════════
+           BARIS 4 — REKAP PT2 GO LIVE (tab DISTRICT / SUB DISTRICT)
+           Sama persis dengan "Rekap Go Live" di atas, tapi baris
+           disaring dulu berdasarkan [Kolom K] TIPE DESIGN = "PT2"
+           (lihat getMonitoringGoLivePT2Summary() di backend).
+           IMPROVEMENT TAHAP 2 (poin 4).
            ══════════════════════════════════════════════════════════ -->
-      <div class="golive-charts-row golive-charts-row-3col">
-        <div class="golive-chart-card">
-          <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (Nama LOP)</div>
-          </div>
-          <div class="golive-chart-body" id="gl-chart-mitra-body">
-            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+      <div class="golive-summary-card">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap PT2 Go Live</div>
+        </div>
+
+        <div class="golive-tabs" role="tablist" aria-label="Rekap PT2 Go Live">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glSummaryPT2Panel-district" onclick="switchGoLiveTab('summary-pt2', 'district', this)"><i class="fa-solid fa-location-dot"></i> DISTRICT</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glSummaryPT2Panel-subdistrict" onclick="switchGoLiveTab('summary-pt2', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> SUB DISTRICT</button>
+        </div>
+
+        <div class="golive-tab-panel active" id="glSummaryPT2Panel-district" data-group="summary-pt2" data-tab="district" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummaryPT2DistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-pt2-district-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap PT2 per district...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="golive-chart-card">
-          <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase SDI (Nama LOP)</div>
-          </div>
-          <div class="golive-chart-body" id="gl-chart-sdi-body">
-            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
-          </div>
-        </div>
-        <div class="golive-chart-card">
-          <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Run Rate 7 Hari Terakhir (PORT REAL)</div>
-          </div>
-          <div class="golive-runrate-body" id="gl-runrate-body">
-            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat run rate...</div>
+
+        <div class="golive-tab-panel" id="glSummaryPT2Panel-subdistrict" data-group="summary-pt2" data-tab="subdistrict" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummaryPT2SubDistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">SUB DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-pt2-subdistrict-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap PT2 per sub district...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
       <!-- ══════════════════════════════════════════════════════════
-           BARIS 4 — PEROLEHAN GO LIVE HARIAN (PORT REAL) + FILTER
+           BARIS 5 — REKAP PT3 GO LIVE (tab DISTRICT / SUB DISTRICT)
+           Sama persis dengan "Rekap PT2 Go Live" di atas, tapi baris
+           disaring [Kolom K] TIPE DESIGN = "PT3" (lihat
+           getMonitoringGoLivePT3Summary() di backend).
+           IMPROVEMENT TAHAP 2 (poin 5).
+           ══════════════════════════════════════════════════════════ -->
+      <div class="golive-summary-card">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap PT3 Go Live</div>
+        </div>
+
+        <div class="golive-tabs" role="tablist" aria-label="Rekap PT3 Go Live">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glSummaryPT3Panel-district" onclick="switchGoLiveTab('summary-pt3', 'district', this)"><i class="fa-solid fa-location-dot"></i> DISTRICT</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glSummaryPT3Panel-subdistrict" onclick="switchGoLiveTab('summary-pt3', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> SUB DISTRICT</button>
+        </div>
+
+        <div class="golive-tab-panel active" id="glSummaryPT3Panel-district" data-group="summary-pt3" data-tab="district" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummaryPT3DistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-pt3-district-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap PT3 per district...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="golive-tab-panel" id="glSummaryPT3Panel-subdistrict" data-group="summary-pt3" data-tab="subdistrict" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummaryPT3SubDistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">SUB DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-pt3-subdistrict-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap PT3 per sub district...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           BARIS 6 — PEROLEHAN GO LIVE HARIAN (PORT REAL) + FILTER
            RANGE TANGGAL. Sumber: getMonitoringGoLiveDailyPortReal()
            dengan parameter (startDate, endDate). Rekap Per District &
            Per Sub District, kolom = tiap tanggal dalam rentang.
@@ -1365,10 +1648,76 @@ tbody tr:hover td { background: var(--table-th-bg); }
           </div>
         </div>
       </div>
+
 <!-- ══════════════════════════════════════════════════════════
            TABEL LIST DETAIL (per-baris project) — tetap dipertahankan
            ══════════════════════════════════════════════════════════ -->
       <div class="table-container">
+        <!-- ══════════════════════════════════════════════════════════
+             FILTER TABEL DETAIL — IMPROVEMENT TAHAP 2 (poin 7).
+             11 dropdown filter kolom + range tanggal TANGGAL GO LIVE.
+             Semua opsi dropdown diisi dinamis (unik dari data yang
+             sudah dimuat, lihat populateMonitoringGoLiveFilterOptions_())
+             dan filter murni client-side lewat
+             applyMonitoringGoLiveSearchFilter() -- tidak menambah
+             panggilan ke server.
+             ══════════════════════════════════════════════════════════ -->
+        <div class="golive-filter-bar" id="glFilterBar">
+          <div class="golive-filter-field">
+            <label for="glFilterDistrict">District</label>
+            <select id="glFilterDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterSubDistrict">Sub District</label>
+            <select id="glFilterSubDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterBranch">Branch</label>
+            <select id="glFilterBranch" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterWok">Wok</label>
+            <select id="glFilterWok" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterTipeDesign">Tipe Design</label>
+            <select id="glFilterTipeDesign" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterProgram">Program</label>
+            <select id="glFilterProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterBatchProgram">Batch Program</label>
+            <select id="glFilterBatchProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterStatusProgress">Status Progress</label>
+            <select id="glFilterStatusProgress" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterStatusGoLive">Status Go Live</label>
+            <select id="glFilterStatusGoLive" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterNewStatus">New Status</label>
+            <select id="glFilterNewStatus" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field">
+            <label for="glFilterStatusProyek">Status Proyek</label>
+            <select id="glFilterStatusProyek" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
+          </div>
+          <div class="golive-filter-field golive-filter-daterange">
+            <label>Tanggal Go Live</label>
+            <input type="date" id="glFilterTanggalFrom" onchange="applyMonitoringGoLiveSearchFilter()">
+            <span>s/d</span>
+            <input type="date" id="glFilterTanggalTo" onchange="applyMonitoringGoLiveSearchFilter()">
+          </div>
+          <button type="button" class="golive-filter-reset-btn" onclick="resetMonitoringGoLiveFilters()">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Reset Filter
+          </button>
+          <div class="golive-filter-active-hint" id="glFilterActiveHint"></div>
+        </div>
         <div class="table-search-bar">
           <div class="search-input-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
@@ -1714,6 +2063,31 @@ tbody tr:hover td { background: var(--table-th-bg); }
     let isFetchingGoLiveDaily       = false;
     let goLiveDailyLoadedOnce       = false;
 
+    // IMPROVEMENT TAHAP 2 (poin 4 & 5) — Rekap PT2 / PT3 Go Live.
+    let isFetchingGoLivePT2Summary  = false;
+    let goLivePT2SummaryLoadedOnce  = false;
+    let isFetchingGoLivePT3Summary  = false;
+    let goLivePT3SummaryLoadedOnce  = false;
+
+    // IMPROVEMENT TAHAP 2 (poin 7) — filter dropdown tabel detail.
+    // key = field di objek row (lihat getMonitoringGoLiveData()), id
+    // = elemen <select> di markup. Dipakai bersama oleh
+    // populateMonitoringGoLiveFilterOptions_() (isi opsi unik) dan
+    // applyMonitoringGoLiveSearchFilter() (terapkan filter).
+    const MONITORING_GOLIVE_FILTER_FIELDS = [
+      { id: 'glFilterDistrict',       key: 'district' },
+      { id: 'glFilterSubDistrict',    key: 'subDistrict' },
+      { id: 'glFilterBranch',         key: 'branch' },
+      { id: 'glFilterWok',            key: 'wok' },
+      { id: 'glFilterTipeDesign',     key: 'tipeDesign' },
+      { id: 'glFilterProgram',        key: 'program' },
+      { id: 'glFilterBatchProgram',   key: 'batchProgram' },
+      { id: 'glFilterStatusProgress', key: 'statusProgress' },
+      { id: 'glFilterStatusGoLive',   key: 'statusGoLive' },
+      { id: 'glFilterNewStatus',      key: 'newStatus' },
+      { id: 'glFilterStatusProyek',   key: 'statusProyek' }
+    ];
+
     // Urutan bucket MITRA/SDI harus SAMA dengan urutan kolom di <thead>
     // tabel rekap (lihat markup #glSummaryDistrictTable / #glSummarySubDistrictTable).
     const GOLIVE_SUMMARY_BUCKET_ORDER = [
@@ -1786,16 +2160,36 @@ tbody tr:hover td { background: var(--table-th-bg); }
           // ── Notifikasi ──
           renderNotifications(Array.isArray(res.notifications) ? res.notifications : []);
 
-          // ── Rekap District/Sub District + donut MITRA/SDI ──
+          // ── Rekap District/Sub District + donut MITRA/SDI + badge total ──
           if (res.summary) {
             renderGoLiveSummaryTable_('gl-summary-district-target', res.summary.byDistrict, res.summary.byDistrictGrandTotal, 'DISTRICT');
             renderGoLiveSummaryTable_('gl-summary-subdistrict-target', res.summary.bySubDistrict, res.summary.bySubDistrictGrandTotal, 'SUB DISTRICT');
             renderGoLiveBucketCharts_(res.summary.byDistrictGrandTotal);
+            renderGoLiveBadgeTotals_(res.summary.byDistrictGrandTotal);
             syncAllPivotStickyHeaders_();
           } else {
             renderGoLiveSummaryError_(res.summaryError);
             renderGoLiveChartError_(res.summaryError);
           }
+
+          // ── Rekap PT2 Go Live (poin 4) ──
+          goLivePT2SummaryLoadedOnce = true;
+          if (res.pt2Summary) {
+            renderGoLiveSummaryTable_('gl-summary-pt2-district-target', res.pt2Summary.byDistrict, res.pt2Summary.byDistrictGrandTotal, 'DISTRICT (PT2)');
+            renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', res.pt2Summary.bySubDistrict, res.pt2Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)');
+          } else {
+            renderGoLiveSummaryError_(res.pt2SummaryError, ['gl-summary-pt2-district-target', 'gl-summary-pt2-subdistrict-target']);
+          }
+
+          // ── Rekap PT3 Go Live (poin 5) ──
+          goLivePT3SummaryLoadedOnce = true;
+          if (res.pt3Summary) {
+            renderGoLiveSummaryTable_('gl-summary-pt3-district-target', res.pt3Summary.byDistrict, res.pt3Summary.byDistrictGrandTotal, 'DISTRICT (PT3)');
+            renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', res.pt3Summary.bySubDistrict, res.pt3Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)');
+          } else {
+            renderGoLiveSummaryError_(res.pt3SummaryError, ['gl-summary-pt3-district-target', 'gl-summary-pt3-subdistrict-target']);
+          }
+          syncAllPivotStickyHeaders_();
 
           // ── Run rate 7 hari ──
           if (res.runRate) {
@@ -1823,6 +2217,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
           getCurrentUserInfo(setProfileInfo);
           loadNotifications();
           fetchGoLiveSummary(!!forceFresh);
+          fetchGoLivePT2Summary(!!forceFresh);
+          fetchGoLivePT3Summary(!!forceFresh);
           fetchGoLiveRunRate(!!forceFresh);
           fetchGoLiveDaily(!!forceFresh);
         })
@@ -2227,6 +2623,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
         document.getElementById('page-golive-b2c').classList.add('active-page');
         if (!monitoringGoLiveLoadedOnce) fetchMonitoringGoLiveData();
         if (!goLiveSummaryLoadedOnce) fetchGoLiveSummary();
+        if (!goLivePT2SummaryLoadedOnce) fetchGoLivePT2Summary();
+        if (!goLivePT3SummaryLoadedOnce) fetchGoLivePT3Summary();
         if (!goLiveRunRateLoadedOnce) fetchGoLiveRunRate();
         if (!goLiveDailyLoadedOnce) { ensureGoLiveDailyFilterOptions_(); fetchGoLiveDaily(); }
       }
@@ -2290,6 +2688,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           renderGoLiveSummaryTable_('gl-summary-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT');
           renderGoLiveSummaryTable_('gl-summary-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT');
           renderGoLiveBucketCharts_(response.byDistrictGrandTotal);
+          renderGoLiveBadgeTotals_(response.byDistrictGrandTotal);
           syncAllPivotStickyHeaders_();
         })
         .withFailureHandler(function(err) {
@@ -2299,6 +2698,96 @@ tbody tr:hover td { background: var(--table-th-bg); }
           renderGoLiveChartError_(err.message);
         })
         .getMonitoringGoLiveSummary(!!forceFresh);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ── REKAP PIVOT PT2 / PT3 GO LIVE (poin 4 & 5) ──
+    // Sama persis dengan fetchGoLiveSummary() di atas, tapi memanggil
+    // endpoint yang sudah difilter TIPE DESIGN di backend
+    // (getMonitoringGoLivePT2Summary / getMonitoringGoLivePT3Summary).
+    // Dipakai sebagai fallback kalau getDashboardBootstrap() gagal,
+    // dan saat halaman diaktifkan ulang lewat switchPage().
+    // ══════════════════════════════════════════════════════════════
+
+    function fetchGoLivePT2Summary(forceFresh) {
+      if (isFetchingGoLivePT2Summary) return;
+      isFetchingGoLivePT2Summary = true;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          isFetchingGoLivePT2Summary = false;
+          goLivePT2SummaryLoadedOnce = true;
+
+          if (!response || response.success === false) {
+            renderGoLiveSummaryError_(response && response.message, ['gl-summary-pt2-district-target', 'gl-summary-pt2-subdistrict-target']);
+            return;
+          }
+
+          renderGoLiveSummaryTable_('gl-summary-pt2-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT2)');
+          renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)');
+          syncAllPivotStickyHeaders_();
+        })
+        .withFailureHandler(function(err) {
+          isFetchingGoLivePT2Summary = false;
+          console.error('Gagal mengambil rekap PT2 Go Live:', err.message);
+          renderGoLiveSummaryError_(err.message, ['gl-summary-pt2-district-target', 'gl-summary-pt2-subdistrict-target']);
+        })
+        .getMonitoringGoLivePT2Summary(!!forceFresh);
+    }
+
+    function fetchGoLivePT3Summary(forceFresh) {
+      if (isFetchingGoLivePT3Summary) return;
+      isFetchingGoLivePT3Summary = true;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          isFetchingGoLivePT3Summary = false;
+          goLivePT3SummaryLoadedOnce = true;
+
+          if (!response || response.success === false) {
+            renderGoLiveSummaryError_(response && response.message, ['gl-summary-pt3-district-target', 'gl-summary-pt3-subdistrict-target']);
+            return;
+          }
+
+          renderGoLiveSummaryTable_('gl-summary-pt3-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT3)');
+          renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)');
+          syncAllPivotStickyHeaders_();
+        })
+        .withFailureHandler(function(err) {
+          isFetchingGoLivePT3Summary = false;
+          console.error('Gagal mengambil rekap PT3 Go Live:', err.message);
+          renderGoLiveSummaryError_(err.message, ['gl-summary-pt3-district-target', 'gl-summary-pt3-subdistrict-target']);
+        })
+        .getMonitoringGoLivePT3Summary(!!forceFresh);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ── BADGE TOTAL: TOTAL ORDER + 7 bucket MITRA/SDI (poin 1) ──
+    // Sumber data SAMA dengan tabel "Rekap Go Live" & donut MITRA/SDI
+    // (GRAND TOTAL dari getMonitoringGoLiveSummary), satuan LOP (count
+    // baris). Tidak ada request tambahan ke server.
+    // ══════════════════════════════════════════════════════════════
+
+    const GOLIVE_BADGE_BUCKET_IDS = {
+      createAbd:   'gl-badge-createAbd',
+      revisionAbd: 'gl-badge-revisionAbd',
+      kendalaAbd:  'gl-badge-kendalaAbd',
+      validation:  'gl-badge-validation',
+      drawing:     'gl-badge-drawing',
+      termination: 'gl-badge-termination',
+      goLive:      'gl-badge-goLive'
+    };
+
+    function renderGoLiveBadgeTotals_(grandTotal) {
+      const totalEl = document.getElementById('gl-badge-totalOrder');
+      if (totalEl) totalEl.textContent = formatNum_(grandTotal && grandTotal.total ? grandTotal.total.lop : 0);
+
+      Object.keys(GOLIVE_BADGE_BUCKET_IDS).forEach(function (key) {
+        const el = document.getElementById(GOLIVE_BADGE_BUCKET_IDS[key]);
+        if (!el) return;
+        const bucket = grandTotal && grandTotal.buckets ? grandTotal.buckets[key] : null;
+        el.textContent = formatNum_(bucket ? bucket.lop : 0);
+      });
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -2720,14 +3209,18 @@ tbody tr:hover td { background: var(--table-th-bg); }
       document.fonts.ready.then(syncAllPivotStickyHeaders_);
     }
 
-    function renderGoLiveSummaryError_(message) {
+    // targetIds opsional -- default 2 target "Rekap Go Live" utama.
+    // Dipakai ulang untuk tabel PT2/PT3 dengan targetIds masing-masing
+    // (lihat fetchGoLivePT2Summary / fetchGoLivePT3Summary).
+    function renderGoLiveSummaryError_(message, targetIds) {
+      const ids = targetIds || ['gl-summary-district-target', 'gl-summary-subdistrict-target'];
       const errHtml = `<tr><td colspan="25" class="golive-summary-empty" style="color:var(--danger-color);">
         <i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat rekap: ${escapeHtml(message || 'Terjadi kesalahan.')}
       </td></tr>`;
-      const a = document.getElementById('gl-summary-district-target');
-      const b = document.getElementById('gl-summary-subdistrict-target');
-      if (a) a.innerHTML = errHtml;
-      if (b) b.innerHTML = errHtml;
+      ids.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = errHtml;
+      });
     }
 
     // group        -> 'total' | 'mitra' | 'sdi', menentukan warna sel (lihat CSS
@@ -2800,6 +3293,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Refresh Data`;
 
           activeMonitoringGoLiveRows = (response && response.data) || [];
+          populateMonitoringGoLiveFilterOptions_(activeMonitoringGoLiveRows);
           applyMonitoringGoLiveSearchFilter(false);
         })
         .withFailureHandler(function(err) {
@@ -2815,15 +3309,106 @@ tbody tr:hover td { background: var(--table-th-bg); }
         .getMonitoringGoLiveData(!!forceFresh);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ── FILTER TABEL DETAIL (poin 7) ──
+    // 11 dropdown filter kolom (lihat MONITORING_GOLIVE_FILTER_FIELDS)
+    // + range tanggal TANGGAL GO LIVE, digabung dengan pencarian teks
+    // bebas yang sudah ada. Semua murni client-side atas
+    // activeMonitoringGoLiveRows (data lengkap yang sudah dimuat),
+    // tidak menambah panggilan ke server.
+    // ══════════════════════════════════════════════════════════════
+
+    // Isi ulang opsi tiap <select> filter dengan nilai UNIK dari data
+    // yang baru dimuat/di-refresh, urut alfabet. Pilihan user yang
+    // sedang aktif dipertahankan kalau nilainya masih ada di data baru.
+    function populateMonitoringGoLiveFilterOptions_(rows) {
+      MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
+        const select = document.getElementById(f.id);
+        if (!select) return;
+
+        const prevValue = select.value;
+        const uniqueVals = Array.from(new Set(
+          rows.map(function (r) { return String(r[f.key] || '').trim(); }).filter(function (v) { return v !== ''; })
+        )).sort(function (a, b) { return a.localeCompare(b); });
+
+        select.innerHTML = '<option value="">Semua</option>' +
+          uniqueVals.map(function (v) { return `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`; }).join('');
+
+        if (uniqueVals.indexOf(prevValue) !== -1) select.value = prevValue;
+      });
+    }
+
+    // Parse string TANGGAL GO LIVE (hasil getDisplayValues() dari
+    // sheet) jadi objek Date. Mendukung format yang sama dengan
+    // parser backend (golive_parseTanggal_ di code.gs): yyyy-mm-dd /
+    // yyyy/mm/dd, dd/mm/yyyy / dd-mm-yyyy, fallback ke Date() bawaan.
+    function golive_parseTanggalJs_(v) {
+      if (v === null || v === undefined) return null;
+      const s = String(v).trim();
+      if (!s) return null;
+
+      let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if (m) {
+        const dt = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        return isNaN(dt.getTime()) ? null : dt;
+      }
+
+      m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if (m) {
+        let y = parseInt(m[3], 10);
+        if (y < 100) y += 2000;
+        const dt = new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+        return isNaN(dt.getTime()) ? null : dt;
+      }
+
+      const dt = new Date(s);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
     function applyMonitoringGoLiveSearchFilter(resetPage) {
       if (resetPage === undefined) resetPage = true;
       const query = document.getElementById('glSearchInput').value.trim().toLowerCase();
       const clearBtn = document.getElementById('glSearchClearBtn');
       clearBtn.classList.toggle('show', query.length > 0);
 
+      const fieldFilters = MONITORING_GOLIVE_FILTER_FIELDS.map(function (f) {
+        const el = document.getElementById(f.id);
+        return { key: f.key, value: el ? el.value : '' };
+      }).filter(function (f) { return f.value !== ''; });
+
+      const dateFromEl = document.getElementById('glFilterTanggalFrom');
+      const dateToEl   = document.getElementById('glFilterTanggalTo');
+      const dateFromRaw = dateFromEl ? dateFromEl.value : '';
+      const dateToRaw   = dateToEl   ? dateToEl.value   : '';
+      // input[type=date] mengembalikan "yyyy-mm-dd" -- tambah jam
+      // eksplisit supaya perbandingan Date tidak kena masalah timezone.
+      const dateFrom = dateFromRaw ? new Date(dateFromRaw + 'T00:00:00') : null;
+      const dateTo   = dateToRaw   ? new Date(dateToRaw   + 'T23:59:59') : null;
+
+      const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+
       let filtered = activeMonitoringGoLiveRows;
+
+      if (fieldFilters.length) {
+        filtered = filtered.filter(function (row) {
+          return fieldFilters.every(function (f) {
+            return String(row[f.key] || '').trim() === f.value;
+          });
+        });
+      }
+
+      if (dateFrom || dateTo) {
+        filtered = filtered.filter(function (row) {
+          const dt = golive_parseTanggalJs_(row.tanggalGoLive);
+          if (!dt) return false;
+          if (dateFrom && dt < dateFrom) return false;
+          if (dateTo && dt > dateTo) return false;
+          return true;
+        });
+      }
+
       if (query) {
-        filtered = activeMonitoringGoLiveRows.filter(function(row) {
+        filtered = filtered.filter(function(row) {
           // Field yang ikut dicari = kolom teks yang tampil di tabel.
           // Kolom angka (TOTAL ODP / TOTAL PORT) sengaja tidak ikut
           // supaya pencarian "10" tidak memunculkan ratusan baris.
@@ -2837,6 +3422,16 @@ tbody tr:hover td { background: var(--table-th-bg); }
         });
       }
 
+      const hintEl = document.getElementById('glFilterActiveHint');
+      if (hintEl) {
+        if (activeFilterCount > 0) {
+          hintEl.textContent = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.';
+          hintEl.classList.add('show');
+        } else {
+          hintEl.classList.remove('show');
+        }
+      }
+
       if (resetPage) currentMonitoringGoLivePage = 1;
 
       renderMonitoringGoLiveRows(filtered, query);
@@ -2846,6 +3441,21 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const input = document.getElementById('glSearchInput');
       input.value = '';
       input.focus();
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
+    // Reset SEMUA filter (11 dropdown + range tanggal + pencarian teks),
+    // dipanggil dari tombol "Reset Filter".
+    function resetMonitoringGoLiveFilters() {
+      MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
+        const el = document.getElementById(f.id);
+        if (el) el.value = '';
+      });
+      const dateFromEl = document.getElementById('glFilterTanggalFrom');
+      const dateToEl   = document.getElementById('glFilterTanggalTo');
+      if (dateFromEl) dateFromEl.value = '';
+      if (dateToEl)   dateToEl.value   = '';
+      document.getElementById('glSearchInput').value = '';
       applyMonitoringGoLiveSearchFilter(true);
     }
 
