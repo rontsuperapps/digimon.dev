@@ -1037,7 +1037,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         <div class="logo-icon-box"><i class="fa-solid fa-layer-group"></i></div>
         <div class="logo-text">
           <h2>Monitoring Project</h2>
-          <p>PWA v1.0</p>
+          <p>PWA v1.1</p>
         </div>
       </div>
     </div>
@@ -1340,7 +1340,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         <div class="table-search-bar">
           <div class="search-input-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="glSearchInput" class="search-input" placeholder="Cari Region, District, Branch, STO, ID IHLD, Nama LOP, Status Go Live..." oninput="applyMonitoringGoLiveSearchFilter()">
+            <input type="text" id="glSearchInput" class="search-input" placeholder="Cari District, Branch, STO, ID IHLD, Nama Proyek, Program, Status Go Live..." oninput="applyMonitoringGoLiveSearchFilter()">
             <button class="search-clear-btn" id="glSearchClearBtn" onclick="clearMonitoringGoLiveSearchFilter()" title="Hapus pencarian">
               <i class="fa-solid fa-circle-xmark"></i>
             </button>
@@ -1357,31 +1357,48 @@ tbody tr:hover td { background: var(--table-th-bg); }
             <span>data</span>
           </div>
         </div>
+        <!-- 23 kolom — pada layar kecil tabel pasti perlu digeser. -->
+        <div class="golive-scroll-hint" style="padding: 0 12px; margin: 8px 0 4px;"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
         <div style="overflow-x:auto;">
         <table>
+          <!-- MIGRASI v1.1 — kolom mengikuti sheet "B2C" (A s/d W).
+               Kolom NO & REGION sudah tidak ada di sheet baru, jadi
+               tabel sekarang dimulai dari DISTRICT. Kolom X (SHEET
+               UPDATE) & Y (LINK UPDATE) sengaja tidak ditampilkan.
+               URUTAN <th> DI BAWAH HARUS SAMA PERSIS dengan urutan
+               <td> di renderMonitoringGoLiveRows(). -->
           <thead>
             <tr>
-              <th>NO</th>
-              <th>REGION</th>
               <th>DISTRICT</th>
               <th>SUB DISTRICT</th>
               <th>BRANCH</th>
               <th>WOK</th>
               <th>STO</th>
               <th>ID IHLD</th>
-              <th>NAMA LOP</th>
+              <th>STATUS IHLD</th>
+              <th>NAMA PROYEK</th>
+              <th>TOTAL ODP</th>
+              <th>TOTAL PORT</th>
+              <th>TIPE DESIGN</th>
+              <th>SEGMEN</th>
+              <th>PROGRAM</th>
+              <th>BATCH PROGRAM</th>
+              <th>STATUS PROGRESS</th>
               <th>STATUS GO LIVE</th>
               <th>TANGGAL GO LIVE</th>
+              <th>NAMA ALPRO</th>
+              <th>ID SW</th>
+              <th>KET KENDALA</th>
               <th>NEW STATUS</th>
               <th>STATUS PROYEK</th>
-              <th>ACTIONS</th>
+              <th>STATUS TASK</th>
             </tr>
           </thead>
           <tbody id="gl-rows-target">
             <tr>
-              <td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+              <td colspan="23" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
-                Memuat data Monitoring Go Live...
+                Memuat data Go Live B2C...
               </td>
             </tr>
           </tbody>
@@ -1506,8 +1523,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
       'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal'
     ];
 
+    // Prefiks dinaikkan ke _v2 saat migrasi ke sheet "B2C": bentuk data
+    // yang tersimpan di localStorage dari versi lama sudah tidak cocok
+    // dengan kolom baru, jadi jangan sampai ikut dibaca saat offline.
     function pwaOfflineCacheKey_(fn, args) {
-      return 'pwa_offline_cache::' + fn + '::' + JSON.stringify(args || []);
+      return 'pwa_offline_cache_v2::' + fn + '::' + JSON.stringify(args || []);
     }
 
     function readPwaOfflineCache_(fn, args) {
@@ -2095,12 +2115,15 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // Beberapa nilai status umum -> kelas badge (biar konsisten warnanya).
     // Nilai lain di luar daftar ini otomatis jatuh ke badge "lainnya".
     function statusBadgeClass_(value) {
-      const v = String(value || '').trim().toUpperCase();
+      const v = String(value || '').trim().toUpperCase().replace(/\s+/g, ' ');
       if (!v) return 'badge lainnya';
-      if (['GO LIVE', 'SELESAI', 'COMPLETE', 'CLOSE', 'DONE'].indexOf(v) !== -1) return 'badge solved';
-      if (['ON PROGRESS', 'PROSES', 'ONGOING'].indexOf(v) !== -1) return 'badge ongoing';
+      if (['GO LIVE', 'FI-OGP GO LIVE', 'SELESAI', 'COMPLETE', 'CLOSE', 'DONE'].indexOf(v) !== -1) return 'badge solved';
+      // Nilai STATUS GO LIVE sheet "B2C" yang berarti pekerjaan masih
+      // berjalan (bucket MITRA/SDI selain GO LIVE).
+      if (['ON PROGRESS', 'PROSES', 'ONGOING', 'CREATE ABD', 'REVISION',
+           'VALIDATION', 'DRAWING', 'TERMINATION'].indexOf(v) !== -1) return 'badge ongoing';
       if (['BELUM GO LIVE', 'PENDING', 'KENDALA'].indexOf(v) !== -1) return 'badge pending';
-      if (['CANCEL', 'BATAL'].indexOf(v) !== -1) return 'badge cancel';
+      if (['CANCEL', 'BATAL', 'DROP'].indexOf(v) !== -1) return 'badge cancel';
       if (['OPEN', 'NEW'].indexOf(v) !== -1) return 'badge open';
       return 'badge lainnya';
     }
@@ -2608,9 +2631,9 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
       const tbody = document.getElementById('gl-rows-target');
       if (!monitoringGoLiveLoadedOnce) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
           <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
-          Memuat data Monitoring Go Live...
+          Memuat data Go Live B2C...
         </td></tr>`;
       }
 
@@ -2628,10 +2651,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
           isFetchingMonitoringGoLive = false;
           const btn = document.querySelector('.btn-refresh');
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Refresh Data`;
-          console.error('Gagal mengambil data Monitoring Go Live:', err.message);
-          tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
+          console.error('Gagal mengambil data Go Live B2C:', err.message);
+          tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
             <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;opacity:0.6;display:block;margin-bottom:10px;"></i>
-            Gagal memuat data Monitoring Go Live: ${escapeHtml(err.message)}
+            Gagal memuat data Go Live B2C: ${escapeHtml(err.message)}
           </td></tr>`;
         })
         .getMonitoringGoLiveData(!!forceFresh);
@@ -2646,9 +2669,15 @@ tbody tr:hover td { background: var(--table-th-bg); }
       let filtered = activeMonitoringGoLiveRows;
       if (query) {
         filtered = activeMonitoringGoLiveRows.filter(function(row) {
+          // Field yang ikut dicari = kolom teks yang tampil di tabel.
+          // Kolom angka (TOTAL ODP / TOTAL PORT) sengaja tidak ikut
+          // supaya pencarian "10" tidak memunculkan ratusan baris.
           return [
-            row.region, row.district, row.subDistrict, row.branch, row.wok, row.sto,
-            row.idIhld, row.namaLop, row.statusGoLive, row.newStatus, row.statusProyek
+            row.district, row.subDistrict, row.branch, row.wok, row.sto,
+            row.idIhld, row.statusIhld, row.namaProyek, row.tipeDesign,
+            row.segmen, row.program, row.batchProgram, row.statusProgress,
+            row.statusGoLive, row.namaAlpro, row.idSw, row.ketKendala,
+            row.newStatus, row.statusProyek, row.statusTask
           ].some(function(v) { return String(v || '').toLowerCase().includes(query); });
         });
       }
@@ -2696,12 +2725,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (!data || data.length === 0) {
         currentMonitoringGoLivePage = 1;
         let icon = 'fa-inbox';
-        let emptyMsg = 'Tidak ada data Monitoring Go Live.';
+        let emptyMsg = 'Tidak ada data Go Live B2C.';
         if (query) {
           icon = 'fa-magnifying-glass';
           emptyMsg = `Tidak ada data yang cocok dengan pencarian "${escapeHtml(query)}".`;
         }
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
           <i class="fa-solid ${icon}" style="font-size:22px;opacity:0.35;display:block;margin-bottom:10px;"></i>
           ${emptyMsg}
         </td></tr>`;
@@ -2716,22 +2745,33 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const pageData = data.slice(startIdx, startIdx + monitoringGoLivePageSize);
 
       const rowsHtml = pageData.map(function(row) {
+        // URUTAN <td> HARUS SAMA PERSIS dengan urutan <th> di markup
+        // tabel (DISTRICT ... STATUS TASK, 23 kolom).
         return `
           <tr>
-            <td>${escapeHtml(row.no)||'-'}</td>
-            <td>${escapeHtml(row.region)||'-'}</td>
             <td>${escapeHtml(row.district)||'-'}</td>
             <td>${escapeHtml(row.subDistrict)||'-'}</td>
             <td>${escapeHtml(row.branch)||'-'}</td>
             <td>${escapeHtml(row.wok)||'-'}</td>
             <td style="color:var(--accent-color);"><i class="fa-solid fa-location-dot" style="font-size:10px;"></i> ${escapeHtml(row.sto)||'-'}</td>
             <td>${escapeHtml(row.idIhld)||'-'}</td>
-            <td>${escapeHtml(row.namaLop)||'-'}</td>
+            <td><span class="${statusBadgeClass_(row.statusIhld)}">${escapeHtml(row.statusIhld)||'-'}</span></td>
+            <td>${escapeHtml(row.namaProyek)||'-'}</td>
+            <td style="text-align:right;font-variant-numeric:tabular-nums;">${formatNum_(row.totalOdp)}</td>
+            <td style="text-align:right;font-variant-numeric:tabular-nums;">${formatNum_(row.totalPort)}</td>
+            <td>${escapeHtml(row.tipeDesign)||'-'}</td>
+            <td>${escapeHtml(row.segmen)||'-'}</td>
+            <td>${escapeHtml(row.program)||'-'}</td>
+            <td>${escapeHtml(row.batchProgram)||'-'}</td>
+            <td><span class="${statusBadgeClass_(row.statusProgress)}">${escapeHtml(row.statusProgress)||'-'}</span></td>
             <td><span class="${statusBadgeClass_(row.statusGoLive)}">${escapeHtml(row.statusGoLive)||'-'}</span></td>
             <td>${escapeHtml(row.tanggalGoLive)||'-'}</td>
+            <td>${escapeHtml(row.namaAlpro)||'-'}</td>
+            <td>${escapeHtml(row.idSw)||'-'}</td>
+            <td style="max-width:220px;white-space:normal;color:var(--text-muted);">${escapeHtml(row.ketKendala)||'-'}</td>
             <td><span class="${statusBadgeClass_(row.newStatus)}">${escapeHtml(row.newStatus)||'-'}</span></td>
             <td><span class="${statusBadgeClass_(row.statusProyek)}">${escapeHtml(row.statusProyek)||'-'}</span></td>
-            <td style="max-width:200px;white-space:normal;color:var(--text-muted);">${escapeHtml(row.actions)||'-'}</td>
+            <td><span class="${statusBadgeClass_(row.statusTask)}">${escapeHtml(row.statusTask)||'-'}</span></td>
           </tr>`;
       });
 
