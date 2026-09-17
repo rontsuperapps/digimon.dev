@@ -312,6 +312,21 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .sub-nav-item:hover { color: var(--accent-color); background: var(--sb-active-bg); }
 .sub-nav-item.active { color: var(--accent-color); font-weight: 600; background: var(--sb-active-bg); }
 .sub-nav-item.disabled { opacity: 0.5; cursor: not-allowed; }
+.sub-nav-item.disabled:hover { color: var(--sb-text-muted); background: transparent; }
+
+.soon-badge {
+  margin-left: auto;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--sb-active-bg);
+  color: var(--sb-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .nav-icon-bullet { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
 .sub-nav-item.active .nav-icon-bullet, .sub-nav-item:hover .nav-icon-bullet { opacity: 1; }
@@ -1030,13 +1045,40 @@ tbody tr:hover td { background: var(--table-th-bg); }
         <button class="nav-header-trigger" onclick="toggleAccordion(this)">
           <div class="nav-header-left">
             <div class="icon-box-wrapper"><i class="fa-solid fa-chart-simple"></i></div>
-            <span class="menu-title-text">Dashboard</span>
+            <span class="menu-title-text">Dashboard B2C</span>
           </div>
           <i class="fa-solid fa-chevron-right arrow-icon"></i>
         </button>
         <div class="submenu-list">
-          <a class="sub-nav-item active" id="nav-monitoring-project" onclick="switchPage('monitoring-project')"><span class="nav-icon-bullet"></span> Monitoring Project</a>
-          <a class="sub-nav-item" id="nav-monitoring-golive" onclick="switchPage('monitoring-golive')"><span class="nav-icon-bullet"></span> Monitoring Go Live</a>
+          <a class="sub-nav-item active" id="nav-golive-b2c" onclick="switchPage('golive-b2c')"><span class="nav-icon-bullet"></span> Go Live B2C</a>
+          <a class="sub-nav-item disabled" id="nav-survey-dsi" onclick="handleComingSoon(event)"><span class="nav-icon-bullet"></span> Survey DSI<span class="soon-badge">Coming Soon</span></a>
+        </div>
+      </div>
+
+      <div class="menu-item-group">
+        <button class="nav-header-trigger" onclick="toggleAccordion(this)">
+          <div class="nav-header-left">
+            <div class="icon-box-wrapper"><i class="fa-solid fa-building"></i></div>
+            <span class="menu-title-text">Dashboard B2B</span>
+          </div>
+          <i class="fa-solid fa-chevron-right arrow-icon"></i>
+        </button>
+        <div class="submenu-list">
+          <a class="sub-nav-item disabled" id="nav-golive-b2b" onclick="handleComingSoon(event)"><span class="nav-icon-bullet"></span> Go Live B2B<span class="soon-badge">Coming Soon</span></a>
+        </div>
+      </div>
+
+      <div class="menu-item-group">
+        <button class="nav-header-trigger" onclick="toggleAccordion(this)">
+          <div class="nav-header-left">
+            <div class="icon-box-wrapper"><i class="fa-solid fa-clipboard-list"></i></div>
+            <span class="menu-title-text">Monitoring ABD</span>
+          </div>
+          <i class="fa-solid fa-chevron-right arrow-icon"></i>
+        </button>
+        <div class="submenu-list">
+          <a class="sub-nav-item disabled" id="nav-abd-dashboard" onclick="handleComingSoon(event)"><span class="nav-icon-bullet"></span> Dashboard<span class="soon-badge">Coming Soon</span></a>
+          <a class="sub-nav-item disabled" id="nav-abd-submit" onclick="handleComingSoon(event)"><span class="nav-icon-bullet"></span> Submit<span class="soon-badge">Coming Soon</span></a>
         </div>
       </div>
     </div>
@@ -1046,8 +1088,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
     <div class="top-bar">
       <div class="top-bar-left">
         <div class="top-bar-titles">
-          <h1 id="pageTitle">Monitoring Project</h1>
-          <span class="top-subtitle" id="pageSubtitle">Monitoring seluruh project FBB Jatim — semua kolom data</span>
+          <h1 id="pageTitle">Go Live B2C</h1>
+          <span class="top-subtitle" id="pageSubtitle">Status & tanggal go live tiap project FBB Jatim (B2C)</span>
         </div>
       </div>
       <div class="top-actions-wrapper">
@@ -1103,89 +1145,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
     <div class="content-scroll">
 
     <!-- ══════════════════════════════════════════════════════════
-         HALAMAN: MONITORING PROJECT (semua kolom A—Z)
+         HALAMAN: GO LIVE B2C (dulu "Monitoring Go Live"; subset
+         kolom identitas + Go Live, sumber data sama dengan sheet
+         "FBB | JATIM" B2C)
          ══════════════════════════════════════════════════════════ -->
-    <div class="page-section active-page" id="page-monitoring-project">
-
-      <div class="table-container">
-        <div class="table-search-bar">
-          <div class="search-input-wrap">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="mpSearchInput" class="search-input" placeholder="Cari Region, District, Branch, STO, ID IHLD, Nama LOP, Status..." oninput="applyMonitoringProjectSearchFilter()">
-            <button class="search-clear-btn" id="mpSearchClearBtn" onclick="clearMonitoringProjectSearchFilter()" title="Hapus pencarian">
-              <i class="fa-solid fa-circle-xmark"></i>
-            </button>
-          </div>
-          <div class="page-size-select-wrap">
-            <label for="mpPageSizeSelect">Tampilkan</label>
-            <select id="mpPageSizeSelect" class="page-size-select" onchange="changeMonitoringProjectPageSize(this.value)">
-              <option value="10">10</option>
-              <option value="20" selected>20</option>
-              <option value="30">30</option>
-              <option value="40">40</option>
-              <option value="50">50</option>
-            </select>
-            <span>data</span>
-          </div>
-        </div>
-        <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>NO</th>
-              <th>REGION</th>
-              <th>DISTRICT</th>
-              <th>SUB DISTRICT</th>
-              <th>BRANCH</th>
-              <th>WOK</th>
-              <th>STO</th>
-              <th>ID IHLD</th>
-              <th>STATUS IHLD</th>
-              <th>NAMA LOP</th>
-              <th>ODP PLAN</th>
-              <th>PORT PLAN</th>
-              <th>BOQ PLAN</th>
-              <th>CPP PLAN</th>
-              <th>TEMATIK</th>
-              <th>BATCH</th>
-              <th>STATUS PEKERJAAN</th>
-              <th>TANGGAL ABD MASUK</th>
-              <th>STATUS GO LIVE</th>
-              <th>TANGGAL GO LIVE</th>
-              <th>LABEL ODP</th>
-              <th>ODP REAL</th>
-              <th>PORT REAL</th>
-              <th>NEW STATUS</th>
-              <th>STATUS PROYEK</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody id="mp-rows-target">
-            <tr>
-              <td colspan="26" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
-                Memuat data Monitoring Project...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-        <div class="pagination-bar" id="mpPaginationBar">
-          <span class="pagination-info" id="mpPaginationInfo"></span>
-          <div class="pagination-controls">
-            <button class="btn-page" id="mpBtnPrevPage" onclick="goToMonitoringProjectPage(currentMonitoringProjectPage - 1)"><i class="fa-solid fa-chevron-left"></i></button>
-            <span class="pagination-current" id="mpPaginationCurrent">1</span>
-            <button class="btn-page" id="mpBtnNextPage" onclick="goToMonitoringProjectPage(currentMonitoringProjectPage + 1)"><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════
-         HALAMAN: MONITORING GO LIVE (subset kolom: identitas + Go Live)
-         ══════════════════════════════════════════════════════════ -->
-    <div class="page-section" id="page-monitoring-golive">
+    <div class="page-section active-page" id="page-golive-b2c">
 
       <!-- ══════════════════════════════════════════════════════════
            BARIS 1 — REKAP PIVOT PER DISTRICT
@@ -1520,7 +1484,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // untuk fallback offline ("tampilkan data terakhir yang sempat
     // ter-cache saat online").
     const PWA_OFFLINE_CACHEABLE_FN = [
-      'getMonitoringProjectData', 'getMonitoringGoLiveData',
+      'getMonitoringGoLiveData',
       'getLoggedInUserInfo', 'getMyProfile', 'getNotifications',
       'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal'
     ];
@@ -1656,13 +1620,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       });
     })();
 
-    let currentActivePage = 'monitoring-project';
-
-    let activeMonitoringProjectRows  = [];
-    let currentMonitoringProjectPage = 1;
-    let monitoringProjectPageSize    = 20;
-    let isFetchingMonitoringProject  = false;
-    let monitoringProjectLoadedOnce  = false;
+    let currentActivePage = 'golive-b2c';
 
     let activeMonitoringGoLiveRows  = [];
     let currentMonitoringGoLivePage = 1;
@@ -1706,7 +1664,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
       initProfileMenu();
       initNotifications();
 
-      fetchMonitoringProjectData();
+      fetchMonitoringGoLiveData();
+      fetchGoLiveSummary();
+      fetchGoLiveRunRate();
+      ensureGoLiveDailyFilterOptions_();
+      fetchGoLiveDaily();
     };
 
     // ══════════════════════════════════════════════════════════════
@@ -2046,37 +2008,32 @@ tbody tr:hover td { background: var(--table-th-bg); }
         sec.classList.remove('active-page');
       });
 
-      if (pageName === 'monitoring-golive') {
-        document.getElementById('page-monitoring-golive').classList.add('active-page');
-        syncSidebarActiveState('nav-monitoring-golive');
-        document.getElementById('pageTitle').innerText    = 'Monitoring Go Live';
-        document.getElementById('pageSubtitle').innerText = 'Status & tanggal go live tiap project FBB Jatim';
-        if (!monitoringGoLiveLoadedOnce) fetchMonitoringGoLiveData();
-        if (!goLiveSummaryLoadedOnce) fetchGoLiveSummary();
-        if (!goLiveRunRateLoadedOnce) fetchGoLiveRunRate();
-        if (!goLiveDailyLoadedOnce) { ensureGoLiveDailyFilterOptions_(); fetchGoLiveDaily(); }
-      } else {
-        document.getElementById('page-monitoring-project').classList.add('active-page');
-        syncSidebarActiveState('nav-monitoring-project');
-        document.getElementById('pageTitle').innerText    = 'Monitoring Project';
-        document.getElementById('pageSubtitle').innerText = 'Monitoring seluruh project FBB Jatim — semua kolom data';
-        if (!monitoringProjectLoadedOnce) fetchMonitoringProjectData();
-      }
+      // Tahap 1: hanya "Go Live B2C" yang punya halaman aktif. Menu lain
+      // (Survey DSI, Go Live B2B, Monitoring ABD) masih "Coming Soon" dan
+      // dipanggil lewat handleComingSoon(), bukan switchPage().
+      document.getElementById('page-golive-b2c').classList.add('active-page');
+      syncSidebarActiveState('nav-golive-b2c');
+      document.getElementById('pageTitle').innerText    = 'Go Live B2C';
+      document.getElementById('pageSubtitle').innerText = 'Status & tanggal go live tiap project FBB Jatim (B2C)';
+      if (!monitoringGoLiveLoadedOnce) fetchMonitoringGoLiveData();
+      if (!goLiveSummaryLoadedOnce) fetchGoLiveSummary();
+      if (!goLiveRunRateLoadedOnce) fetchGoLiveRunRate();
+      if (!goLiveDailyLoadedOnce) { ensureGoLiveDailyFilterOptions_(); fetchGoLiveDaily(); }
 
       toggleMobileSidebar(false);
     }
 
-    function forceRefreshData() {
-      if (currentActivePage === 'monitoring-golive') {
-        forceRefreshMonitoringGoLiveData();
-        return;
-      }
-      forceRefreshMonitoringProjectData();
+    // Menu-menu yang masih "Coming Soon" (Survey DSI, Go Live B2B,
+    // Monitoring ABD - Dashboard & Submit) belum punya halaman/data,
+    // jadi sengaja tidak memanggil switchPage(). Cukup beri tahu user.
+    function handleComingSoon(e) {
+      if (e) e.preventDefault();
+      alert('Fitur ini masih dalam pengembangan (Coming Soon).');
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ── MONITORING PROJECT (semua kolom A—Z) ──
-    // ══════════════════════════════════════════════════════════════
+    function forceRefreshData() {
+      forceRefreshMonitoringGoLiveData();
+    }
 
     // Beberapa nilai status umum -> kelas badge (biar konsisten warnanya).
     // Nilai lain di luar daftar ini otomatis jatuh ke badge "lainnya".
@@ -2091,163 +2048,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       return 'badge lainnya';
     }
 
-    function forceRefreshMonitoringProjectData() {
-      document.querySelector('.btn-refresh').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading...`;
-      fetchMonitoringProjectData(true);
-    }
-
-    function fetchMonitoringProjectData(forceFresh) {
-      if (isFetchingMonitoringProject) return;
-      isFetchingMonitoringProject = true;
-
-      const tbody = document.getElementById('mp-rows-target');
-      if (!monitoringProjectLoadedOnce) {
-        tbody.innerHTML = `<tr><td colspan="26" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
-          Memuat data Monitoring Project...
-        </td></tr>`;
-      }
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          isFetchingMonitoringProject = false;
-          monitoringProjectLoadedOnce = true;
-          const btn = document.querySelector('.btn-refresh');
-          if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Refresh Data`;
-
-          activeMonitoringProjectRows = (response && response.data) || [];
-          applyMonitoringProjectSearchFilter(false);
-        })
-        .withFailureHandler(function(err) {
-          isFetchingMonitoringProject = false;
-          const btn = document.querySelector('.btn-refresh');
-          if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Refresh Data`;
-          console.error('Gagal mengambil data Monitoring Project:', err.message);
-          tbody.innerHTML = `<tr><td colspan="26" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;opacity:0.6;display:block;margin-bottom:10px;"></i>
-            Gagal memuat data Monitoring Project: ${escapeHtml(err.message)}
-          </td></tr>`;
-        })
-        .getMonitoringProjectData(!!forceFresh);
-    }
-
-    function applyMonitoringProjectSearchFilter(resetPage) {
-      if (resetPage === undefined) resetPage = true;
-      const query = document.getElementById('mpSearchInput').value.trim().toLowerCase();
-      const clearBtn = document.getElementById('mpSearchClearBtn');
-      clearBtn.classList.toggle('show', query.length > 0);
-
-      let filtered = activeMonitoringProjectRows;
-      if (query) {
-        filtered = activeMonitoringProjectRows.filter(function(row) {
-          return [
-            row.region, row.district, row.subDistrict, row.branch, row.wok, row.sto,
-            row.idIhld, row.statusIhld, row.namaLop, row.tematik, row.batch,
-            row.statusPekerjaan, row.statusGoLive, row.labelOdp, row.newStatus, row.statusProyek
-          ].some(function(v) { return String(v || '').toLowerCase().includes(query); });
-        });
-      }
-
-      if (resetPage) currentMonitoringProjectPage = 1;
-
-      renderMonitoringProjectRows(filtered, query);
-    }
-
-    function clearMonitoringProjectSearchFilter() {
-      const input = document.getElementById('mpSearchInput');
-      input.value = '';
-      input.focus();
-      applyMonitoringProjectSearchFilter(true);
-    }
-
-    function changeMonitoringProjectPageSize(val) {
-      monitoringProjectPageSize = parseInt(val, 10) || 20;
-      currentMonitoringProjectPage = 1;
-      applyMonitoringProjectSearchFilter(false);
-    }
-
-    function goToMonitoringProjectPage(page) {
-      currentMonitoringProjectPage = page;
-      applyMonitoringProjectSearchFilter(false);
-    }
-
-    function renderMonitoringProjectPaginationControls(totalRows, totalPages) {
-      const bar = document.getElementById('mpPaginationBar');
-      if (totalRows === 0) { bar.style.display = 'none'; return; }
-      bar.style.display = 'flex';
-
-      const startIdx = (currentMonitoringProjectPage - 1) * monitoringProjectPageSize + 1;
-      const endIdx   = Math.min(currentMonitoringProjectPage * monitoringProjectPageSize, totalRows);
-
-      document.getElementById('mpPaginationInfo').innerText = `Menampilkan ${startIdx}–${endIdx} dari ${totalRows} data`;
-      document.getElementById('mpPaginationCurrent').innerText = `${currentMonitoringProjectPage} / ${totalPages}`;
-      document.getElementById('mpBtnPrevPage').disabled = currentMonitoringProjectPage <= 1;
-      document.getElementById('mpBtnNextPage').disabled = currentMonitoringProjectPage >= totalPages;
-    }
-
-    function renderMonitoringProjectRows(data, query) {
-      const tbody = document.getElementById('mp-rows-target');
-
-      if (!data || data.length === 0) {
-        currentMonitoringProjectPage = 1;
-        let icon = 'fa-inbox';
-        let emptyMsg = 'Tidak ada data Monitoring Project.';
-        if (query) {
-          icon = 'fa-magnifying-glass';
-          emptyMsg = `Tidak ada data yang cocok dengan pencarian "${escapeHtml(query)}".`;
-        }
-        tbody.innerHTML = `<tr><td colspan="26" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
-          <i class="fa-solid ${icon}" style="font-size:22px;opacity:0.35;display:block;margin-bottom:10px;"></i>
-          ${emptyMsg}
-        </td></tr>`;
-        renderMonitoringProjectPaginationControls(0, 0);
-        return;
-      }
-
-      const totalPages = Math.max(1, Math.ceil(data.length / monitoringProjectPageSize));
-      if (currentMonitoringProjectPage > totalPages) currentMonitoringProjectPage = totalPages;
-      if (currentMonitoringProjectPage < 1) currentMonitoringProjectPage = 1;
-      const startIdx = (currentMonitoringProjectPage - 1) * monitoringProjectPageSize;
-      const pageData = data.slice(startIdx, startIdx + monitoringProjectPageSize);
-
-      const rowsHtml = pageData.map(function(row) {
-        return `
-          <tr>
-            <td>${escapeHtml(row.no)||'-'}</td>
-            <td>${escapeHtml(row.region)||'-'}</td>
-            <td>${escapeHtml(row.district)||'-'}</td>
-            <td>${escapeHtml(row.subDistrict)||'-'}</td>
-            <td>${escapeHtml(row.branch)||'-'}</td>
-            <td>${escapeHtml(row.wok)||'-'}</td>
-            <td style="color:var(--accent-color);"><i class="fa-solid fa-location-dot" style="font-size:10px;"></i> ${escapeHtml(row.sto)||'-'}</td>
-            <td>${escapeHtml(row.idIhld)||'-'}</td>
-            <td><span class="${statusBadgeClass_(row.statusIhld)}">${escapeHtml(row.statusIhld)||'-'}</span></td>
-            <td>${escapeHtml(row.namaLop)||'-'}</td>
-            <td>${escapeHtml(row.odpPlan)||'-'}</td>
-            <td>${escapeHtml(row.portPlan)||'-'}</td>
-            <td>${escapeHtml(row.boqPlan)||'-'}</td>
-            <td>${escapeHtml(row.cppPlan)||'-'}</td>
-            <td>${escapeHtml(row.tematik)||'-'}</td>
-            <td>${escapeHtml(row.batch)||'-'}</td>
-            <td><span class="${statusBadgeClass_(row.statusPekerjaan)}">${escapeHtml(row.statusPekerjaan)||'-'}</span></td>
-            <td>${escapeHtml(row.tanggalAbdMasuk)||'-'}</td>
-            <td><span class="${statusBadgeClass_(row.statusGoLive)}">${escapeHtml(row.statusGoLive)||'-'}</span></td>
-            <td>${escapeHtml(row.tanggalGoLive)||'-'}</td>
-            <td>${escapeHtml(row.labelOdp)||'-'}</td>
-            <td>${escapeHtml(row.odpReal)||'-'}</td>
-            <td>${escapeHtml(row.portReal)||'-'}</td>
-            <td><span class="${statusBadgeClass_(row.newStatus)}">${escapeHtml(row.newStatus)||'-'}</span></td>
-            <td><span class="${statusBadgeClass_(row.statusProyek)}">${escapeHtml(row.statusProyek)||'-'}</span></td>
-            <td style="max-width:200px;white-space:normal;color:var(--text-muted);">${escapeHtml(row.actions)||'-'}</td>
-          </tr>`;
-      });
-
-      tbody.innerHTML = rowsHtml.join("");
-      renderMonitoringProjectPaginationControls(data.length, totalPages);
-    }
-
     // ══════════════════════════════════════════════════════════════
-    // ── MONITORING GO LIVE (subset kolom) ──
+    // ── GO LIVE B2C (dulu "Monitoring Go Live"; subset kolom) ──
     // ══════════════════════════════════════════════════════════════
 
     function forceRefreshMonitoringGoLiveData() {
