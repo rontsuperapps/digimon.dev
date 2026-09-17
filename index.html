@@ -716,8 +716,20 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
   font-family: 'Poppins', sans-serif; font-size: 11.5px; padding: 7px 8px; border-radius: 8px;
   border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main);
 }
-.golive-filter-field.golive-filter-daterange { flex-direction: row; align-items: center; gap: 6px; min-width: 220px; }
-.golive-filter-field.golive-filter-daterange input { flex: 1 1 0; min-width: 0; }
+/* IMPROVEMENT TAHAP 2 (poin 3 revisi) -- field "Tanggal Go Live" butuh ruang
+   lebih lebar dari dropdown biasa (label + 2 date input + separator "s/d"),
+   tapi sebelumnya masih ikut kena max-width:190px dari .golive-filter-field
+   umum, bentrok dengan min-width:220px di aturan ini sendiri -- browser
+   menyusutkan paksa sampai native date-input (angka + ikon kalender) saling
+   tumpuk/terpotong. Sekarang: max-width dilepas & min-width dinaikkan supaya
+   selalu cukup lebar; layout dibalik ke KOLOM (label di atas, konsisten
+   dengan field lain) dengan baris [input] s/d [input] di bawahnya dibungkus
+   wrapper terpisah (.golive-filter-daterange-inputs) supaya urutan visualnya
+   tidak lagi bergantung pada flex-direction milik field ini. */
+.golive-filter-field.golive-filter-daterange { flex-direction: column; align-items: stretch; min-width: 280px; max-width: none; flex: 1 1 280px; }
+.golive-filter-daterange-inputs { display: flex; align-items: center; gap: 6px; }
+.golive-filter-daterange-inputs input[type="date"] { flex: 1 1 0; min-width: 118px; }
+.golive-filter-daterange-inputs span { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 /* IMPROVEMENT TAHAP 2 (poin 3) — tombol reset SELALU didorong ke ujung
    kanan baris filter (margin-left:auto) supaya tidak nyempil di tengah
    deretan dropdown saat baris wrap ke banyak baris; align-self:flex-end
@@ -1737,9 +1749,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
           </div>
           <div class="golive-filter-field golive-filter-daterange">
             <label>Tanggal Go Live</label>
-            <input type="date" id="glFilterTanggalFrom" onchange="applyMonitoringGoLiveSearchFilter()">
-            <span>s/d</span>
-            <input type="date" id="glFilterTanggalTo" onchange="applyMonitoringGoLiveSearchFilter()">
+            <div class="golive-filter-daterange-inputs">
+              <input type="date" id="glFilterTanggalFrom" onchange="applyMonitoringGoLiveSearchFilter()">
+              <span>s/d</span>
+              <input type="date" id="glFilterTanggalTo" onchange="applyMonitoringGoLiveSearchFilter()">
+            </div>
           </div>
           <button type="button" class="golive-filter-reset-btn" onclick="resetMonitoringGoLiveFilters()">
             <i class="fa-solid fa-filter-circle-xmark"></i> Reset Filter
