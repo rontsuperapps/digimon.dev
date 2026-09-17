@@ -674,6 +674,28 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 }
 
 .golive-summary-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-card); padding: 14px 14px 16px; margin-bottom: 16px; }
+
+/* ── TAB DISTRICT / SUB DISTRICT ──
+   Dipakai di kartu "Rekap Go Live" & "Perolehan Go Live Harian" untuk
+   memisahkan view District dan Sub District (dulu ditumpuk vertikal
+   sebagai 2 kartu/tabel terpisah). Struktur & id tabel di dalam tiap
+   panel TIDAK berubah, jadi fungsi render (renderGoLiveSummaryTable_,
+   renderGoLiveDailyTable_, dst.) tidak perlu disentuh. */
+.golive-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); margin: 2px 0 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.golive-tab-btn {
+  appearance: none; -webkit-appearance: none; background: transparent; border: none; cursor: pointer;
+  font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;
+  color: var(--text-muted); white-space: nowrap;
+  padding: 9px 18px 10px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  display: flex; align-items: center; gap: 7px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.golive-tab-btn i { font-size: 11px; opacity: 0.7; }
+.golive-tab-btn:hover { color: var(--text-title); }
+.golive-tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+.golive-tab-btn.active i { opacity: 1; }
+.golive-tab-panel { display: none; }
+.golive-tab-panel.active { display: block; }
 .golive-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
 .golive-summary-title { font-size: 13px; font-weight: 700; color: var(--text-title); display: flex; align-items: center; gap: 8px; }
 .golive-summary-title i { color: var(--accent-color); font-size: 12px; }
@@ -1155,95 +1177,99 @@ tbody tr:hover td { background: var(--table-th-bg); }
     <div class="page-section active-page" id="page-golive-b2c">
 
       <!-- ══════════════════════════════════════════════════════════
-           BARIS 1 — REKAP PIVOT PER DISTRICT
-           Filter wajib: NEW STATUS = FI-OGP GO LIVE / GO LIVE.
+           BARIS 1 — REKAP GO LIVE (tab DISTRICT / SUB DISTRICT)
+           Filter wajib: NEW STATUS = FI-OGP GO LIVE / GO LIVE. Dulu 2
+           kartu terpisah ditumpuk vertikal, sekarang 1 kartu dengan
+           tab supaya tidak perlu scroll panjang untuk bandingkan.
            ══════════════════════════════════════════════════════════ -->
       <div class="golive-summary-card">
         <div class="golive-summary-head">
-          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap Go Live — Per District</div>
+          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap Go Live</div>
         </div>
-        <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
-        <div class="pivot-table-wrap pivot-table-wrap-full">
-          <table class="pivot-grouped-table" id="glSummaryDistrictTable">
-            <thead>
-              <tr class="pivot-hdr-r1">
-                <th rowspan="3" class="hdr-navy">DISTRICT</th>
-                <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
-                <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
-                <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
-              </tr>
-              <tr class="pivot-hdr-r2">
-                <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
-                <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
-                <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
-                <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
-                <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
-                <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
-                <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
-              </tr>
-              <tr class="pivot-hdr-r3">
-                <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-              </tr>
-            </thead>
-            <tbody id="gl-summary-district-target">
-              <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per district...</td></tr>
-            </tbody>
-          </table>
+
+        <div class="golive-tabs" role="tablist" aria-label="Rekap Go Live">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glSummaryPanel-district" onclick="switchGoLiveTab('summary', 'district', this)"><i class="fa-solid fa-location-dot"></i> DISTRICT</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glSummaryPanel-subdistrict" onclick="switchGoLiveTab('summary', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> SUB DISTRICT</button>
+        </div>
+
+        <div class="golive-tab-panel active" id="glSummaryPanel-district" data-group="summary" data-tab="district" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummaryDistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-district-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per district...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="golive-tab-panel" id="glSummaryPanel-subdistrict" data-group="summary" data-tab="subdistrict" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glSummarySubDistrictTable">
+              <thead>
+                <tr class="pivot-hdr-r1">
+                  <th rowspan="3" class="hdr-navy">SUB DISTRICT</th>
+                  <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
+                  <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
+                </tr>
+                <tr class="pivot-hdr-r2">
+                  <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
+                  <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
+                  <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
+                  <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
+                  <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
+                </tr>
+                <tr class="pivot-hdr-r3">
+                  <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
+                  <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                  <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
+                </tr>
+              </thead>
+              <tbody id="gl-summary-subdistrict-target">
+                <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per sub district...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════════════════
-           BARIS 2 — REKAP PIVOT PER SUB DISTRICT
-           ══════════════════════════════════════════════════════════ -->
-      <div class="golive-summary-card">
-        <div class="golive-summary-head">
-          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap Go Live — Per Sub District</div>
-        </div>
-        <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
-        <div class="pivot-table-wrap pivot-table-wrap-full">
-          <table class="pivot-grouped-table" id="glSummarySubDistrictTable">
-            <thead>
-              <tr class="pivot-hdr-r1">
-                <th rowspan="3" class="hdr-navy">SUB DISTRICT</th>
-                <th rowspan="2" colspan="3" class="hdr-band hdr-band-total">TOTAL ORDER</th>
-                <th colspan="9" class="hdr-band hdr-band-mitra">MITRA</th>
-                <th colspan="12" class="hdr-band hdr-band-sdi">SDI</th>
-              </tr>
-              <tr class="pivot-hdr-r2">
-                <th colspan="3" class="hdr-sub-mitra">CREATE ABD</th>
-                <th colspan="3" class="hdr-sub-mitra">REVISION ABD</th>
-                <th colspan="3" class="hdr-sub-mitra group-divider">KENDALA ABD</th>
-                <th colspan="3" class="hdr-sub-sdi">VALIDATION</th>
-                <th colspan="3" class="hdr-sub-sdi">DRAWING</th>
-                <th colspan="3" class="hdr-sub-sdi">TERMINATION</th>
-                <th colspan="3" class="hdr-sub-sdi">GO LIVE</th>
-              </tr>
-              <tr class="pivot-hdr-r3">
-                <th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra">PORT</th>
-                <th class="hdr-leaf-mitra">LOP</th><th class="hdr-leaf-mitra">ODP</th><th class="hdr-leaf-mitra group-divider">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-                <th class="hdr-leaf-sdi">LOP</th><th class="hdr-leaf-sdi">ODP</th><th class="hdr-leaf-sdi">PORT</th>
-              </tr>
-            </thead>
-            <tbody id="gl-summary-subdistrict-target">
-              <tr><td colspan="25" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per sub district...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════════
+<!-- ══════════════════════════════════════════════════════════
            BARIS 3 — 3 CHART DALAM 1 BARIS:
            Persentase MITRA, Persentase SDI, Run Rate 7 Hari Terakhir.
            Chart pie sumber data SAMA dengan tabel rekap di atas
@@ -1306,34 +1332,40 @@ tbody tr:hover td { background: var(--table-th-bg); }
           <div class="golive-daily-filter-hint">Nilai yang ditampilkan = PORT REAL untuk baris berstatus GO LIVE, dikelompokkan per tanggal GO LIVE pada bulan & tahun yang dipilih.</div>
         </div>
 
-        <div class="golive-daily-subtitle">Rekap Per District</div>
-        <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua tanggal</div>
-        <div class="pivot-table-wrap pivot-table-wrap-full">
-          <table class="pivot-grouped-table" id="glDailyDistrictTable">
-            <thead id="glDailyDistrictThead">
-              <tr><th class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i></th></tr>
-            </thead>
-            <tbody id="glDailyDistrictBody">
-              <tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap harian per district...</td></tr>
-            </tbody>
-          </table>
+        <div class="golive-tabs" role="tablist" aria-label="Perolehan Go Live Harian">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glDailyPanel-district" onclick="switchGoLiveTab('daily', 'district', this)"><i class="fa-solid fa-location-dot"></i> DISTRICT</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glDailyPanel-subdistrict" onclick="switchGoLiveTab('daily', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> SUB DISTRICT</button>
         </div>
 
-        <div class="golive-daily-subtitle">Rekap Per Sub District</div>
-        <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua tanggal</div>
-        <div class="pivot-table-wrap pivot-table-wrap-full">
-          <table class="pivot-grouped-table" id="glDailySubDistrictTable">
-            <thead id="glDailySubDistrictThead">
-              <tr><th class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i></th></tr>
-            </thead>
-            <tbody id="glDailySubDistrictBody">
-              <tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap harian per sub district...</td></tr>
-            </tbody>
-          </table>
+        <div class="golive-tab-panel active" id="glDailyPanel-district" data-group="daily" data-tab="district" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua tanggal</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glDailyDistrictTable">
+              <thead id="glDailyDistrictThead">
+                <tr><th class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i></th></tr>
+              </thead>
+              <tbody id="glDailyDistrictBody">
+                <tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap harian per district...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="golive-tab-panel" id="glDailyPanel-subdistrict" data-group="daily" data-tab="subdistrict" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua tanggal</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="glDailySubDistrictTable">
+              <thead id="glDailySubDistrictThead">
+                <tr><th class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i></th></tr>
+              </thead>
+              <tbody id="glDailySubDistrictBody">
+                <tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap harian per sub district...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-
-      <!-- ══════════════════════════════════════════════════════════
+<!-- ══════════════════════════════════════════════════════════
            TABEL LIST DETAIL (per-baris project) — tetap dipertahankan
            ══════════════════════════════════════════════════════════ -->
       <div class="table-container">
@@ -1503,7 +1535,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
        (Deploy > Manage deployments > Web app > URL, berakhiran
        "/exec"). URL ini SAMA dipakai di login.html.
        ============================================================ */
-    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby6qUomlq-4uDMvCJyj2BCUR-Oope1oaCGXZgWydnWjv5FKb7qDEP3yutQ8rbAdZWu7rw/exec';
+    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycbw8vhkLbSvk0Jo_bzs3IbffCxOSBKtyNZtRY9nXE15MZJaCRL44o1FB9aQKO16DOFNY/exec';
 
     // Token sesi dibaca dari localStorage (diisi login.html saat login
     // berhasil). Kalau tidak ada token sama sekali, user belum login --
@@ -2547,6 +2579,34 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const h2 = r2.getBoundingClientRect().height;
       Array.prototype.forEach.call(r2.children, function (th) { th.style.top = h1 + 'px'; });
       Array.prototype.forEach.call(r3.children, function (th) { th.style.top = (h1 + h2) + 'px'; });
+    }
+
+    // Ganti tab aktif DISTRICT <-> SUB DISTRICT pada kartu "Rekap Go
+    // Live" (group='summary') maupun "Perolehan Go Live Harian"
+    // (group='daily'). Data kedua tab SUDAH ter-fetch bareng (satu
+    // response API dipakai untuk render District & Sub District
+    // sekaligus) -- switchGoLiveTab HANYA show/hide panel, tidak
+    // memicu request baru.
+    function switchGoLiveTab(group, tab, btnEl) {
+      const tabsWrap = btnEl.closest('.golive-tabs');
+      if (tabsWrap) {
+        tabsWrap.querySelectorAll('.golive-tab-btn').forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+      }
+      btnEl.classList.add('active');
+      btnEl.setAttribute('aria-selected', 'true');
+
+      document.querySelectorAll('.golive-tab-panel[data-group="' + group + '"]').forEach(function (p) {
+        p.classList.toggle('active', p.getAttribute('data-tab') === tab);
+      });
+
+      // Panel yang baru saja ditampilkan sebelumnya display:none, jadi
+      // tinggi baris header pivot-nya kebaca 0 kalau offset sticky
+      // dihitung sebelum browser selesai layout ulang -- hitung ulang
+      // SETELAH panel benar-benar terlihat.
+      requestAnimationFrame(syncAllPivotStickyHeaders_);
     }
 
     function syncAllPivotStickyHeaders_() {
