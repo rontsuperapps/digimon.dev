@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - DIGIMON</title>
+  <title>Dashboard - Monitoring Project</title>
 
   <!-- ============================================================
        PWA — MANIFEST & META
@@ -747,6 +747,16 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .golive-filter-reset-btn i { font-size: 11px; }
 .golive-filter-active-hint { width: 100%; font-size: 10.5px; color: var(--accent-color); font-weight: 600; display: none; padding: 0 12px; }
 .golive-filter-active-hint.show { display: block; }
+/* Chip "Bucket: ..." -- muncul di sebelah teks hint saat filter bucket dari
+   klik LOP tabel rekap aktif (lihat glQuickBucketFilter_ di JS). Klik chip
+   ini hanya melepas filter bucket, filter lain tetap dipertahankan. */
+.gl-bucket-chip {
+  appearance: none; border: 1px solid currentColor; background: transparent; color: inherit;
+  font-family: 'Poppins', sans-serif; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; vertical-align: middle;
+}
+.gl-bucket-chip:hover { background: currentColor; color: var(--card-bg); }
+.gl-bucket-chip i { font-size: 9px; }
 
 /* ── TAB DISTRICT / SUB DISTRICT ──
    Dipakai di kartu "Rekap Go Live" & "Perolehan Go Live Harian" untuk
@@ -876,6 +886,12 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
    dipasang di baris GRAND TOTAL karena baris itu sudah solid warna + teks
    putih tersendiri. */
 .pivot-grouped-table td.cell-hit { background: var(--pivot-green-bg); color: var(--pivot-green-text); font-weight: 700; }
+/* Drill-down klik LOP (Rekap Go Live/PT2/PT3 -> Tabel Data Go Live B2C) --
+   lihat initGoLiveSummaryDrilldown_() di JS. Cuma dipasang di TD LOP
+   (kolom pertama tiap grup TOTAL/MITRA/SDI), tidak di ODP/PORT. */
+.pivot-grouped-table td.cell-lop-click { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.pivot-grouped-table td.cell-lop-click:hover { filter: brightness(0.9); text-decoration-style: solid; }
+.pivot-grouped-table tr.pivot-total-row td.cell-lop-click:hover { filter: brightness(1.15); }
 
 /* Baris GRAND TOTAL — warna solid SAMA PERSIS dengan header (bukan versi lebih gelap) */
 .pivot-grouped-table tbody tr.pivot-total-row td { font-weight: 800; color: #fff; border-color: rgba(255,255,255,0.35); }
@@ -1124,7 +1140,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
   <div class="mobile-header-bar">
     <button class="btn-hamburger" onclick="toggleMobileSidebar(true)"><i class="fa-solid fa-bars"></i></button>
-    <div style="font-size: 14px; font-weight: 700; color: var(--text-title);">Digital Monitoring</div>
+    <div style="font-size: 14px; font-weight: 700; color: var(--text-title);">Monitoring Project</div>
     <div style="width: 20px;"></div>
   </div>
 
@@ -1136,8 +1152,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       <div class="logo-brand">
         <div class="logo-icon-box"><i class="fa-solid fa-layer-group"></i></div>
         <div class="logo-text">
-          <h2>DIGIMON</h2>
-          <p>Digital Monitoring v2.0</p>
+          <h2>Monitoring Project</h2>
+          <p>PWA v1.1</p>
         </div>
       </div>
     </div>
@@ -1191,8 +1207,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
     <div class="top-bar">
       <div class="top-bar-left">
         <div class="top-bar-titles">
-          <h1 id="pageTitle">Dashboard - Go Live B2C</h1>
-          <span class="top-subtitle" id="pageSubtitle">Progres Project Go Live B2C</span>
+          <h1 id="pageTitle">Go Live B2C</h1>
+          <span class="top-subtitle" id="pageSubtitle">Status & tanggal go live tiap project FBB Jatim (B2C)</span>
         </div>
       </div>
       <div class="top-actions-wrapper">
@@ -1324,7 +1340,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       <div class="golive-charts-row golive-charts-row-3col">
         <div class="golive-chart-card">
           <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (LOP)</div>
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (Nama LOP)</div>
           </div>
           <div class="golive-chart-body" id="gl-chart-mitra-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
@@ -1332,7 +1348,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         </div>
         <div class="golive-chart-card">
           <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase SDI (LOP)</div>
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase SDI (Nama LOP)</div>
           </div>
           <div class="golive-chart-body" id="gl-chart-sdi-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
@@ -1340,7 +1356,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         </div>
         <div class="golive-chart-card">
           <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Run Rate 7 Hari Terakhir (PORT)</div>
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Run Rate 7 Hari Terakhir (PORT REAL)</div>
           </div>
           <div class="golive-runrate-body" id="gl-runrate-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat run rate...</div>
@@ -1637,7 +1653,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
            ══════════════════════════════════════════════════════════ -->
       <div class="golive-summary-card">
         <div class="golive-summary-head">
-          <div class="golive-summary-title"><i class="fa-solid fa-calendar-days"></i> Perolehan Go Live Harian (PORT)</div>
+          <div class="golive-summary-title"><i class="fa-solid fa-calendar-days"></i> Perolehan Go Live Harian (PORT REAL)</div>
         </div>
 
         <div class="golive-daily-filter">
@@ -2139,6 +2155,115 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // 3 bucket pertama = grup warna MITRA (oranye), 4 sisanya = grup SDI (teal).
     const GOLIVE_SUMMARY_MITRA_BUCKET_COUNT = 3;
 
+    // ══════════════════════════════════════════════════════════════
+    // ── DRILL-DOWN KLIK LOP (Rekap Go Live / PT2 / PT3 -> Tabel Detail) ──
+    // Klik salah satu angka LOP di tabel rekap akan mengisi ulang filter
+    // tabel "Data Go Live B2C" (District/Sub District + Tipe Design kalau
+    // dari tabel PT2/PT3 + bucket status) lalu scroll ke sana. District/
+    // Sub District/Tipe Design pakai dropdown filter yang SUDAH ADA (lihat
+    // MONITORING_GOLIVE_FILTER_FIELDS), tapi bucket (mis. "Create ABD")
+    // TIDAK dipetakan ke satu <option> "Status Go Live" tertentu -- di
+    // sheet lama satu bucket bisa punya beberapa alias nilai mentah
+    // (mis. "MITRA - CREATE ABD" vs "CREATE ABD", lihat GOLIVE_BUCKET_MAP
+    // di code.gs), jadi exact-match ke satu nilai dropdown akan salah
+    // untuk baris data lama. Makanya bucket difilter lewat KLASIFIKASI
+    // (glQuickBucketFilter_ + golive_classifyBucketJs_ di bawah), bukan
+    // lewat dropdown "Status Go Live" -- mapping ini WAJIB disamakan
+    // manual kalau GOLIVE_BUCKET_MAP di code.gs berubah.
+    // ══════════════════════════════════════════════════════════════
+    let glQuickBucketFilter_ = '';
+
+    const GOLIVE_BUCKET_MAP_JS_ = {
+      'CREATE ABD':            'createAbd',
+      'REVISION':              'revisionAbd',
+      'KENDALA':               'kendalaAbd',
+      'VALIDATION':            'validation',
+      'DRAWING':               'drawing',
+      'TERMINATION':           'termination',
+      'GO LIVE':               'goLive',
+      'MITRA - CREATE ABD':    'createAbd',
+      'MITRA - REVISION ABD':  'revisionAbd',
+      'REVISION ABD':          'revisionAbd',
+      'MITRA - KENDALA':       'kendalaAbd',
+      'KENDALA ABD':           'kendalaAbd',
+      'SDI - VALIDATION ABD':  'validation',
+      'VALIDATION ABD':        'validation',
+      'SDI - DRAWING SW':      'drawing',
+      'DRAWING SW':            'drawing',
+      'SDI - TERMINATION UIM': 'termination',
+      'TERMINATION UIM':       'termination',
+      'SDI - GO LIVE':         'goLive'
+    };
+
+    const GOLIVE_BUCKET_LABELS_JS_ = {
+      createAbd: 'Create ABD', revisionAbd: 'Revision ABD', kendalaAbd: 'Kendala ABD',
+      validation: 'Validation', drawing: 'Drawing', termination: 'Termination', goLive: 'Go Live'
+    };
+
+    // SAMA PERSIS dengan golive_norm_() di code.gs -- trim, uppercase,
+    // rapikan spasi ganda -- supaya klasifikasi bucket di frontend selalu
+    // konsisten dengan hasil pivot dari backend.
+    function golive_normJs_(v) {
+      return String(v || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    function golive_classifyBucketJs_(statusGoLive) {
+      return GOLIVE_BUCKET_MAP_JS_[golive_normJs_(statusGoLive)] || '';
+    }
+
+    // Delegated click listener (dipasang sekali di window.onload) supaya
+    // tetap jalan walau isi tbody tabel rekap di-render ulang berkali-kali
+    // lewat innerHTML (lihat renderGoLiveSummaryTable_()).
+    function initGoLiveSummaryDrilldown_() {
+      document.addEventListener('click', function (e) {
+        const td = e.target.closest('[data-gl-lop-click="1"]');
+        if (!td) return;
+
+        const labelType  = td.getAttribute('data-label-type') || '';
+        const label      = td.getAttribute('data-label') || '';
+        const bucketKey  = td.getAttribute('data-bucket') || '';
+        const tipeDesign = td.getAttribute('data-tipe-design') || '';
+
+        // Reset dulu semua filter supaya hasil klik tidak tercampur sisa
+        // filter lama, baru isi ulang sesuai sel yang diklik.
+        MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
+          const el = document.getElementById(f.id);
+          if (el) el.value = '';
+        });
+        const dateFromEl = document.getElementById('glFilterTanggalFrom');
+        const dateToEl   = document.getElementById('glFilterTanggalTo');
+        if (dateFromEl) dateFromEl.value = '';
+        if (dateToEl)   dateToEl.value   = '';
+        document.getElementById('glSearchInput').value = '';
+
+        if (label) {
+          const targetId = (labelType === 'subDistrict') ? 'glFilterSubDistrict' : 'glFilterDistrict';
+          const el = document.getElementById(targetId);
+          // value cuma di-set kalau opsinya memang ada (data sudah dimuat).
+          if (el && Array.from(el.options).some(function (o) { return o.value === label; })) {
+            el.value = label;
+          }
+        }
+        if (tipeDesign) {
+          const el = document.getElementById('glFilterTipeDesign');
+          if (el && Array.from(el.options).some(function (o) { return o.value === tipeDesign; })) {
+            el.value = tipeDesign;
+          }
+        }
+
+        glQuickBucketFilter_ = bucketKey;
+        applyMonitoringGoLiveSearchFilter(true);
+
+        const bar = document.getElementById('glFilterBar');
+        if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function clearGoLiveQuickBucketFilter_() {
+      glQuickBucketFilter_ = '';
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
     // PWA — daftarkan service worker (app-shell cache untuk mode offline).
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
@@ -2156,6 +2281,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       initSidebarHoverUnfold();
       initProfileMenu();
       initNotifications();
+      initGoLiveSummaryDrilldown_();
       ensureGoLiveDailyFilterOptions_();
 
       // ══════════════════════════════════════════════════════════
@@ -2204,8 +2330,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
           // ── Rekap District/Sub District + donut MITRA/SDI + badge total ──
           if (res.summary) {
-            renderGoLiveSummaryTable_('gl-summary-district-target', res.summary.byDistrict, res.summary.byDistrictGrandTotal, 'DISTRICT');
-            renderGoLiveSummaryTable_('gl-summary-subdistrict-target', res.summary.bySubDistrict, res.summary.bySubDistrictGrandTotal, 'SUB DISTRICT');
+            renderGoLiveSummaryTable_('gl-summary-district-target', res.summary.byDistrict, res.summary.byDistrictGrandTotal, 'DISTRICT', 'district', '');
+            renderGoLiveSummaryTable_('gl-summary-subdistrict-target', res.summary.bySubDistrict, res.summary.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict', '');
             renderGoLiveBucketCharts_(res.summary.byDistrictGrandTotal);
             renderGoLiveBadgeTotals_(res.summary.byDistrictGrandTotal);
             syncAllPivotStickyHeaders_();
@@ -2217,8 +2343,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
           // ── Rekap PT2 Go Live (poin 4) ──
           goLivePT2SummaryLoadedOnce = true;
           if (res.pt2Summary) {
-            renderGoLiveSummaryTable_('gl-summary-pt2-district-target', res.pt2Summary.byDistrict, res.pt2Summary.byDistrictGrandTotal, 'DISTRICT (PT2)');
-            renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', res.pt2Summary.bySubDistrict, res.pt2Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)');
+            renderGoLiveSummaryTable_('gl-summary-pt2-district-target', res.pt2Summary.byDistrict, res.pt2Summary.byDistrictGrandTotal, 'DISTRICT (PT2)', 'district', 'PT2');
+            renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', res.pt2Summary.bySubDistrict, res.pt2Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)', 'subDistrict', 'PT2');
           } else {
             renderGoLiveSummaryError_(res.pt2SummaryError, ['gl-summary-pt2-district-target', 'gl-summary-pt2-subdistrict-target']);
           }
@@ -2226,8 +2352,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
           // ── Rekap PT3 Go Live (poin 5) ──
           goLivePT3SummaryLoadedOnce = true;
           if (res.pt3Summary) {
-            renderGoLiveSummaryTable_('gl-summary-pt3-district-target', res.pt3Summary.byDistrict, res.pt3Summary.byDistrictGrandTotal, 'DISTRICT (PT3)');
-            renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', res.pt3Summary.bySubDistrict, res.pt3Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)');
+            renderGoLiveSummaryTable_('gl-summary-pt3-district-target', res.pt3Summary.byDistrict, res.pt3Summary.byDistrictGrandTotal, 'DISTRICT (PT3)', 'district', 'PT3');
+            renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', res.pt3Summary.bySubDistrict, res.pt3Summary.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)', 'subDistrict', 'PT3');
           } else {
             renderGoLiveSummaryError_(res.pt3SummaryError, ['gl-summary-pt3-district-target', 'gl-summary-pt3-subdistrict-target']);
           }
@@ -2727,8 +2853,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
             return;
           }
 
-          renderGoLiveSummaryTable_('gl-summary-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT');
-          renderGoLiveSummaryTable_('gl-summary-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT');
+          renderGoLiveSummaryTable_('gl-summary-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT', 'district', '');
+          renderGoLiveSummaryTable_('gl-summary-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict', '');
           renderGoLiveBucketCharts_(response.byDistrictGrandTotal);
           renderGoLiveBadgeTotals_(response.byDistrictGrandTotal);
           syncAllPivotStickyHeaders_();
@@ -2765,8 +2891,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
             return;
           }
 
-          renderGoLiveSummaryTable_('gl-summary-pt2-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT2)');
-          renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)');
+          renderGoLiveSummaryTable_('gl-summary-pt2-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT2)', 'district', 'PT2');
+          renderGoLiveSummaryTable_('gl-summary-pt2-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT2)', 'subDistrict', 'PT2');
           syncAllPivotStickyHeaders_();
         })
         .withFailureHandler(function(err) {
@@ -2791,8 +2917,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
             return;
           }
 
-          renderGoLiveSummaryTable_('gl-summary-pt3-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT3)');
-          renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)');
+          renderGoLiveSummaryTable_('gl-summary-pt3-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT (PT3)', 'district', 'PT3');
+          renderGoLiveSummaryTable_('gl-summary-pt3-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT (PT3)', 'subDistrict', 'PT3');
           syncAllPivotStickyHeaders_();
         })
         .withFailureHandler(function(err) {
@@ -3280,25 +3406,62 @@ tbody tr:hover td { background: var(--table-th-bg); }
     //                 dipakai untuk sel bucket MITRA/SDI (bukan kolom TOTAL,
     //                 dan tidak pernah untuk baris GRAND TOTAL -- lihat
     //                 pemanggilan di goLiveSummaryRowHtml_ di bawah).
-    function goLiveSummaryMetricCells_(metric, group, withDivider, highlightHit) {
+    // clickCtx     -> IMPROVEMENT TAHAP 2 (drill-down klik LOP): objek
+    //                 { labelType, label, tipeDesign, bucketKey } atau null.
+    //                 Kalau diisi, TD LOP (kolom pertama tiap grup) dibuat
+    //                 clickable (class .cell-lop-click + data-* attribute)
+    //                 supaya delegated click listener di
+    //                 initGoLiveSummaryDrilldown_() bisa mengisi ulang
+    //                 filter tabel detail & scroll ke sana. TD ODP/PORT SENGAJA
+    //                 tidak diklikkan -- sesuai permintaan, hanya kolom LOP.
+    //                 bucketKey kosong ('') artinya grup TOTAL -> tidak
+    //                 memfilter bucket tertentu (semua bucket ikut tampil).
+    function goLiveSummaryMetricCells_(metric, group, withDivider, highlightHit, clickCtx) {
       const m = metric || { lop: 0, odp: 0, port: 0 };
       const hitCls = (highlightHit && m.lop !== 0) ? ' cell-hit' : '';
       const cls = 'num-cell cell-' + group + hitCls;
       const portCls = cls + (withDivider ? ' group-divider' : '');
+
+      let lopCls = cls;
+      let lopAttrs = '';
+      if (clickCtx) {
+        lopCls += ' cell-lop-click';
+        lopAttrs =
+          ' data-gl-lop-click="1"' +
+          ' data-label-type="' + escapeHtml(clickCtx.labelType || '') + '"' +
+          ' data-label="' + escapeHtml(clickCtx.label || '') + '"' +
+          ' data-bucket="' + escapeHtml(clickCtx.bucketKey || '') + '"' +
+          ' data-tipe-design="' + escapeHtml(clickCtx.tipeDesign || '') + '"' +
+          ' title="Klik untuk lihat detail datanya di tabel Data Go Live B2C"';
+      }
+
       return `
-        <td class="${cls}">${formatNum_(m.lop)}</td>
+        <td class="${lopCls}"${lopAttrs}>${formatNum_(m.lop)}</td>
         <td class="${cls}">${formatNum_(m.odp)}</td>
         <td class="${portCls}">${formatNum_(m.port)}</td>`;
     }
 
-    function goLiveSummaryRowHtml_(row, isGrandTotal) {
+    // labelType        -> 'district' | 'subDistrict', dipakai klik LOP untuk
+    //                     tahu dropdown filter mana (#glFilterDistrict /
+    //                     #glFilterSubDistrict) yang perlu diisi.
+    // tipeDesignFilter  -> '' | 'PT2' | 'PT3', ikut diisikan ke dropdown
+    //                     #glFilterTipeDesign saat klik LOP di tabel PT2/PT3.
+    function goLiveSummaryRowHtml_(row, isGrandTotal, labelType, tipeDesignFilter) {
+      // Baris GRAND TOTAL tidak mewakili satu district/sub district tertentu
+      // -- klik LOP di baris ini tetap jalan (memfilter bucket/tipe design
+      // saja), tapi TIDAK ikut mengisi dropdown District/Sub District.
+      const clickLabel = isGrandTotal ? '' : row.label;
+
       let bucketCells = '';
       GOLIVE_SUMMARY_BUCKET_ORDER.forEach(function (key, idx) {
         const group = (idx < GOLIVE_SUMMARY_MITRA_BUCKET_COUNT) ? 'mitra' : 'sdi';
         // idx 2 = KENDALA ABD -> bucket terakhir grup MITRA, diberi divider.
         // Highlight (poin 2) hanya untuk baris biasa, bukan GRAND TOTAL --
         // sama seperti aturan .cell-hit di tabel "Perolehan Go Live Harian".
-        bucketCells += goLiveSummaryMetricCells_(row.buckets && row.buckets[key], group, idx === 2, !isGrandTotal);
+        bucketCells += goLiveSummaryMetricCells_(
+          row.buckets && row.buckets[key], group, idx === 2, !isGrandTotal,
+          { labelType: labelType, label: clickLabel, tipeDesign: tipeDesignFilter, bucketKey: key }
+        );
       });
 
       const labelHtml = escapeHtml(row.label) || '-';
@@ -3306,24 +3469,24 @@ tbody tr:hover td { background: var(--table-th-bg); }
       return `
         <tr${isGrandTotal ? ' class="pivot-total-row"' : ''}>
           <td class="label-cell">${labelHtml}</td>
-          ${goLiveSummaryMetricCells_(row.total, 'total', true, false)}
+          ${goLiveSummaryMetricCells_(row.total, 'total', true, false, { labelType: labelType, label: clickLabel, tipeDesign: tipeDesignFilter, bucketKey: '' })}
           ${bucketCells}
         </tr>`;
     }
 
-    function renderGoLiveSummaryTable_(tbodyId, rows, grandTotal, labelType) {
+    function renderGoLiveSummaryTable_(tbodyId, rows, grandTotal, emptyLabel, rowLabelType, tipeDesignFilter) {
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
 
       if (!rows || rows.length === 0) {
         tbody.innerHTML = `<tr><td colspan="25" class="golive-summary-empty">
-          <i class="fa-solid fa-inbox"></i>Tidak ada data ${escapeHtml(labelType)} dengan NEW STATUS "FI-OGP GO LIVE" / "GO LIVE".
+          <i class="fa-solid fa-inbox"></i>Tidak ada data ${escapeHtml(emptyLabel)} dengan NEW STATUS "FI-OGP GO LIVE" / "GO LIVE".
         </td></tr>`;
         return;
       }
 
-      const bodyHtml = rows.map(function (r) { return goLiveSummaryRowHtml_(r, false); }).join('');
-      const totalHtml = grandTotal ? goLiveSummaryRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true) : '';
+      const bodyHtml = rows.map(function (r) { return goLiveSummaryRowHtml_(r, false, rowLabelType, tipeDesignFilter); }).join('');
+      const totalHtml = grandTotal ? goLiveSummaryRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType, tipeDesignFilter) : '';
 
       tbody.innerHTML = bodyHtml + totalHtml;
     }
@@ -3440,7 +3603,9 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const dateFrom = dateFromRaw ? new Date(dateFromRaw + 'T00:00:00') : null;
       const dateTo   = dateToRaw   ? new Date(dateToRaw   + 'T23:59:59') : null;
 
-      const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+      // Bucket dari klik LOP tabel rekap (lihat initGoLiveSummaryDrilldown_())
+      // -- bukan dropdown biasa, jadi dihitung terpisah dari fieldFilters.
+      const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (glQuickBucketFilter_ ? 1 : 0);
 
       let filtered = activeMonitoringGoLiveRows;
 
@@ -3449,6 +3614,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
           return fieldFilters.every(function (f) {
             return String(row[f.key] || '').trim() === f.value;
           });
+        });
+      }
+
+      if (glQuickBucketFilter_) {
+        filtered = filtered.filter(function (row) {
+          return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_;
         });
       }
 
@@ -3480,7 +3651,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const hintEl = document.getElementById('glFilterActiveHint');
       if (hintEl) {
         if (activeFilterCount > 0) {
-          hintEl.textContent = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.';
+          const bucketChip = glQuickBucketFilter_
+            ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickBucketFilter_()">Bucket: '
+              + escapeHtml(GOLIVE_BUCKET_LABELS_JS_[glQuickBucketFilter_] || glQuickBucketFilter_)
+              + ' <i class="fa-solid fa-circle-xmark"></i></button>'
+            : '';
+          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip;
           hintEl.classList.add('show');
         } else {
           hintEl.classList.remove('show');
@@ -3511,6 +3687,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (dateFromEl) dateFromEl.value = '';
       if (dateToEl)   dateToEl.value   = '';
       document.getElementById('glSearchInput').value = '';
+      glQuickBucketFilter_ = '';
       applyMonitoringGoLiveSearchFilter(true);
     }
 
