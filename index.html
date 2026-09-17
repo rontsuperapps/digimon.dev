@@ -886,12 +886,18 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
    dipasang di baris GRAND TOTAL karena baris itu sudah solid warna + teks
    putih tersendiri. */
 .pivot-grouped-table td.cell-hit { background: var(--pivot-green-bg); color: var(--pivot-green-text); font-weight: 700; }
-/* Drill-down klik LOP (Rekap Go Live/PT2/PT3 -> Tabel Data Go Live B2C) --
-   lihat initGoLiveSummaryDrilldown_() di JS. Cuma dipasang di TD LOP
-   (kolom pertama tiap grup TOTAL/MITRA/SDI), tidak di ODP/PORT. */
-.pivot-grouped-table td.cell-lop-click { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
-.pivot-grouped-table td.cell-lop-click:hover { filter: brightness(0.9); text-decoration-style: solid; }
-.pivot-grouped-table tr.pivot-total-row td.cell-lop-click:hover { filter: brightness(1.15); }
+/* Drill-down klik LOP (Rekap Go Live/PT2/PT3) & klik sel TOTAL/tanggal
+   (Perolehan Go Live Harian) -> Tabel Data Go Live B2C -- lihat
+   initGoLiveSummaryDrilldown_() di JS. Cuma dipasang di TD LOP (kolom
+   pertama tiap grup TOTAL/MITRA/SDI) untuk tabel rekap, dan di SEMUA sel
+   angka (TOTAL + tiap tanggal) untuk tabel harian -- tidak di ODP/PORT
+   tabel rekap. */
+.pivot-grouped-table td.cell-lop-click,
+.pivot-grouped-table td.cell-date-click { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.pivot-grouped-table td.cell-lop-click:hover,
+.pivot-grouped-table td.cell-date-click:hover { filter: brightness(0.9); text-decoration-style: solid; }
+.pivot-grouped-table tr.pivot-total-row td.cell-lop-click:hover,
+.pivot-grouped-table tr.pivot-total-row td.cell-date-click:hover { filter: brightness(1.15); }
 
 /* Baris GRAND TOTAL — warna solid SAMA PERSIS dengan header (bukan versi lebih gelap) */
 .pivot-grouped-table tbody tr.pivot-total-row td { font-weight: 800; color: #fff; border-color: rgba(255,255,255,0.35); }
@@ -2172,6 +2178,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // manual kalau GOLIVE_BUCKET_MAP di code.gs berubah.
     // ══════════════════════════════════════════════════════════════
     let glQuickBucketFilter_ = '';
+    // Klik sel tabel "Perolehan Go Live Harian" (TOTAL/tanggal) -> filter
+    // New Status = "GO LIVE" via klasifikasi (bukan exact-match dropdown,
+    // supaya tidak rapuh terhadap variasi huruf besar/kecil di data), sama
+    // seperti alasan glQuickBucketFilter_ di atas.
+    let glQuickNewStatusGoLive_ = false;
 
     const GOLIVE_BUCKET_MAP_JS_ = {
       'CREATE ABD':            'createAbd',
@@ -2212,46 +2223,61 @@ tbody tr:hover td { background: var(--table-th-bg); }
     }
 
     // Delegated click listener (dipasang sekali di window.onload) supaya
-    // tetap jalan walau isi tbody tabel rekap di-render ulang berkali-kali
-    // lewat innerHTML (lihat renderGoLiveSummaryTable_()).
+    // tetap jalan walau isi tbody tabel rekap/harian di-render ulang
+    // berkali-kali lewat innerHTML. Menangani DUA sumber sel drill-down:
+    //  - [data-gl-lop-click]   : LOP di Rekap Go Live / PT2 / PT3
+    //  - [data-gl-daily-click] : TOTAL/tanggal di Perolehan Go Live Harian
     function initGoLiveSummaryDrilldown_() {
+      function setSelectIfExists_(id, value) {
+        if (!value) return;
+        const el = document.getElementById(id);
+        if (el && Array.from(el.options).some(function (o) { return o.value === value; })) {
+          el.value = value;
+        }
+      }
+
       document.addEventListener('click', function (e) {
-        const td = e.target.closest('[data-gl-lop-click="1"]');
-        if (!td) return;
+        const lopTd   = e.target.closest('[data-gl-lop-click="1"]');
+        const dailyTd = !lopTd ? e.target.closest('[data-gl-daily-click="1"]') : null;
+        if (!lopTd && !dailyTd) return;
 
-        const labelType  = td.getAttribute('data-label-type') || '';
-        const label      = td.getAttribute('data-label') || '';
-        const bucketKey  = td.getAttribute('data-bucket') || '';
-        const tipeDesign = td.getAttribute('data-tipe-design') || '';
-
-        // Reset dulu semua filter supaya hasil klik tidak tercampur sisa
-        // filter lama, baru isi ulang sesuai sel yang diklik.
+        // Reset SEMUA filter (dropdown, tanggal, teks, + 2 quick filter)
+        // dulu, supaya sel manapun yang diklik selalu mulai dari kondisi
+        // bersih -- baru diisi ulang sesuai konteks sel yang diklik.
         MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
           const el = document.getElementById(f.id);
           if (el) el.value = '';
         });
+        document.getElementById('glSearchInput').value = '';
+        glQuickBucketFilter_    = '';
+        glQuickNewStatusGoLive_ = false;
+
         const dateFromEl = document.getElementById('glFilterTanggalFrom');
         const dateToEl   = document.getElementById('glFilterTanggalTo');
-        if (dateFromEl) dateFromEl.value = '';
-        if (dateToEl)   dateToEl.value   = '';
-        document.getElementById('glSearchInput').value = '';
 
-        if (label) {
-          const targetId = (labelType === 'subDistrict') ? 'glFilterSubDistrict' : 'glFilterDistrict';
-          const el = document.getElementById(targetId);
-          // value cuma di-set kalau opsinya memang ada (data sudah dimuat).
-          if (el && Array.from(el.options).some(function (o) { return o.value === label; })) {
-            el.value = label;
-          }
-        }
-        if (tipeDesign) {
-          const el = document.getElementById('glFilterTipeDesign');
-          if (el && Array.from(el.options).some(function (o) { return o.value === tipeDesign; })) {
-            el.value = tipeDesign;
-          }
+        if (lopTd) {
+          const labelType  = lopTd.getAttribute('data-label-type') || '';
+          const label      = lopTd.getAttribute('data-label') || '';
+          const bucketKey  = lopTd.getAttribute('data-bucket') || '';
+          const tipeDesign = lopTd.getAttribute('data-tipe-design') || '';
+
+          if (dateFromEl) dateFromEl.value = '';
+          if (dateToEl)   dateToEl.value   = '';
+          setSelectIfExists_(labelType === 'subDistrict' ? 'glFilterSubDistrict' : 'glFilterDistrict', label);
+          setSelectIfExists_('glFilterTipeDesign', tipeDesign);
+          glQuickBucketFilter_ = bucketKey;
+        } else {
+          const labelType = dailyTd.getAttribute('data-label-type') || '';
+          const label     = dailyTd.getAttribute('data-label') || '';
+          const dateFrom  = dailyTd.getAttribute('data-date-from') || '';
+          const dateTo    = dailyTd.getAttribute('data-date-to') || '';
+
+          setSelectIfExists_(labelType === 'subDistrict' ? 'glFilterSubDistrict' : 'glFilterDistrict', label);
+          if (dateFromEl) dateFromEl.value = dateFrom;
+          if (dateToEl)   dateToEl.value   = dateTo;
+          glQuickNewStatusGoLive_ = true;
         }
 
-        glQuickBucketFilter_ = bucketKey;
         applyMonitoringGoLiveSearchFilter(true);
 
         const bar = document.getElementById('glFilterBar');
@@ -2261,6 +2287,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
     function clearGoLiveQuickBucketFilter_() {
       glQuickBucketFilter_ = '';
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
+    function clearGoLiveQuickNewStatusFilter_() {
+      glQuickNewStatusGoLive_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
 
@@ -2368,8 +2399,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
           // ── Perolehan harian ──
           if (res.daily) {
-            renderGoLiveDailyTable_('glDailyDistrictThead', 'glDailyDistrictBody', res.daily.byDistrict, res.daily.dates, 'DISTRICT');
-            renderGoLiveDailyTable_('glDailySubDistrictThead', 'glDailySubDistrictBody', res.daily.bySubDistrict, res.daily.dates, 'SUB DISTRICT');
+            renderGoLiveDailyTable_('glDailyDistrictThead', 'glDailyDistrictBody', res.daily.byDistrict, res.daily.dates, 'DISTRICT', 'district');
+            renderGoLiveDailyTable_('glDailySubDistrictThead', 'glDailySubDistrictBody', res.daily.bySubDistrict, res.daily.dates, 'SUB DISTRICT', 'subDistrict');
           } else if (res.dailyError) {
             renderGoLiveDailyError_(res.dailyError);
           }
@@ -3224,8 +3255,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
             return;
           }
 
-          renderGoLiveDailyTable_('glDailyDistrictThead', 'glDailyDistrictBody', response.byDistrict, response.dates, 'DISTRICT');
-          renderGoLiveDailyTable_('glDailySubDistrictThead', 'glDailySubDistrictBody', response.bySubDistrict, response.dates, 'SUB DISTRICT');
+          renderGoLiveDailyTable_('glDailyDistrictThead', 'glDailyDistrictBody', response.byDistrict, response.dates, 'DISTRICT', 'district');
+          renderGoLiveDailyTable_('glDailySubDistrictThead', 'glDailySubDistrictBody', response.bySubDistrict, response.dates, 'SUB DISTRICT', 'subDistrict');
         })
         .withFailureHandler(function (err) {
           isFetchingGoLiveDaily = false;
@@ -3250,22 +3281,45 @@ tbody tr:hover td { background: var(--table-th-bg); }
       fetchGoLiveDaily();
     }
 
-    function golive_dailyPivotRowHtml_(rowLabel, total, byDate, dateKeys, isGrandTotal) {
+    // labelType -> 'district' | 'subDistrict', dipakai klik sel (TOTAL &
+    // per-tanggal) untuk mengisi dropdown filter District/Sub District yang
+    // tepat -- lihat initGoLiveSummaryDrilldown_().
+    function golive_dailyPivotRowHtml_(rowLabel, total, byDate, dateKeys, isGrandTotal, labelType) {
       const rowClass = isGrandTotal ? ' class="pivot-total-row"' : '';
+      // Baris GRAND TOTAL tidak mewakili satu district/sub district tertentu
+      // -- klik tetap jalan (memfilter tanggal/New Status saja), tapi TIDAK
+      // ikut mengisi dropdown District/Sub District.
+      const clickLabel = isGrandTotal ? '' : rowLabel;
+      const firstKey = dateKeys[0] || '';
+      const lastKey  = dateKeys[dateKeys.length - 1] || '';
+      const labelTypeAttr = escapeHtml(labelType || '');
+      const clickLabelAttr = escapeHtml(clickLabel);
+
       let tds = `<td class="label-cell">${escapeHtml(rowLabel)}</td>`;
-      tds += `<td class="num-cell cell-total">${formatNum_(total)}</td>`;
+      // Sel TOTAL diklik -> filter rentang 1 BULAN PENUH (tanggal pertama s/d
+      // terakhir yang sedang ditampilkan), bukan cuma 1 hari.
+      tds += `<td class="num-cell cell-total cell-date-click" data-gl-daily-click="1"` +
+        ` data-label-type="${labelTypeAttr}" data-label="${clickLabelAttr}"` +
+        ` data-date-from="${escapeHtml(firstKey)}" data-date-to="${escapeHtml(lastKey)}"` +
+        ` title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">${formatNum_(total)}</td>`;
+
       dateKeys.forEach(function (k) {
         const val = (byDate && byDate[k]) || 0;
         // Baris biasa dengan nilai > 0 dapat highlight hijau (.cell-hit, lihat
         // CSS); baris GRAND TOTAL tetap pakai warna solid birunya sendiri
         // (lihat rule .pivot-total-row td.cell-date).
         const hitClass = (!isGrandTotal && val !== 0) ? ' cell-hit' : '';
-        tds += `<td class="num-cell cell-date${hitClass}">${formatNum_(val)}</td>`;
+        // Sel tanggal diklik -> filter HANYA tanggal itu (from = to = tanggal
+        // yang sama).
+        tds += `<td class="num-cell cell-date${hitClass} cell-date-click" data-gl-daily-click="1"` +
+          ` data-label-type="${labelTypeAttr}" data-label="${clickLabelAttr}"` +
+          ` data-date-from="${escapeHtml(k)}" data-date-to="${escapeHtml(k)}"` +
+          ` title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">${formatNum_(val)}</td>`;
       });
       return `<tr${rowClass}>${tds}</tr>`;
     }
 
-    function renderGoLiveDailyTable_(theadId, tbodyId, pivot, dateMeta, identityLabel) {
+    function renderGoLiveDailyTable_(theadId, tbodyId, pivot, dateMeta, identityLabel, labelType) {
       const thead = document.getElementById(theadId);
       const tbody = document.getElementById(tbodyId);
       if (!thead || !tbody) return;
@@ -3291,11 +3345,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
       }
 
       let html = rows.map(function (r) {
-        return golive_dailyPivotRowHtml_(r.label, r.total, r.byDate, dateKeys, false);
+        return golive_dailyPivotRowHtml_(r.label, r.total, r.byDate, dateKeys, false, labelType);
       }).join('');
 
       const gt = (pivot && pivot.grandTotal) || { label: 'GRAND TOTAL', total: 0, byDate: {} };
-      html += golive_dailyPivotRowHtml_(gt.label || 'GRAND TOTAL', gt.total, gt.byDate, dateKeys, true);
+      html += golive_dailyPivotRowHtml_(gt.label || 'GRAND TOTAL', gt.total, gt.byDate, dateKeys, true, labelType);
 
       tbody.innerHTML = html;
     }
@@ -3603,9 +3657,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const dateFrom = dateFromRaw ? new Date(dateFromRaw + 'T00:00:00') : null;
       const dateTo   = dateToRaw   ? new Date(dateToRaw   + 'T23:59:59') : null;
 
-      // Bucket dari klik LOP tabel rekap (lihat initGoLiveSummaryDrilldown_())
+      // Bucket dari klik LOP tabel rekap, & New Status "GO LIVE" dari klik
+      // sel tabel Perolehan Harian (lihat initGoLiveSummaryDrilldown_())
       // -- bukan dropdown biasa, jadi dihitung terpisah dari fieldFilters.
-      const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (glQuickBucketFilter_ ? 1 : 0);
+      const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
+        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0);
 
       let filtered = activeMonitoringGoLiveRows;
 
@@ -3620,6 +3676,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (glQuickBucketFilter_) {
         filtered = filtered.filter(function (row) {
           return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_;
+        });
+      }
+
+      if (glQuickNewStatusGoLive_) {
+        filtered = filtered.filter(function (row) {
+          return golive_normJs_(row.newStatus) === 'GO LIVE';
         });
       }
 
@@ -3656,7 +3718,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
               + escapeHtml(GOLIVE_BUCKET_LABELS_JS_[glQuickBucketFilter_] || glQuickBucketFilter_)
               + ' <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
-          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip;
+          const newStatusChip = glQuickNewStatusGoLive_
+            ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNewStatusFilter_()">New Status: Go Live <i class="fa-solid fa-circle-xmark"></i></button>'
+            : '';
+          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + newStatusChip;
           hintEl.classList.add('show');
         } else {
           hintEl.classList.remove('show');
@@ -3687,7 +3752,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (dateFromEl) dateFromEl.value = '';
       if (dateToEl)   dateToEl.value   = '';
       document.getElementById('glSearchInput').value = '';
-      glQuickBucketFilter_ = '';
+      glQuickBucketFilter_    = '';
+      glQuickNewStatusGoLive_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
 
