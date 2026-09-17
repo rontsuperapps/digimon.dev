@@ -1732,19 +1732,103 @@ tbody tr:hover td { background: var(--table-th-bg); }
       initSidebarHoverUnfold();
       initProfileMenu();
       initNotifications();
-
-      fetchMonitoringGoLiveData();
-      fetchGoLiveSummary();
-      fetchGoLiveRunRate();
       ensureGoLiveDailyFilterOptions_();
-      fetchGoLiveDaily();
+
+      // ══════════════════════════════════════════════════════════
+      // PERFORMA: dulu di titik ini ada 6 request google.script.run
+      // TERPISAH ditembak nyaris bersamaan (profile, notif, summary,
+      // run-rate, pivot harian, tabel detail) -- tiap request Web App
+      // GAS punya overhead round-trip sendiri (auth check + cold
+      // start), jadi makin banyak request paralel = makin lama waktu
+      // tunggu dashboard SIAP, dan ini juga yang bikin rawan race
+      // condition di validasi sesi tepat setelah login.
+      // Sekarang: 1 request "bootstrap" gabungan untuk semua widget
+      // kecil (profile+notif+summary+run-rate+harian), + 1 request
+      // terpisah untuk tabel detail (datanya jauh lebih besar, jadi
+      // sengaja tetap dipisah supaya tidak memperlambat widget lain).
+      // ══════════════════════════════════════════════════════════
+      fetchDashboardBootstrap();
+      fetchMonitoringGoLiveData();
     };
+
+    function fetchDashboardBootstrap(forceFresh) {
+      const monthSel = document.getElementById('glDailyMonthSelect');
+      const yearSel  = document.getElementById('glDailyYearSelect');
+      const month = monthSel ? parseInt(monthSel.value, 10) : null;
+      const year  = yearSel ? parseInt(yearSel.value, 10) : null;
+
+      isFetchingGoLiveSummary = true;
+      isFetchingGoLiveRunRate = true;
+      isFetchingGoLiveDaily   = true;
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          isFetchingGoLiveSummary = false;
+          isFetchingGoLiveRunRate = false;
+          isFetchingGoLiveDaily   = false;
+          goLiveSummaryLoadedOnce = true;
+          goLiveRunRateLoadedOnce = true;
+          goLiveDailyLoadedOnce   = true;
+
+          if (!res) return;
+
+          // ── Profil ──
+          setProfileInfo(res.profile);
+
+          // ── Notifikasi ──
+          renderNotifications(Array.isArray(res.notifications) ? res.notifications : []);
+
+          // ── Rekap District/Sub District + donut MITRA/SDI ──
+          if (res.summary) {
+            renderGoLiveSummaryTable_('gl-summary-district-target', res.summary.byDistrict, res.summary.byDistrictGrandTotal, 'DISTRICT');
+            renderGoLiveSummaryTable_('gl-summary-subdistrict-target', res.summary.bySubDistrict, res.summary.bySubDistrictGrandTotal, 'SUB DISTRICT');
+            renderGoLiveBucketCharts_(res.summary.byDistrictGrandTotal);
+            syncAllPivotStickyHeaders_();
+          } else {
+            renderGoLiveSummaryError_(res.summaryError);
+            renderGoLiveChartError_(res.summaryError);
+          }
+
+          // ── Run rate 7 hari ──
+          if (res.runRate) {
+            renderGoLiveRunRateChart_(res.runRate.days || []);
+          } else {
+            renderGoLiveRunRateError_(res.runRateError);
+          }
+
+          // ── Perolehan harian ──
+          if (res.daily) {
+            renderGoLiveDailyTable_('glDailyDistrictThead', 'glDailyDistrictBody', res.daily.byDistrict, res.daily.dates, 'DISTRICT');
+            renderGoLiveDailyTable_('glDailySubDistrictThead', 'glDailySubDistrictBody', res.daily.bySubDistrict, res.daily.dates, 'SUB DISTRICT');
+          } else if (res.dailyError) {
+            renderGoLiveDailyError_(res.dailyError);
+          }
+        })
+        .withFailureHandler(function (err) {
+          isFetchingGoLiveSummary = false;
+          isFetchingGoLiveRunRate = false;
+          isFetchingGoLiveDaily   = false;
+          console.error('Gagal memuat dashboard bootstrap:', err.message);
+          // Fallback: kalau bootstrap gagal total, coba jalur lama
+          // (request terpisah per widget) supaya dashboard tetap bisa
+          // menampilkan sesuatu.
+          getCurrentUserInfo(setProfileInfo);
+          loadNotifications();
+          fetchGoLiveSummary(!!forceFresh);
+          fetchGoLiveRunRate(!!forceFresh);
+          fetchGoLiveDaily(!!forceFresh);
+        })
+        .getDashboardBootstrap(SESSION_TOKEN, year, month, !!forceFresh);
+    }
 
     // ══════════════════════════════════════════════════════════════
     // ── PROFILE MENU (pojok kanan atas) ──
     // ══════════════════════════════════════════════════════════════
     function initProfileMenu() {
-      getCurrentUserInfo(setProfileInfo);
+      // Data profil sekarang datang dari fetchDashboardBootstrap() (1
+      // round-trip gabungan), bukan request terpisah lagi -- lihat
+      // window.onload. getCurrentUserInfo() masih dipertahankan di
+      // bawah untuk dipakai ulang manual kalau perlu (mis. debugging).
 
       document.addEventListener('click', function(e) {
         const wrap = document.getElementById('profileWrap');
@@ -1926,7 +2010,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
     let globalNotifications = [];
 
     function initNotifications() {
-      loadNotifications();
+      // Data notifikasi sekarang datang dari fetchDashboardBootstrap()
+      // (1 round-trip gabungan), bukan request terpisah lagi -- lihat
+      // window.onload. loadNotifications() masih ada di bawah untuk
+      // dipakai ulang manual kalau perlu.
 
       document.addEventListener('click', function(e) {
         const wrap = document.getElementById('notifWrap');
@@ -2166,12 +2253,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
     function forceRefreshMonitoringGoLiveData() {
       document.querySelector('.btn-refresh').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading...`;
-      // true = paksa lewati cache 45 detik di server (getMonitoringProjectData),
-      // supaya tombol Refresh Data selalu ambil angka paling baru dari sheet.
+      // true = paksa lewati cache di server (getMonitoringProjectData),
+      // supaya tombol Refresh Data selalu ambil angka paling baru dari
+      // sheet. Sekarang lewat 1 request bootstrap gabungan, bukan 3
+      // request terpisah lagi.
       fetchMonitoringGoLiveData(true);
-      fetchGoLiveSummary(true);
-      fetchGoLiveRunRate(true);
-      fetchGoLiveDaily(true);
+      fetchDashboardBootstrap(true);
     }
 
     // ══════════════════════════════════════════════════════════════
