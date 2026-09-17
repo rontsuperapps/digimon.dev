@@ -14,8 +14,8 @@
    localStorage -- bukan di service worker ini.
    =================================================================== */
 
-const SHELL_CACHE   = 'monitoring-project-shell-v1';
-const RUNTIME_CACHE = 'monitoring-project-runtime-v1';
+const SHELL_CACHE   = 'monitoring-project-shell-v2';
+const RUNTIME_CACHE = 'monitoring-project-runtime-v2';
 
 // File yang WAJIB ada di app-shell. Path relatif terhadap lokasi sw.js
 // (taruh sw.js di root yang sama dengan index.html/login.html).
