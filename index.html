@@ -1633,6 +1633,14 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
       if (data && data.__routerError) {
         if (data.code === 'UNAUTHORIZED') {
+          console.warn(
+            '[SESI DITOLAK] fn=' + fn +
+            ' reason=' + data.debugReason +
+            ' ageMs=' + data.debugAgeMs +
+            ' backendVersion=' + data.debugBackendVersion +
+            ' -- kalau backendVersion di atas TIDAK sesuai dengan yang ' +
+            'baru kamu deploy, deployment /exec masih menjalankan kode lama.'
+          );
           localStorage.removeItem('monproj_session_token');
           window.location.replace('login.html');
         }
