@@ -702,6 +702,14 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .golive-badge-item.badge-sdi   { border-left-color: var(--pivot-teal); }
 .golive-badge-label { font-size: 9px; font-weight: 700; letter-spacing: 0.3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .golive-badge-value { font-size: 19px; font-weight: 800; color: var(--text-title); line-height: 1.1; }
+/* IMPROVEMENT: badge "Ringkasan Total Go Live" jadi clickable, drill-down
+   ke tabel Data Go Live B2C -- sama seperti klik LOP di tabel Rekap Go
+   Live/PT2/PT3 (dipasang lewat data-gl-lop-click, ditangani listener yang
+   sama di initGoLiveSummaryDrilldown_(), tidak perlu listener baru). */
+.golive-badge-item.badge-lop-click { cursor: pointer; transition: filter .15s ease, transform .1s ease; }
+.golive-badge-item.badge-lop-click .golive-badge-value { text-decoration: underline dotted; text-underline-offset: 3px; }
+.golive-badge-item.badge-lop-click:hover { filter: brightness(0.95); }
+.golive-badge-item.badge-lop-click:active { transform: scale(0.97); }
 
 /* ── IMPROVEMENT TAHAP 2 (poin 7) — FILTER TABEL DETAIL ──
    Baris dropdown filter kolom (DISTRICT s/d STATUS PROYEK) + range
@@ -1298,35 +1306,35 @@ tbody tr:hover td { background: var(--table-th-bg); }
              tiap badge lewat id, jadi urutan markup boleh diubah bebas
              tanpa menyentuh JS. -->
         <div class="golive-badge-grid" id="gl-badge-grid">
-          <div class="golive-badge-item badge-mitra">
+          <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="createAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Create ABD</div>
             <div class="golive-badge-value" id="gl-badge-createAbd">0</div>
           </div>
-          <div class="golive-badge-item badge-mitra">
+          <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="revisionAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Revision ABD</div>
             <div class="golive-badge-value" id="gl-badge-revisionAbd">0</div>
           </div>
-          <div class="golive-badge-item badge-mitra">
+          <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="kendalaAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Kendala ABD</div>
             <div class="golive-badge-value" id="gl-badge-kendalaAbd">0</div>
           </div>
-          <div class="golive-badge-item badge-sdi">
+          <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="validation" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Validation</div>
             <div class="golive-badge-value" id="gl-badge-validation">0</div>
           </div>
-          <div class="golive-badge-item badge-sdi">
+          <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="drawing" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Drawing</div>
             <div class="golive-badge-value" id="gl-badge-drawing">0</div>
           </div>
-          <div class="golive-badge-item badge-sdi">
+          <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="termination" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Termination</div>
             <div class="golive-badge-value" id="gl-badge-termination">0</div>
           </div>
-          <div class="golive-badge-item badge-sdi">
+          <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="goLive" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
             <div class="golive-badge-label">Go Live</div>
             <div class="golive-badge-value" id="gl-badge-goLive">0</div>
           </div>
-          <div class="golive-badge-item badge-total">
+          <div class="golive-badge-item badge-total badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="" data-tipe-design="" title="Klik untuk lihat semua data Go Live B2C di tabel Data Go Live B2C">
             <div class="golive-badge-label">Total Order</div>
             <div class="golive-badge-value" id="gl-badge-totalOrder">0</div>
           </div>
