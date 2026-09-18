@@ -876,6 +876,24 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .golive-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
 .golive-summary-title { font-size: 13px; font-weight: 700; color: var(--text-title); display: flex; align-items: center; gap: 8px; }
 .golive-summary-title i { color: var(--accent-color); font-size: 12px; }
+/* Tombol audit duplikat ID IHLD (lihat getGoLiveDuplicateIdIhldAudit di
+   code.gs) -- dipakai untuk investigasi kalau "Total Order" di badge
+   terasa kelebihan hitung dibanding jumlah manual. */
+.btn-audit-duplicate {
+  background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);
+  padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 11.5px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-audit-duplicate:hover { border-color: var(--accent-color); color: var(--accent-color); }
+.golive-audit-summary-line { font-size: 12.5px; margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; background: var(--sb-active-bg); }
+.golive-audit-summary-line b { color: var(--text-title); }
+.golive-audit-empty { font-size: 12.5px; color: var(--text-muted); text-align: center; padding: 18px 0; }
+.golive-audit-group { border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.golive-audit-group-head { padding: 8px 12px; background: var(--sb-active-bg); font-size: 12.5px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.golive-audit-group-head .badge-total { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--danger-color); color: #fff; font-weight: 700; }
+.golive-audit-row { padding: 8px 12px; font-size: 11.5px; border-top: 1px dashed var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; }
+.golive-audit-row span.lbl { color: var(--text-muted); }
 
 /* ── Chart pie/donut persentase MITRA & SDI (count NAMA LOP) ──
    Dibuat pakai CSS conic-gradient murni (tanpa library chart apapun)
@@ -1384,6 +1402,9 @@ tbody tr:hover td { background: var(--table-th-bg); }
       <div class="golive-summary-card">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Total Go Live (LOP)</div>
+          <button type="button" class="btn-audit-duplicate" onclick="openGoLiveDuplicateAudit()" title="Cek baris dengan ID IHLD sama persis yang bisa bikin Total Order kelebihan hitung">
+            <i class="fa-solid fa-magnifying-glass"></i> Cek Duplikat ID IHLD
+          </button>
         </div>
         <!-- IMPROVEMENT TAHAP 2 (poin 1): badge "Total Order" dipindah ke
              posisi PALING KANAN (dulu paling kiri), konsisten dengan
@@ -1984,6 +2005,27 @@ tbody tr:hover td { background: var(--table-th-bg); }
         </div>
       </div>
 
+      <!-- ══════════════════════════════════════════════════════════
+           MODAL: AUDIT DUPLIKAT ID IHLD — investigasi kalau "Total
+           Order" di Ringkasan Total Go Live terasa kelebihan hitung
+           dibanding jumlah manual. Diisi oleh
+           getGoLiveDuplicateIdIhldAudit() lewat openGoLiveDuplicateAudit().
+           ══════════════════════════════════════════════════════════ -->
+      <div id="glDuplicateAuditOverlay" class="modal-overlay modal-overlay-top">
+        <div class="modal-card" style="max-width:560px;">
+          <div class="modal-header">
+            <h2><i class="fa-solid fa-magnifying-glass"></i> Audit Duplikat ID IHLD</h2>
+            <p>Baris dengan ID IHLD yang sama persis akan ikut terhitung berkali-kali di Ringkasan Total Go Live.</p>
+          </div>
+          <div class="detail-box" id="glDuplicateAuditBody" style="max-height:62vh; overflow-y:auto;">
+            <div class="golive-audit-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-modal btn-m-cancel" onclick="closeGoLiveDuplicateAudit()">TUTUP</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -2346,6 +2388,14 @@ tbody tr:hover td { background: var(--table-th-bg); }
       createAbd: 'Create ABD', revisionAbd: 'Revision ABD', kendalaAbd: 'Kendala ABD',
       validation: 'Validation', drawing: 'Drawing', termination: 'Termination', goLive: 'Go Live'
     };
+
+    // SAMA PERSIS dengan GOLIVE_SUMMARY_STATUSES di code.gs -- filter WAJIB
+    // yang dipakai backend saat menghitung badge Ringkasan Total Go Live
+    // (golive_buildPivot_). Drill-down klik badge HARUS ikut menyaring
+    // dengan syarat yang sama, supaya jumlah baris yang muncul di tabel
+    // detail selalu cocok dengan angka di badge yang diklik -- lihat
+    // BUGFIX di glQuickBucketFilter_ pada applyMonitoringGoLiveSearchFilter().
+    const GOLIVE_SUMMARY_STATUSES_JS_ = ['FI-OGP GO LIVE', 'GO LIVE'];
 
     // SAMA PERSIS dengan golive_norm_() di code.gs -- trim, uppercase,
     // rapikan spasi ganda -- supaya klasifikasi bucket di frontend selalu
@@ -3891,8 +3941,16 @@ tbody tr:hover td { background: var(--table-th-bg); }
       }
 
       if (glQuickBucketFilter_) {
+        // BUGFIX: dulu cuma cocokkan STATUS GO LIVE -> bucket, TANPA syarat
+        // NEW STATUS harus GO LIVE/FI-OGP GO LIVE. Akibatnya baris yang
+        // STATUS GO LIVE-nya cocok (mis. "CREATE ABD") tapi belum sampai
+        // NEW STATUS = GO LIVE ikut muncul, padahal badge di Ringkasan
+        // Total Go Live (golive_buildPivot_ di code.gs) sudah lebih dulu
+        // menyaring dengan syarat NEW STATUS itu. Sekarang disamakan
+        // persis supaya jumlah hasil klik = angka di badge.
         filtered = filtered.filter(function (row) {
-          return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_;
+          return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_
+              && GOLIVE_SUMMARY_STATUSES_JS_.indexOf(golive_normJs_(row.newStatus)) !== -1;
         });
       }
 
@@ -4112,6 +4170,74 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
     function closeMonitoringGoLiveDetail() {
       document.getElementById('glDetailModalOverlay').style.display = 'none';
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // AUDIT DUPLIKAT ID IHLD — lihat getGoLiveDuplicateIdIhldAudit()
+    // di code.gs untuk latar belakang & logikanya. Dipanggil dari
+    // tombol "Cek Duplikat ID IHLD" di card Ringkasan Total Go Live.
+    // ══════════════════════════════════════════════════════════════
+    function openGoLiveDuplicateAudit() {
+      const overlay = document.getElementById('glDuplicateAuditOverlay');
+      const body    = document.getElementById('glDuplicateAuditBody');
+      overlay.style.display = 'flex';
+      body.innerHTML = '<div class="golive-audit-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</div>';
+
+      callGAS('getGoLiveDuplicateIdIhldAudit', [])
+        .then(function (res) { renderGoLiveDuplicateAuditResult_(res); })
+        .catch(function (err) {
+          body.innerHTML = '<div class="golive-audit-empty">Gagal memuat audit: ' + escapeHtml(err.message) + '</div>';
+        });
+    }
+
+    function closeGoLiveDuplicateAudit() {
+      document.getElementById('glDuplicateAuditOverlay').style.display = 'none';
+    }
+
+    function renderGoLiveDuplicateAuditResult_(res) {
+      const body = document.getElementById('glDuplicateAuditBody');
+      if (!res || !res.success) {
+        body.innerHTML = '<div class="golive-audit-empty">Data audit tidak tersedia.</div>';
+        return;
+      }
+
+      const summaryHtml =
+        '<div class="golive-audit-summary-line">' +
+          'Diperiksa <b>' + formatNum_(res.totalIdChecked) + '</b> ID IHLD (baris yang ikut dihitung di Ringkasan Total Go Live). ' +
+          'Ditemukan <b>' + formatNum_(res.totalDuplicateGroups) + '</b> ID IHLD duplikat, ' +
+          'total <b>' + formatNum_(res.totalExtraRows) + '</b> baris kelebihan hitung akibat duplikat ini ' +
+          '(perkiraan penyebab selisih di badge "Total Order").' +
+        '</div>';
+
+      if (!res.duplicates || res.duplicates.length === 0) {
+        body.innerHTML = summaryHtml + '<div class="golive-audit-empty">Tidak ada ID IHLD duplikat ditemukan. Selisih Total Order kemungkinan berasal dari sebab lain (mis. baris dengan STATUS IHLD tertentu yang belum dikecualikan, atau data berubah di antara dua waktu pengecekan).</div>';
+        return;
+      }
+
+      const groupsHtml = res.duplicates.map(function (d) {
+        const rowsHtml = d.rows.map(function (r) {
+          return '<div class="golive-audit-row">' +
+            '<div><span class="lbl">Baris sheet:</span> ' + formatNum_(r.rowNum) + '</div>' +
+            '<div><span class="lbl">Status Go Live:</span> ' + (escapeHtml(r.statusGoLive) || '-') + '</div>' +
+            '<div><span class="lbl">District:</span> ' + (escapeHtml(r.district) || '-') + '</div>' +
+            '<div><span class="lbl">Sub District:</span> ' + (escapeHtml(r.subDistrict) || '-') + '</div>' +
+            '<div><span class="lbl">Nama Proyek:</span> ' + (escapeHtml(r.namaProyek) || '-') + '</div>' +
+            '<div><span class="lbl">Status IHLD:</span> ' + (escapeHtml(r.statusIhld) || '-') + '</div>' +
+            '<div><span class="lbl">New Status:</span> ' + (escapeHtml(r.newStatus) || '-') + '</div>' +
+            '<div><span class="lbl">Tgl Go Live:</span> ' + (escapeHtml(r.tanggalGoLive) || '-') + '</div>' +
+          '</div>';
+        }).join('');
+
+        return '<div class="golive-audit-group">' +
+          '<div class="golive-audit-group-head">' +
+            '<span>ID IHLD: ' + escapeHtml(d.idIhld) + '</span>' +
+            '<span class="badge-total">' + d.count + 'x muncul</span>' +
+          '</div>' +
+          rowsHtml +
+        '</div>';
+      }).join('');
+
+      body.innerHTML = summaryHtml + groupsHtml;
     }
 
     function golive_csvEscape_(v) {
