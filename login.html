@@ -1434,8 +1434,12 @@
               // Sekarang halaman ini bukan iframe lagi -- redirect biasa
               // ke halaman dashboard statis (ganti nama file di bawah
               // kalau dashboard-mu tidak bernama index.html).
+              // AUDIT PERFORMA: delay diturunkan dari 800ms -> 300ms.
+              // 300ms masih cukup untuk toast "Login berhasil" sempat
+              // terlihat sekilas, tapi tidak menambah setengah detik lebih
+              // ke waktu tunggu total user sebelum dashboard mulai memuat.
               window.location.href = 'index.html';
-            }, 800);
+            }, 300);
 
           } else {
             isSubmitting = false;
