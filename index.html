@@ -766,14 +766,22 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .gl-bucket-chip:hover { background: currentColor; color: var(--card-bg); }
 .gl-bucket-chip i { font-size: 9px; }
 
-/* IMPROVEMENT TAHAP 3 (poin 1-3) — filter bar dirapikan jadi SATU baris:
-   New Status / Status Proyek / Tanggal Go Live / pencarian / reset / export.
-   9 dropdown filter kolom lain (District, Sub District, Branch, Wok, Tipe
-   Design, Program, Batch Program, Status Progress, Status Go Live) TIDAK
-   dihapus dari DOM -- cuma disembunyikan (.golive-filter-hidden) -- karena
-   masih dipakai fitur drill-down klik LOP/tanggal di tabel Rekap Go Live
-   (lihat initGoLiveSummaryDrilldown_() & MONITORING_GOLIVE_FILTER_FIELDS). */
-.golive-filter-hidden { display: none !important; }
+/* IMPROVEMENT TAHAP 4 (koreksi) — filter dipisah jadi KARTU TERSENDIRI
+   (.golive-filter-card), terpisah visual dari .table-container. Di
+   dalam kartu ada 2 baris (.golive-filter-row1 / row2):
+     Baris 1 = District/Sub District/Branch/Wok/Tipe Design/Program/
+               Batch Program/Status Progress/Status Go Live (9 dropdown,
+               SEMUA tetap ditampilkan -- dipakai juga oleh fitur
+               drill-down klik LOP/tanggal di tabel Rekap Go Live, lihat
+               initGoLiveSummaryDrilldown_() & MONITORING_GOLIVE_FILTER_FIELDS).
+     Baris 2 = New Status/Status Proyek/Tanggal Go Live/Pencarian/
+               tombol Reset/tombol Export. */
+.golive-filter-card {
+  background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+  box-shadow: var(--shadow-card); padding: 12px 12px 8px; margin-bottom: 14px;
+}
+.golive-filter-card .golive-filter-bar { padding: 0 0 10px; }
+.golive-filter-card .golive-filter-row1 { border-bottom: 1px dashed var(--border-color); margin-bottom: 10px; }
 .golive-filter-field.golive-filter-search-field { flex: 2 1 240px; max-width: 420px; }
 .golive-filter-field.golive-filter-search-field .search-input-wrap {
   position: relative; width: 100%;
@@ -1775,57 +1783,56 @@ tbody tr:hover td { background: var(--table-th-bg); }
       </div>
 
 <!-- ══════════════════════════════════════════════════════════
-           TABEL LIST DETAIL (per-baris project) — tetap dipertahankan
+           FILTER + PENCARIAN TABEL DETAIL — IMPROVEMENT TAHAP 4 (koreksi).
+           Kartu TERPISAH dari tabel data (.golive-filter-card, sebelum
+           .table-container). 2 baris:
+             Baris 1 = 9 dropdown District s/d Status Go Live (semua
+                       tetap tampil).
+             Baris 2 = New Status / Status Proyek / Tanggal Go Live /
+                       Pencarian / tombol Reset / tombol Export.
+           Semua filter murni client-side lewat
+           applyMonitoringGoLiveSearchFilter().
            ══════════════════════════════════════════════════════════ -->
-      <div class="table-container">
-        <!-- ══════════════════════════════════════════════════════════
-             FILTER + PENCARIAN TABEL DETAIL — IMPROVEMENT TAHAP 3.
-             Dirapikan jadi SATU baris: New Status / Status Proyek /
-             Tanggal Go Live / pencarian / tombol reset / tombol export.
-             9 dropdown filter lain (District s/d Status Go Live) TETAP
-             ADA di DOM tapi disembunyikan (.golive-filter-hidden) --
-             masih dipakai fitur drill-down klik LOP/tanggal dari tabel
-             Rekap Go Live (initGoLiveSummaryDrilldown_()). Semua filter
-             murni client-side lewat applyMonitoringGoLiveSearchFilter().
-             ══════════════════════════════════════════════════════════ -->
-        <div class="golive-filter-bar" id="glFilterBar">
-          <div class="golive-filter-field golive-filter-hidden">
+      <div class="golive-filter-card" id="glFilterBar">
+        <div class="golive-filter-bar golive-filter-row1">
+          <div class="golive-filter-field">
             <label for="glFilterDistrict">District</label>
             <select id="glFilterDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterSubDistrict">Sub District</label>
             <select id="glFilterSubDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterBranch">Branch</label>
             <select id="glFilterBranch" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterWok">Wok</label>
             <select id="glFilterWok" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterTipeDesign">Tipe Design</label>
             <select id="glFilterTipeDesign" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterProgram">Program</label>
             <select id="glFilterProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterBatchProgram">Batch Program</label>
             <select id="glFilterBatchProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterStatusProgress">Status Progress</label>
             <select id="glFilterStatusProgress" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field golive-filter-hidden">
+          <div class="golive-filter-field">
             <label for="glFilterStatusGoLive">Status Go Live</label>
             <select id="glFilterStatusGoLive" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-
+        </div>
+        <div class="golive-filter-bar golive-filter-row2">
           <div class="golive-filter-field">
             <label for="glFilterNewStatus">New Status</label>
             <select id="glFilterNewStatus" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
@@ -1858,8 +1865,15 @@ tbody tr:hover td { background: var(--table-th-bg); }
           <button type="button" class="golive-export-btn" id="glExportBtn" onclick="exportMonitoringGoLiveData()">
             <i class="fa-solid fa-file-export"></i> Export
           </button>
-          <div class="golive-filter-active-hint" id="glFilterActiveHint"></div>
         </div>
+        <div class="golive-filter-active-hint" id="glFilterActiveHint"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           TABEL LIST DETAIL (per-baris project) — terpisah dari kartu
+           filter di atas.
+           ══════════════════════════════════════════════════════════ -->
+      <div class="table-container">
         <!-- 14 kolom (DISTRICT s/d ACTION) — pada layar kecil tabel pasti perlu digeser. -->
         <div class="golive-scroll-hint" style="padding: 0 12px; margin: 8px 0 4px;"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
         <div style="overflow-x:auto;">
