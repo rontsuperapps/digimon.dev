@@ -1402,8 +1402,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       <div class="golive-summary-card">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Total Go Live (LOP)</div>
-          <button type="button" class="btn-audit-duplicate" onclick="openGoLiveDuplicateAudit()" title="Cek baris dengan ID IHLD sama persis yang bisa bikin Total Order kelebihan hitung">
-            <i class="fa-solid fa-magnifying-glass"></i> Cek Duplikat ID IHLD
+          <button type="button" class="btn-audit-duplicate" onclick="openGoLiveDuplicateAudit()" title="Cek ID IHLD duplikat & baris tanpa District/Sub District yang bisa bikin badge Total Order tidak sinkron">
+            <i class="fa-solid fa-magnifying-glass"></i> Audit Selisih Total
           </button>
         </div>
         <!-- IMPROVEMENT TAHAP 2 (poin 1): badge "Total Order" dipindah ke
@@ -2014,8 +2014,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       <div id="glDuplicateAuditOverlay" class="modal-overlay modal-overlay-top">
         <div class="modal-card" style="max-width:560px;">
           <div class="modal-header">
-            <h2><i class="fa-solid fa-magnifying-glass"></i> Audit Duplikat ID IHLD</h2>
-            <p>Baris dengan ID IHLD yang sama persis akan ikut terhitung berkali-kali di Ringkasan Total Go Live.</p>
+            <h2><i class="fa-solid fa-magnifying-glass"></i> Audit Selisih Ringkasan Total Go Live</h2>
+            <p>Baris duplikat ID IHLD, dan baris tanpa District/Sub District yang bikin badge tidak selalu sama dengan tabel rekap/detail.</p>
           </div>
           <div class="detail-box" id="glDuplicateAuditBody" style="max-height:62vh; overflow-y:auto;">
             <div class="golive-audit-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</div>
@@ -2609,8 +2609,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
           if (res.summary) {
             renderGoLiveSummaryTable_('gl-summary-district-target', res.summary.byDistrict, res.summary.byDistrictGrandTotal, 'DISTRICT', 'district', '');
             renderGoLiveSummaryTable_('gl-summary-subdistrict-target', res.summary.bySubDistrict, res.summary.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict', '');
-            renderGoLiveBucketCharts_(res.summary.byDistrictGrandTotal);
-            renderGoLiveBadgeTotals_(res.summary.byDistrictGrandTotal);
+            // BUGFIX (badge Go Live vs detail selisih 1): badge & chart
+            // HARUS pakai overallTotal (tidak mensyaratkan District terisi),
+            // bukan byDistrictGrandTotal (diam-diam skip baris tanpa
+            // District) -- lihat catatan golive_buildOverallTotal_() di code.gs.
+            renderGoLiveBucketCharts_(res.summary.overallTotal);
+            renderGoLiveBadgeTotals_(res.summary.overallTotal);
             syncAllPivotStickyHeaders_();
           } else {
             renderGoLiveSummaryError_(res.summaryError);
@@ -3133,8 +3137,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
           renderGoLiveSummaryTable_('gl-summary-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT', 'district', '');
           renderGoLiveSummaryTable_('gl-summary-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict', '');
-          renderGoLiveBucketCharts_(response.byDistrictGrandTotal);
-          renderGoLiveBadgeTotals_(response.byDistrictGrandTotal);
+          // BUGFIX (badge Go Live vs detail selisih 1): lihat catatan yang
+          // sama di fetchDashboardBootstrap() di atas.
+          renderGoLiveBucketCharts_(response.overallTotal);
+          renderGoLiveBadgeTotals_(response.overallTotal);
           syncAllPivotStickyHeaders_();
         })
         .withFailureHandler(function(err) {
@@ -4201,43 +4207,71 @@ tbody tr:hover td { background: var(--table-th-bg); }
         return;
       }
 
+      const missingDistrict    = res.missingDistrictRows    || [];
+      const missingSubDistrict = res.missingSubDistrictRows || [];
+
       const summaryHtml =
         '<div class="golive-audit-summary-line">' +
           'Diperiksa <b>' + formatNum_(res.totalIdChecked) + '</b> ID IHLD (baris yang ikut dihitung di Ringkasan Total Go Live). ' +
-          'Ditemukan <b>' + formatNum_(res.totalDuplicateGroups) + '</b> ID IHLD duplikat, ' +
-          'total <b>' + formatNum_(res.totalExtraRows) + '</b> baris kelebihan hitung akibat duplikat ini ' +
-          '(perkiraan penyebab selisih di badge "Total Order").' +
+          'Ditemukan <b>' + formatNum_(res.totalDuplicateGroups) + '</b> ID IHLD duplikat (total <b>' + formatNum_(res.totalExtraRows) + '</b> baris kelebihan hitung), ' +
+          'dan <b>' + formatNum_(missingDistrict.length) + '</b> baris tanpa DISTRICT / <b>' + formatNum_(missingSubDistrict.length) + '</b> baris tanpa SUB DISTRICT ' +
+          '(baris ini tetap dihitung di badge "Ringkasan Total Go Live", tapi hilang dari tabel rekap per-District/per-Sub-District — penyebab badge Go Live bisa lebih besar dari total tabel rekap).' +
         '</div>';
 
-      if (!res.duplicates || res.duplicates.length === 0) {
-        body.innerHTML = summaryHtml + '<div class="golive-audit-empty">Tidak ada ID IHLD duplikat ditemukan. Selisih Total Order kemungkinan berasal dari sebab lain (mis. baris dengan STATUS IHLD tertentu yang belum dikecualikan, atau data berubah di antara dua waktu pengecekan).</div>';
-        return;
+      function rowLineHtml_(r) {
+        return '<div class="golive-audit-row">' +
+          '<div><span class="lbl">Baris sheet:</span> ' + formatNum_(r.rowNum) + '</div>' +
+          '<div><span class="lbl">Status Go Live:</span> ' + (escapeHtml(r.statusGoLive) || '-') + '</div>' +
+          '<div><span class="lbl">District:</span> ' + (escapeHtml(r.district) || '-') + '</div>' +
+          '<div><span class="lbl">Sub District:</span> ' + (escapeHtml(r.subDistrict) || '-') + '</div>' +
+          '<div><span class="lbl">Nama Proyek:</span> ' + (escapeHtml(r.namaProyek) || '-') + '</div>' +
+          '<div><span class="lbl">Status IHLD:</span> ' + (escapeHtml(r.statusIhld) || '-') + '</div>' +
+          '<div><span class="lbl">New Status:</span> ' + (escapeHtml(r.newStatus) || '-') + '</div>' +
+          '<div><span class="lbl">Tgl Go Live:</span> ' + (escapeHtml(r.tanggalGoLive) || '-') + '</div>' +
+        '</div>';
       }
 
-      const groupsHtml = res.duplicates.map(function (d) {
-        const rowsHtml = d.rows.map(function (r) {
-          return '<div class="golive-audit-row">' +
-            '<div><span class="lbl">Baris sheet:</span> ' + formatNum_(r.rowNum) + '</div>' +
-            '<div><span class="lbl">Status Go Live:</span> ' + (escapeHtml(r.statusGoLive) || '-') + '</div>' +
-            '<div><span class="lbl">District:</span> ' + (escapeHtml(r.district) || '-') + '</div>' +
-            '<div><span class="lbl">Sub District:</span> ' + (escapeHtml(r.subDistrict) || '-') + '</div>' +
-            '<div><span class="lbl">Nama Proyek:</span> ' + (escapeHtml(r.namaProyek) || '-') + '</div>' +
-            '<div><span class="lbl">Status IHLD:</span> ' + (escapeHtml(r.statusIhld) || '-') + '</div>' +
-            '<div><span class="lbl">New Status:</span> ' + (escapeHtml(r.newStatus) || '-') + '</div>' +
-            '<div><span class="lbl">Tgl Go Live:</span> ' + (escapeHtml(r.tanggalGoLive) || '-') + '</div>' +
+      let duplicatesHtml;
+      if (!res.duplicates || res.duplicates.length === 0) {
+        duplicatesHtml = '<div class="golive-audit-empty">Tidak ada ID IHLD duplikat ditemukan.</div>';
+      } else {
+        duplicatesHtml = res.duplicates.map(function (d) {
+          return '<div class="golive-audit-group">' +
+            '<div class="golive-audit-group-head">' +
+              '<span>ID IHLD: ' + escapeHtml(d.idIhld) + '</span>' +
+              '<span class="badge-total">' + d.count + 'x muncul</span>' +
+            '</div>' +
+            d.rows.map(rowLineHtml_).join('') +
           '</div>';
         }).join('');
+      }
 
-        return '<div class="golive-audit-group">' +
+      let missingHtml = '';
+      if (missingDistrict.length > 0) {
+        missingHtml += '<div class="golive-audit-group">' +
           '<div class="golive-audit-group-head">' +
-            '<span>ID IHLD: ' + escapeHtml(d.idIhld) + '</span>' +
-            '<span class="badge-total">' + d.count + 'x muncul</span>' +
+            '<span>Baris tanpa DISTRICT</span>' +
+            '<span class="badge-total">' + missingDistrict.length + ' baris</span>' +
           '</div>' +
-          rowsHtml +
+          missingDistrict.map(rowLineHtml_).join('') +
         '</div>';
-      }).join('');
+      }
+      if (missingSubDistrict.length > 0) {
+        missingHtml += '<div class="golive-audit-group">' +
+          '<div class="golive-audit-group-head">' +
+            '<span>Baris tanpa SUB DISTRICT</span>' +
+            '<span class="badge-total">' + missingSubDistrict.length + ' baris</span>' +
+          '</div>' +
+          missingSubDistrict.map(rowLineHtml_).join('') +
+        '</div>';
+      }
+      if (!missingHtml) {
+        missingHtml = '<div class="golive-audit-empty">Semua baris sudah punya DISTRICT & SUB DISTRICT.</div>';
+      }
 
-      body.innerHTML = summaryHtml + groupsHtml;
+      body.innerHTML = summaryHtml +
+        '<div style="font-size:12px; font-weight:700; margin:4px 0 8px;">Duplikat ID IHLD</div>' + duplicatesHtml +
+        '<div style="font-size:12px; font-weight:700; margin:14px 0 8px;">Baris Tanpa District / Sub District</div>' + missingHtml;
     }
 
     function golive_csvEscape_(v) {
