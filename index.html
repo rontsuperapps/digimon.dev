@@ -1758,10 +1758,14 @@ tbody tr:hover td { background: var(--table-th-bg); }
             <label for="glDailyYearSelect">Tahun</label>
             <select id="glDailyYearSelect"></select>
           </div>
+          <div class="golive-daily-filter-field">
+            <label for="glDailyTipeDesignSelect">Tipe Design</label>
+            <select id="glDailyTipeDesignSelect"><option value="">Semua</option></select>
+          </div>
           <button type="button" class="golive-daily-filter-btn" onclick="applyGoLiveDailyFilter()">
             <i class="fa-solid fa-filter"></i> Terapkan
           </button>
-          <div class="golive-daily-filter-hint">Nilai yang ditampilkan = PORT REAL untuk baris berstatus GO LIVE, dikelompokkan per tanggal GO LIVE pada bulan & tahun yang dipilih.</div>
+          <div class="golive-daily-filter-hint">Nilai yang ditampilkan = PORT REAL untuk baris berstatus GO LIVE, dikelompokkan per tanggal GO LIVE pada bulan &amp; tahun yang dipilih (opsional disaring per Tipe Design).</div>
         </div>
 
         <div class="golive-tabs" role="tablist" aria-label="Perolehan Go Live Harian">
@@ -3302,11 +3306,13 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
     // ══════════════════════════════════════════════════════════════
     // ── BARIS 4: PEROLEHAN GO LIVE HARIAN (PORT REAL) + FILTER
-    //    DROPDOWN BULAN & TAHUN ──
-    // Request ke getMonitoringGoLiveDailyPortReal(year, month). Tabel
-    // dibangun dinamis lewat JS (jumlah kolom tanggal = jumlah hari
-    // dalam bulan yang dipilih), style reuse pivot-grouped-table yang
-    // sudah ada (konsisten dengan rekap District/Sub District).
+    //    DROPDOWN BULAN & TAHUN & TIPE DESIGN ──
+    // Request ke getMonitoringGoLiveDailyPortReal(year, month, tipeDesign).
+    // tipeDesign kosong ('') = semua Tipe Design ikut tampil (tidak
+    // difilter). Tabel dibangun dinamis lewat JS (jumlah kolom tanggal =
+    // jumlah hari dalam bulan yang dipilih), style reuse
+    // pivot-grouped-table yang sudah ada (konsisten dengan rekap
+    // District/Sub District).
     // ══════════════════════════════════════════════════════════════
 
     const GOLIVE_DAILY_MONTH_NAMES = [
@@ -3351,10 +3357,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (isFetchingGoLiveDaily) return;
       ensureGoLiveDailyFilterOptions_();
 
-      const monthSel = document.getElementById('glDailyMonthSelect');
-      const yearSel  = document.getElementById('glDailyYearSelect');
-      const month = monthSel ? parseInt(monthSel.value, 10) : null;
-      const year  = yearSel ? parseInt(yearSel.value, 10) : null;
+      const monthSel      = document.getElementById('glDailyMonthSelect');
+      const yearSel       = document.getElementById('glDailyYearSelect');
+      const tipeDesignSel = document.getElementById('glDailyTipeDesignSelect');
+      const month      = monthSel ? parseInt(monthSel.value, 10) : null;
+      const year       = yearSel ? parseInt(yearSel.value, 10) : null;
+      const tipeDesign = tipeDesignSel ? tipeDesignSel.value : '';
       if (!month || !year) return;
 
       isFetchingGoLiveDaily = true;
@@ -3377,10 +3385,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
           console.error('Gagal mengambil rekap harian Go Live:', err.message);
           renderGoLiveDailyError_(err.message);
         })
-        .getMonitoringGoLiveDailyPortReal(year, month, !!forceFresh);
+        .getMonitoringGoLiveDailyPortReal(year, month, tipeDesign, !!forceFresh);
     }
 
-    // Dipanggil dari tombol "Terapkan" pada filter dropdown bulan/tahun.
+    // Dipanggil dari tombol "Terapkan" pada filter dropdown bulan/tahun/tipe design.
     function applyGoLiveDailyFilter() {
       const monthSel = document.getElementById('glDailyMonthSelect');
       const yearSel  = document.getElementById('glDailyYearSelect');
@@ -3723,6 +3731,20 @@ tbody tr:hover td { background: var(--table-th-bg); }
           uniqueVals.map(function (v) { return `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`; }).join('');
 
         if (uniqueVals.indexOf(prevValue) !== -1) select.value = prevValue;
+
+        // IMPROVEMENT: dropdown "Tipe Design" di kartu "Perolehan Go Live
+        // Harian" ikut diisi ulang dari daftar unik yang SAMA (field
+        // tipeDesign) supaya pilihannya selalu konsisten dengan filter
+        // tabel detail -- tidak perlu request terpisah ke server.
+        if (f.key === 'tipeDesign') {
+          const dailySelect = document.getElementById('glDailyTipeDesignSelect');
+          if (dailySelect) {
+            const prevDaily = dailySelect.value;
+            dailySelect.innerHTML = '<option value="">Semua</option>' +
+              uniqueVals.map(function (v) { return `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`; }).join('');
+            if (uniqueVals.indexOf(prevDaily) !== -1) dailySelect.value = prevDaily;
+          }
+        }
       });
     }
 
