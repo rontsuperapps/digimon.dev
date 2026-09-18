@@ -47,6 +47,13 @@
     })();
   </script>
 
+  <!-- AUDIT PERFORMA: preconnect ke domain font SEBELUM link stylesheet
+       di bawah -- browser bisa mulai buka koneksi TLS ke kedua domain ini
+       lebih awal (paralel dengan parsing HTML lain), jadi saat browser
+       akhirnya butuh font-nya, koneksi sudah siap dan tidak menambah
+       latensi render teks. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -2080,10 +2087,20 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // PWA — daftar fn yang HASILNYA boleh disimpan sebagai cache lokal
     // untuk fallback offline ("tampilkan data terakhir yang sempat
     // ter-cache saat online").
+    // AUDIT PERFORMA (poin 4): dulu jalur utama widget rekap (Summary,
+    // PT2, PT3, run-rate, harian, profile, notif) sudah pindah jadi SATU
+    // panggilan gabungan `getDashboardBootstrap`, tapi nama fungsi itu
+    // TIDAK ada di whitelist ini -- akibatnya begitu koneksi offline,
+    // semua widget itu kosong tanpa fallback walau device sempat online
+    // sebelumnya. `getMonitoringGoLiveSummary`/PT2/PT3 juga ditambahkan
+    // supaya jalur fallback (dipanggil dari withFailureHandler bootstrap
+    // di atas) tetap kebagian cache offline yang sama.
     const PWA_OFFLINE_CACHEABLE_FN = [
       'getMonitoringGoLiveData',
       'getLoggedInUserInfo', 'getMyProfile', 'getNotifications',
-      'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal'
+      'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal',
+      'getDashboardBootstrap',
+      'getMonitoringGoLiveSummary', 'getMonitoringGoLivePT2Summary', 'getMonitoringGoLivePT3Summary'
     ];
 
     // Prefiks dinaikkan ke _v2 saat migrasi ke sheet "B2C": bentuk data
@@ -2235,6 +2252,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
     let monitoringGoLivePageSize    = 20;
     let isFetchingMonitoringGoLive  = false;
     let monitoringGoLiveLoadedOnce  = false;
+    let isFetchingBootstrap         = false; // guard anti-tumpang-tindih fetchDashboardBootstrap
 
     let isFetchingGoLiveSummary     = false;
     let goLiveSummaryLoadedOnce     = false;
@@ -2340,8 +2358,9 @@ tbody tr:hover td { background: var(--table-th-bg); }
       return GOLIVE_BUCKET_MAP_JS_[golive_normJs_(statusGoLive)] || '';
     }
 
-    // Delegated click listener (dipasang sekali di window.onload) supaya
-    // tetap jalan walau isi tbody tabel rekap/harian di-render ulang
+    // Delegated click listener (dipasang sekali saat inisialisasi
+    // dashboard, lihat initDashboardOnReady_) supaya tetap jalan walau
+    // isi tbody tabel rekap/harian di-render ulang
     // berkali-kali lewat innerHTML. Menangani DUA sumber sel drill-down:
     //  - [data-gl-lop-click]   : LOP di Rekap Go Live / PT2 / PT3
     //  - [data-gl-daily-click] : TOTAL/tanggal di Perolehan Go Live Harian
@@ -2426,7 +2445,21 @@ tbody tr:hover td { background: var(--table-th-bg); }
       updatePwaOfflineBanner(true);
     }
 
-    window.onload = function() {
+    // ══════════════════════════════════════════════════════════════
+    // AUDIT PERFORMA (poin 1): inisialisasi dashboard DULU dipasang di
+    // `window.onload`, yang baru terpicu setelah SEMUA aset (gambar,
+    // font, CSS eksternal) selesai dimuat -- padahal script ini sudah
+    // ada di akhir <body>, jadi DOM-nya sendiri sudah pasti siap jauh
+    // lebih awal. Menunggu event `load` penuh cuma menambah jeda tanpa
+    // manfaat sebelum request bootstrap & tabel detail mulai ditembak.
+    // Sekarang: jalankan begitu DOM siap (atau langsung kalau ternyata
+    // sudah siap saat baris ini dieksekusi -- itu memang skenario
+    // normalnya karena posisi script di akhir <body>).
+    // Registrasi service worker TETAP di event `load` terpisah (baris
+    // di atas) -- itu memang praktik yang disarankan supaya SW tidak
+    // ikut berebut bandwidth/CPU dengan request data yang lebih penting.
+    // ══════════════════════════════════════════════════════════════
+    function initDashboardOnReady_() {
       initSidebarHoverUnfold();
       initProfileMenu();
       initNotifications();
@@ -2448,9 +2481,53 @@ tbody tr:hover td { background: var(--table-th-bg); }
       // ══════════════════════════════════════════════════════════
       fetchDashboardBootstrap();
       fetchMonitoringGoLiveData();
-    };
+
+      // AUDIT PERFORMA (poin 2) — auto-refresh senyap (silent), tanpa
+      // spinner/loading state mengganggu, supaya dashboard yang sedang
+      // terbuka lama-lama ikut ter-update sendiri tanpa user harus klik
+      // "Refresh Data" manual. Dipasang lewat startDashboardAutoRefresh_()
+      // di bawah, termasuk jeda saat tab tidak aktif (hemat kuota & tidak
+      // membebani server saat tidak ada yang melihat layar).
+      startDashboardAutoRefresh_();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboardOnReady_);
+    } else {
+      // DOM sudah siap duluan (skenario normal karena script ini ada
+      // di akhir <body>) -- langsung jalankan, jangan tunggu event apa pun.
+      initDashboardOnReady_();
+    }
+
+    // AUDIT PERFORMA (poin 2) — interval auto-refresh silent. Memanggil
+    // ulang fetchDashboardBootstrap() & fetchMonitoringGoLiveData() TANPA
+    // bypassCache (forceFresh=false), jadi request ini justru RINGAN kalau
+    // trigger cache-warmer di backend sudah terpasang (lihat
+    // installCacheWarmerTrigger_ & handleSheetEdit_ di code.gs) -- yang
+    // diambil cuma cache yang memang sudah hangat, bukan baca sheet ulang.
+    // Auto-refresh berhenti sejenak saat tab sedang tidak aktif (dokumen
+    // tersembunyi) supaya tidak buang-buang kuota/beban server percuma.
+    const DASHBOARD_AUTO_REFRESH_MS = 60000; // 60 detik
+    let dashboardAutoRefreshTimer_ = null;
+
+    function startDashboardAutoRefresh_() {
+      if (dashboardAutoRefreshTimer_) return; // sudah jalan, jangan dobel
+      dashboardAutoRefreshTimer_ = setInterval(function () {
+        if (document.hidden) return; // tab tidak aktif -- lewati giliran ini
+        if (!isFetchingBootstrap && !isFetchingMonitoringGoLive) {
+          fetchDashboardBootstrap(false);
+          fetchMonitoringGoLiveData(false);
+        }
+      }, DASHBOARD_AUTO_REFRESH_MS);
+    }
 
     function fetchDashboardBootstrap(forceFresh) {
+      // Guard anti-tumpang-tindih -- auto-refresh interval bisa saja
+      // terpicu lagi sebelum panggilan sebelumnya selesai (mis. koneksi
+      // lambat); tanpa guard ini beberapa request bisa numpuk bersamaan.
+      if (isFetchingBootstrap) return;
+      isFetchingBootstrap = true;
+
       const monthSel = document.getElementById('glDailyMonthSelect');
       const yearSel  = document.getElementById('glDailyYearSelect');
       const month = monthSel ? parseInt(monthSel.value, 10) : null;
@@ -2462,6 +2539,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
       google.script.run
         .withSuccessHandler(function (res) {
+          isFetchingBootstrap     = false;
           isFetchingGoLiveSummary = false;
           isFetchingGoLiveRunRate = false;
           isFetchingGoLiveDaily   = false;
@@ -2524,6 +2602,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           }
         })
         .withFailureHandler(function (err) {
+          isFetchingBootstrap     = false;
           isFetchingGoLiveSummary = false;
           isFetchingGoLiveRunRate = false;
           isFetchingGoLiveDaily   = false;
@@ -2548,8 +2627,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
     function initProfileMenu() {
       // Data profil sekarang datang dari fetchDashboardBootstrap() (1
       // round-trip gabungan), bukan request terpisah lagi -- lihat
-      // window.onload. getCurrentUserInfo() masih dipertahankan di
-      // bawah untuk dipakai ulang manual kalau perlu (mis. debugging).
+      // initDashboardOnReady_. getCurrentUserInfo() masih dipertahankan
+      // di bawah untuk dipakai ulang manual kalau perlu (mis. debugging).
 
       document.addEventListener('click', function(e) {
         const wrap = document.getElementById('profileWrap');
@@ -2733,8 +2812,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
     function initNotifications() {
       // Data notifikasi sekarang datang dari fetchDashboardBootstrap()
       // (1 round-trip gabungan), bukan request terpisah lagi -- lihat
-      // window.onload. loadNotifications() masih ada di bawah untuk
-      // dipakai ulang manual kalau perlu.
+      // initDashboardOnReady_. loadNotifications() masih ada di bawah
+      // untuk dipakai ulang manual kalau perlu.
 
       document.addEventListener('click', function(e) {
         const wrap = document.getElementById('notifWrap');
