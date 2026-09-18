@@ -724,7 +724,6 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
    Live/PT2/PT3 (dipasang lewat data-gl-lop-click, ditangani listener yang
    sama di initGoLiveSummaryDrilldown_(), tidak perlu listener baru). */
 .golive-badge-item.badge-lop-click { cursor: pointer; transition: filter .15s ease, transform .1s ease; }
-.golive-badge-item.badge-lop-click .golive-badge-value { text-decoration: underline dotted; text-underline-offset: 3px; }
 .golive-badge-item.badge-lop-click:hover { filter: brightness(0.95); }
 .golive-badge-item.badge-lop-click:active { transform: scale(0.97); }
 
@@ -974,16 +973,16 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
    dipasang di baris GRAND TOTAL karena baris itu sudah solid warna + teks
    putih tersendiri. */
 .pivot-grouped-table td.cell-hit { background: var(--pivot-green-bg); color: var(--pivot-green-text); font-weight: 700; }
-/* Drill-down klik LOP (Rekap Go Live/PT2/PT3) & klik sel TOTAL/tanggal
+/* Drill-down klik LOP/ODP/PORT (Rekap Go Live/PT2/PT3) & klik sel TOTAL/tanggal
    (Perolehan Go Live Harian) -> Tabel Data Go Live B2C -- lihat
-   initGoLiveSummaryDrilldown_() di JS. Cuma dipasang di TD LOP (kolom
-   pertama tiap grup TOTAL/MITRA/SDI) untuk tabel rekap, dan di SEMUA sel
-   angka (TOTAL + tiap tanggal) untuk tabel harian -- tidak di ODP/PORT
-   tabel rekap. */
+   initGoLiveSummaryDrilldown_() di JS. Dipasang di SEMUA TD metrik (LOP,
+   ODP, PORT) tiap grup TOTAL/MITRA/SDI untuk tabel rekap, dan di SEMUA sel
+   angka (TOTAL + tiap tanggal) untuk tabel harian -- ketiganya (LOP/ODP/
+   PORT) memicu filter drill-down yang sama persis. */
 .pivot-grouped-table td.cell-lop-click,
-.pivot-grouped-table td.cell-date-click { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.pivot-grouped-table td.cell-date-click { cursor: pointer; }
 .pivot-grouped-table td.cell-lop-click:hover,
-.pivot-grouped-table td.cell-date-click:hover { filter: brightness(0.9); text-decoration-style: solid; }
+.pivot-grouped-table td.cell-date-click:hover { filter: brightness(0.9); }
 .pivot-grouped-table tr.pivot-total-row td.cell-lop-click:hover,
 .pivot-grouped-table tr.pivot-total-row td.cell-date-click:hover { filter: brightness(1.15); }
 
@@ -3575,14 +3574,16 @@ tbody tr:hover td { background: var(--table-th-bg); }
     //                 dipakai untuk sel bucket MITRA/SDI (bukan kolom TOTAL,
     //                 dan tidak pernah untuk baris GRAND TOTAL -- lihat
     //                 pemanggilan di goLiveSummaryRowHtml_ di bawah).
-    // clickCtx     -> IMPROVEMENT TAHAP 2 (drill-down klik LOP): objek
-    //                 { labelType, label, tipeDesign, bucketKey } atau null.
-    //                 Kalau diisi, TD LOP (kolom pertama tiap grup) dibuat
-    //                 clickable (class .cell-lop-click + data-* attribute)
-    //                 supaya delegated click listener di
-    //                 initGoLiveSummaryDrilldown_() bisa mengisi ulang
-    //                 filter tabel detail & scroll ke sana. TD ODP/PORT SENGAJA
-    //                 tidak diklikkan -- sesuai permintaan, hanya kolom LOP.
+    // clickCtx     -> IMPROVEMENT TAHAP 2 (drill-down klik LOP/ODP/PORT):
+    //                 objek { labelType, label, tipeDesign, bucketKey } atau
+    //                 null. Kalau diisi, KETIGA TD (LOP, ODP, PORT) di grup
+    //                 ini dibuat clickable (class .cell-lop-click + data-*
+    //                 attribute yang SAMA persis) supaya delegated click
+    //                 listener di initGoLiveSummaryDrilldown_() bisa mengisi
+    //                 ulang filter tabel detail & scroll ke sana -- ketiganya
+    //                 memicu filter yang identik (district/bucket/tipe design
+    //                 saja, tidak bergantung metric LOP/ODP/PORT mana yang
+    //                 diklik), jadi aman dipasang di semua kolom sekaligus.
     //                 bucketKey kosong ('') artinya grup TOTAL -> tidak
     //                 memfilter bucket tertentu (semua bucket ikut tampil).
     function goLiveSummaryMetricCells_(metric, group, withDivider, highlightHit, clickCtx) {
@@ -3591,11 +3592,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const cls = 'num-cell cell-' + group + hitCls;
       const portCls = cls + (withDivider ? ' group-divider' : '');
 
-      let lopCls = cls;
-      let lopAttrs = '';
+      let clickCls = '';
+      let clickAttrs = '';
       if (clickCtx) {
-        lopCls += ' cell-lop-click';
-        lopAttrs =
+        clickCls = ' cell-lop-click';
+        clickAttrs =
           ' data-gl-lop-click="1"' +
           ' data-label-type="' + escapeHtml(clickCtx.labelType || '') + '"' +
           ' data-label="' + escapeHtml(clickCtx.label || '') + '"' +
@@ -3605,9 +3606,9 @@ tbody tr:hover td { background: var(--table-th-bg); }
       }
 
       return `
-        <td class="${lopCls}"${lopAttrs}>${formatNum_(m.lop)}</td>
-        <td class="${cls}">${formatNum_(m.odp)}</td>
-        <td class="${portCls}">${formatNum_(m.port)}</td>`;
+        <td class="${cls}${clickCls}"${clickAttrs}>${formatNum_(m.lop)}</td>
+        <td class="${cls}${clickCls}"${clickAttrs}>${formatNum_(m.odp)}</td>
+        <td class="${portCls}${clickCls}"${clickAttrs}>${formatNum_(m.port)}</td>`;
     }
 
     // labelType        -> 'district' | 'subDistrict', dipakai klik LOP untuk
