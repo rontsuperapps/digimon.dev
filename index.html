@@ -766,6 +766,61 @@ body { font-family: 'Poppins', sans-serif; font-size: 13px; background-color: va
 .gl-bucket-chip:hover { background: currentColor; color: var(--card-bg); }
 .gl-bucket-chip i { font-size: 9px; }
 
+/* IMPROVEMENT TAHAP 3 (poin 1-3) — filter bar dirapikan jadi SATU baris:
+   New Status / Status Proyek / Tanggal Go Live / pencarian / reset / export.
+   9 dropdown filter kolom lain (District, Sub District, Branch, Wok, Tipe
+   Design, Program, Batch Program, Status Progress, Status Go Live) TIDAK
+   dihapus dari DOM -- cuma disembunyikan (.golive-filter-hidden) -- karena
+   masih dipakai fitur drill-down klik LOP/tanggal di tabel Rekap Go Live
+   (lihat initGoLiveSummaryDrilldown_() & MONITORING_GOLIVE_FILTER_FIELDS). */
+.golive-filter-hidden { display: none !important; }
+.golive-filter-field.golive-filter-search-field { flex: 2 1 240px; max-width: 420px; }
+.golive-filter-field.golive-filter-search-field .search-input-wrap {
+  position: relative; width: 100%;
+}
+.golive-filter-field.golive-filter-search-field .search-input-wrap i.fa-magnifying-glass {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-muted); pointer-events: none;
+}
+.golive-filter-field.golive-filter-search-field .search-input {
+  width: 100%; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 11.5px;
+  padding: 7px 30px 7px 30px; border-radius: 8px; border: 1px solid var(--border-color);
+  background: var(--card-bg); color: var(--text-main); outline: none;
+}
+.golive-filter-field.golive-filter-search-field .search-input::placeholder { color: var(--text-muted); }
+.golive-filter-field.golive-filter-search-field .search-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-glow); }
+.golive-filter-field.golive-filter-search-field .search-clear-btn {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%); background: transparent; border: none;
+  color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 4px; display: none;
+}
+.golive-filter-field.golive-filter-search-field .search-clear-btn:hover { color: var(--text-title); }
+.golive-filter-field.golive-filter-search-field .search-clear-btn.show { display: block; }
+
+.golive-export-btn {
+  appearance: none; border: 1px solid var(--accent-color); background: var(--accent-color); color: #fff;
+  font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  align-self: flex-end; flex-shrink: 0; transition: opacity 0.15s ease;
+}
+.golive-export-btn:hover { opacity: 0.85; }
+.golive-export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.golive-export-btn i { font-size: 11px; }
+
+/* Tombol VIEW di kolom ACTION tabel detail. */
+.gl-view-btn {
+  appearance: none; border: 1px solid var(--accent-color); background: transparent; color: var(--accent-color);
+  font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 700; padding: 5px 11px; border-radius: 6px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.gl-view-btn:hover { background: var(--accent-color); color: #fff; }
+.gl-view-btn i { font-size: 10px; }
+
+/* Pagination bar TAHAP 3 (poin 1) — dropdown "Tampilkan" pindah ke pojok
+   kiri bawah tabel (dalam pagination-bar), teks "Menampilkan X-Y dari Z
+   data" dihapus sesuai permintaan. */
+.golive-detail-modal-body { max-height: 62vh; overflow-y: auto; }
+.golive-detail-modal-body .detail-row:last-child { margin-bottom: 0; }
+
 /* ── TAB DISTRICT / SUB DISTRICT ──
    Dipakai di kartu "Rekap Go Live" & "Perolehan Go Live Harian" untuk
    memisahkan view District dan Sub District (dulu ditumpuk vertikal
@@ -1724,51 +1779,53 @@ tbody tr:hover td { background: var(--table-th-bg); }
            ══════════════════════════════════════════════════════════ -->
       <div class="table-container">
         <!-- ══════════════════════════════════════════════════════════
-             FILTER TABEL DETAIL — IMPROVEMENT TAHAP 2 (poin 7).
-             11 dropdown filter kolom + range tanggal TANGGAL GO LIVE.
-             Semua opsi dropdown diisi dinamis (unik dari data yang
-             sudah dimuat, lihat populateMonitoringGoLiveFilterOptions_())
-             dan filter murni client-side lewat
-             applyMonitoringGoLiveSearchFilter() -- tidak menambah
-             panggilan ke server.
+             FILTER + PENCARIAN TABEL DETAIL — IMPROVEMENT TAHAP 3.
+             Dirapikan jadi SATU baris: New Status / Status Proyek /
+             Tanggal Go Live / pencarian / tombol reset / tombol export.
+             9 dropdown filter lain (District s/d Status Go Live) TETAP
+             ADA di DOM tapi disembunyikan (.golive-filter-hidden) --
+             masih dipakai fitur drill-down klik LOP/tanggal dari tabel
+             Rekap Go Live (initGoLiveSummaryDrilldown_()). Semua filter
+             murni client-side lewat applyMonitoringGoLiveSearchFilter().
              ══════════════════════════════════════════════════════════ -->
         <div class="golive-filter-bar" id="glFilterBar">
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterDistrict">District</label>
             <select id="glFilterDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterSubDistrict">Sub District</label>
             <select id="glFilterSubDistrict" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterBranch">Branch</label>
             <select id="glFilterBranch" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterWok">Wok</label>
             <select id="glFilterWok" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterTipeDesign">Tipe Design</label>
             <select id="glFilterTipeDesign" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterProgram">Program</label>
             <select id="glFilterProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterBatchProgram">Batch Program</label>
             <select id="glFilterBatchProgram" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterStatusProgress">Status Progress</label>
             <select id="glFilterStatusProgress" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
-          <div class="golive-filter-field">
+          <div class="golive-filter-field golive-filter-hidden">
             <label for="glFilterStatusGoLive">Status Go Live</label>
             <select id="glFilterStatusGoLive" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
           </div>
+
           <div class="golive-filter-field">
             <label for="glFilterNewStatus">New Status</label>
             <select id="glFilterNewStatus" onchange="applyMonitoringGoLiveSearchFilter()"><option value="">Semua</option></select>
@@ -1785,19 +1842,69 @@ tbody tr:hover td { background: var(--table-th-bg); }
               <input type="date" id="glFilterTanggalTo" onchange="applyMonitoringGoLiveSearchFilter()">
             </div>
           </div>
+          <div class="golive-filter-field golive-filter-search-field">
+            <label for="glSearchInput">Pencarian</label>
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="glSearchInput" class="search-input" placeholder="Cari District, STO, ID IHLD, Nama Proyek, Program..." oninput="applyMonitoringGoLiveSearchFilter()">
+              <button class="search-clear-btn" id="glSearchClearBtn" onclick="clearMonitoringGoLiveSearchFilter()" title="Hapus pencarian">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+            </div>
+          </div>
           <button type="button" class="golive-filter-reset-btn" onclick="resetMonitoringGoLiveFilters()">
-            <i class="fa-solid fa-filter-circle-xmark"></i> Reset Filter
+            <i class="fa-solid fa-filter-circle-xmark"></i> Reset
+          </button>
+          <button type="button" class="golive-export-btn" id="glExportBtn" onclick="exportMonitoringGoLiveData()">
+            <i class="fa-solid fa-file-export"></i> Export
           </button>
           <div class="golive-filter-active-hint" id="glFilterActiveHint"></div>
         </div>
-        <div class="table-search-bar">
-          <div class="search-input-wrap">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="glSearchInput" class="search-input" placeholder="Cari District, Branch, STO, ID IHLD, Nama Proyek, Program, Status Go Live..." oninput="applyMonitoringGoLiveSearchFilter()">
-            <button class="search-clear-btn" id="glSearchClearBtn" onclick="clearMonitoringGoLiveSearchFilter()" title="Hapus pencarian">
-              <i class="fa-solid fa-circle-xmark"></i>
-            </button>
-          </div>
+        <!-- 14 kolom (DISTRICT s/d ACTION) — pada layar kecil tabel pasti perlu digeser. -->
+        <div class="golive-scroll-hint" style="padding: 0 12px; margin: 8px 0 4px;"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+        <div style="overflow-x:auto;">
+        <table>
+          <!-- IMPROVEMENT TAHAP 3 (poin 4) — tabel ringkas 14 kolom:
+               DISTRICT/SUB DISTRICT/STO/ID IHLD/STATUS IHLD/NAMA PROYEK/
+               TOTAL ODP/TOTAL PORT/TIPE DESIGN/PROGRAM/STATUS GO LIVE/
+               NEW STATUS/STATUS PROYEK/ACTION. Data lengkap A s/d W
+               (DISTRICT s/d STATUS TASK) tetap ada di row object &
+               dipakai oleh export (poin 3) & modal VIEW (poin 5).
+               URUTAN <th> DI BAWAH HARUS SAMA PERSIS dengan urutan
+               <td> di renderMonitoringGoLiveRows(). -->
+          <thead>
+            <tr>
+              <th>DISTRICT</th>
+              <th>SUB DISTRICT</th>
+              <th>STO</th>
+              <th>ID IHLD</th>
+              <th>STATUS IHLD</th>
+              <th>NAMA PROYEK</th>
+              <th>TOTAL ODP</th>
+              <th>TOTAL PORT</th>
+              <th>TIPE DESIGN</th>
+              <th>PROGRAM</th>
+              <th>STATUS GO LIVE</th>
+              <th>NEW STATUS</th>
+              <th>STATUS PROYEK</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="gl-rows-target">
+            <tr>
+              <td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
+                Memuat data Go Live B2C...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <!-- IMPROVEMENT TAHAP 3 (poin 1) — dropdown "Tampilkan" pindah ke
+             pojok kiri bawah tabel; teks "Menampilkan X–Y dari Z data"
+             DIHAPUS sesuai permintaan (jumlah data yang cocok filter
+             tetap terlihat lewat #glFilterActiveHint saat ada filter aktif). -->
+        <div class="pagination-bar" id="glPaginationBar">
           <div class="page-size-select-wrap">
             <label for="glPageSizeSelect">Tampilkan</label>
             <select id="glPageSizeSelect" class="page-size-select" onchange="changeMonitoringGoLivePageSize(this.value)">
@@ -1809,60 +1916,29 @@ tbody tr:hover td { background: var(--table-th-bg); }
             </select>
             <span>data</span>
           </div>
-        </div>
-        <!-- 23 kolom — pada layar kecil tabel pasti perlu digeser. -->
-        <div class="golive-scroll-hint" style="padding: 0 12px; margin: 8px 0 4px;"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
-        <div style="overflow-x:auto;">
-        <table>
-          <!-- MIGRASI v1.1 — kolom mengikuti sheet "B2C" (A s/d W).
-               Kolom NO & REGION sudah tidak ada di sheet baru, jadi
-               tabel sekarang dimulai dari DISTRICT. Kolom X (SHEET
-               UPDATE) & Y (LINK UPDATE) sengaja tidak ditampilkan.
-               URUTAN <th> DI BAWAH HARUS SAMA PERSIS dengan urutan
-               <td> di renderMonitoringGoLiveRows(). -->
-          <thead>
-            <tr>
-              <th>DISTRICT</th>
-              <th>SUB DISTRICT</th>
-              <th>BRANCH</th>
-              <th>WOK</th>
-              <th>STO</th>
-              <th>ID IHLD</th>
-              <th>STATUS IHLD</th>
-              <th>NAMA PROYEK</th>
-              <th>TOTAL ODP</th>
-              <th>TOTAL PORT</th>
-              <th>TIPE DESIGN</th>
-              <th>SEGMEN</th>
-              <th>PROGRAM</th>
-              <th>BATCH PROGRAM</th>
-              <th>STATUS PROGRESS</th>
-              <th>STATUS GO LIVE</th>
-              <th>TANGGAL GO LIVE</th>
-              <th>NAMA ALPRO</th>
-              <th>ID SW</th>
-              <th>KET KENDALA</th>
-              <th>NEW STATUS</th>
-              <th>STATUS PROYEK</th>
-              <th>STATUS TASK</th>
-            </tr>
-          </thead>
-          <tbody id="gl-rows-target">
-            <tr>
-              <td colspan="23" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
-                Memuat data Go Live B2C...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-        <div class="pagination-bar" id="glPaginationBar">
-          <span class="pagination-info" id="glPaginationInfo"></span>
           <div class="pagination-controls">
             <button class="btn-page" id="glBtnPrevPage" onclick="goToMonitoringGoLivePage(currentMonitoringGoLivePage - 1)"><i class="fa-solid fa-chevron-left"></i></button>
             <span class="pagination-current" id="glPaginationCurrent">1</span>
             <button class="btn-page" id="glBtnNextPage" onclick="goToMonitoringGoLivePage(currentMonitoringGoLivePage + 1)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           MODAL: VIEW DETAIL PROYEK — IMPROVEMENT TAHAP 3 (poin 5).
+           Diisi dinamis oleh openMonitoringGoLiveDetail() dengan 23
+           field lengkap (DISTRICT s/d STATUS TASK) dari baris yang
+           diklik tombol VIEW di kolom ACTION.
+           ══════════════════════════════════════════════════════════ -->
+      <div id="glDetailModalOverlay" class="modal-overlay modal-overlay-top">
+        <div class="modal-card" style="max-width:480px;">
+          <div class="modal-header">
+            <h2><i class="fa-solid fa-circle-info"></i> Detail Proyek</h2>
+            <p>Data lengkap DISTRICT sampai STATUS TASK.</p>
+          </div>
+          <div class="detail-box golive-detail-modal-body" id="glDetailModalBody"></div>
+          <div class="modal-footer">
+            <button class="btn-modal btn-m-cancel" onclick="closeMonitoringGoLiveDetail()">TUTUP</button>
           </div>
         </div>
       </div>
@@ -3559,7 +3635,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
       const tbody = document.getElementById('gl-rows-target');
       if (!monitoringGoLiveLoadedOnce) {
-        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
           <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
           Memuat data Go Live B2C...
         </td></tr>`;
@@ -3581,7 +3657,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           const btn = document.querySelector('.btn-refresh');
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i> Refresh Data`;
           console.error('Gagal mengambil data Go Live B2C:', err.message);
-          tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
+          tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
             <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;opacity:0.6;display:block;margin-bottom:10px;"></i>
             Gagal memuat data Go Live B2C: ${escapeHtml(err.message)}
           </td></tr>`;
@@ -3738,6 +3814,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
       if (resetPage) currentMonitoringGoLivePage = 1;
 
+      // IMPROVEMENT TAHAP 3 (poin 3) — simpan hasil filter AKTIF (bukan
+      // cuma satu halaman) supaya exportMonitoringGoLiveData() selalu
+      // mengekspor persis apa yang sedang difilter di layar.
+      monitoringGoLiveLastFiltered_ = filtered;
+
       renderMonitoringGoLiveRows(filtered, query);
     }
 
@@ -3781,10 +3862,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (totalRows === 0) { bar.style.display = 'none'; return; }
       bar.style.display = 'flex';
 
-      const startIdx = (currentMonitoringGoLivePage - 1) * monitoringGoLivePageSize + 1;
-      const endIdx   = Math.min(currentMonitoringGoLivePage * monitoringGoLivePageSize, totalRows);
-
-      document.getElementById('glPaginationInfo').innerText = `Menampilkan ${startIdx}–${endIdx} dari ${totalRows} data`;
+      // IMPROVEMENT TAHAP 3 (poin 1) — teks "Menampilkan X–Y dari Z data"
+      // sengaja DIHAPUS (tidak ada lagi #glPaginationInfo di markup).
       document.getElementById('glPaginationCurrent').innerText = `${currentMonitoringGoLivePage} / ${totalPages}`;
       document.getElementById('glBtnPrevPage').disabled = currentMonitoringGoLivePage <= 1;
       document.getElementById('glBtnNextPage').disabled = currentMonitoringGoLivePage >= totalPages;
@@ -3801,7 +3880,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           icon = 'fa-magnifying-glass';
           emptyMsg = `Tidak ada data yang cocok dengan pencarian "${escapeHtml(query)}".`;
         }
-        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
           <i class="fa-solid ${icon}" style="font-size:22px;opacity:0.35;display:block;margin-bottom:10px;"></i>
           ${emptyMsg}
         </td></tr>`;
@@ -3815,15 +3894,22 @@ tbody tr:hover td { background: var(--table-th-bg); }
       const startIdx = (currentMonitoringGoLivePage - 1) * monitoringGoLivePageSize;
       const pageData = data.slice(startIdx, startIdx + monitoringGoLivePageSize);
 
-      const rowsHtml = pageData.map(function(row) {
-        // URUTAN <td> HARUS SAMA PERSIS dengan urutan <th> di markup
-        // tabel (DISTRICT ... STATUS TASK, 23 kolom).
+      // IMPROVEMENT TAHAP 3 (poin 5) — disimpan supaya tombol VIEW per
+      // baris (onclick="openMonitoringGoLiveDetail(idx)") bisa ambil
+      // objek row LENGKAP (23 field, bukan cuma 14 kolom yang tampil).
+      monitoringGoLiveCurrentPageData_ = pageData;
+
+      const rowsHtml = pageData.map(function(row, idx) {
+        // IMPROVEMENT TAHAP 3 (poin 4) — URUTAN <td> HARUS SAMA PERSIS
+        // dengan urutan <th> di markup tabel (14 kolom + ACTION).
+        // Kolom BRANCH/WOK/SEGMEN/BATCH PROGRAM/STATUS PROGRESS/
+        // TANGGAL GO LIVE/NAMA ALPRO/ID SW/KET KENDALA/STATUS TASK
+        // TIDAK ditampilkan lagi di sini, tapi tetap ada di `row` dan
+        // dipakai oleh export & modal VIEW.
         return `
           <tr>
             <td>${escapeHtml(row.district)||'-'}</td>
             <td>${escapeHtml(row.subDistrict)||'-'}</td>
-            <td>${escapeHtml(row.branch)||'-'}</td>
-            <td>${escapeHtml(row.wok)||'-'}</td>
             <td style="color:var(--accent-color);"><i class="fa-solid fa-location-dot" style="font-size:10px;"></i> ${escapeHtml(row.sto)||'-'}</td>
             <td>${escapeHtml(row.idIhld)||'-'}</td>
             <td><span class="${statusBadgeClass_(row.statusIhld)}">${escapeHtml(row.statusIhld)||'-'}</span></td>
@@ -3831,23 +3917,105 @@ tbody tr:hover td { background: var(--table-th-bg); }
             <td style="text-align:right;font-variant-numeric:tabular-nums;">${formatNum_(row.totalOdp)}</td>
             <td style="text-align:right;font-variant-numeric:tabular-nums;">${formatNum_(row.totalPort)}</td>
             <td>${escapeHtml(row.tipeDesign)||'-'}</td>
-            <td>${escapeHtml(row.segmen)||'-'}</td>
             <td>${escapeHtml(row.program)||'-'}</td>
-            <td>${escapeHtml(row.batchProgram)||'-'}</td>
-            <td><span class="${statusBadgeClass_(row.statusProgress)}">${escapeHtml(row.statusProgress)||'-'}</span></td>
             <td><span class="${statusBadgeClass_(row.statusGoLive)}">${escapeHtml(row.statusGoLive)||'-'}</span></td>
-            <td>${escapeHtml(row.tanggalGoLive)||'-'}</td>
-            <td>${escapeHtml(row.namaAlpro)||'-'}</td>
-            <td>${escapeHtml(row.idSw)||'-'}</td>
-            <td style="max-width:220px;white-space:normal;color:var(--text-muted);">${escapeHtml(row.ketKendala)||'-'}</td>
             <td><span class="${statusBadgeClass_(row.newStatus)}">${escapeHtml(row.newStatus)||'-'}</span></td>
             <td><span class="${statusBadgeClass_(row.statusProyek)}">${escapeHtml(row.statusProyek)||'-'}</span></td>
-            <td><span class="${statusBadgeClass_(row.statusTask)}">${escapeHtml(row.statusTask)||'-'}</span></td>
+            <td><button type="button" class="gl-view-btn" onclick="openMonitoringGoLiveDetail(${idx})"><i class="fa-solid fa-eye"></i> VIEW</button></td>
           </tr>`;
       });
 
       tbody.innerHTML = rowsHtml.join("");
       renderMonitoringGoLivePaginationControls(data.length, totalPages);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // IMPROVEMENT TAHAP 3 (poin 3 & 5) — EXPORT DATA + MODAL VIEW DETAIL
+    // Keduanya memakai daftar 23 kolom penuh (DISTRICT s/d STATUS TASK,
+    // sesuai sheet "B2C" A-W) yang SAMA, supaya urutan/label konsisten.
+    // ══════════════════════════════════════════════════════════════
+    let monitoringGoLiveCurrentPageData_ = [];
+    let monitoringGoLiveLastFiltered_    = [];
+
+    const MONITORING_GOLIVE_FULL_COLUMNS_ = [
+      { key: 'district',       label: 'DISTRICT' },
+      { key: 'subDistrict',    label: 'SUB DISTRICT' },
+      { key: 'branch',         label: 'BRANCH' },
+      { key: 'wok',            label: 'WOK' },
+      { key: 'sto',            label: 'STO' },
+      { key: 'idIhld',         label: 'ID IHLD' },
+      { key: 'statusIhld',     label: 'STATUS IHLD' },
+      { key: 'namaProyek',     label: 'NAMA PROYEK' },
+      { key: 'totalOdp',       label: 'TOTAL ODP' },
+      { key: 'totalPort',      label: 'TOTAL PORT' },
+      { key: 'tipeDesign',     label: 'TIPE DESIGN' },
+      { key: 'segmen',         label: 'SEGMEN' },
+      { key: 'program',        label: 'PROGRAM' },
+      { key: 'batchProgram',   label: 'BATCH PROGRAM' },
+      { key: 'statusProgress', label: 'STATUS PROGRESS' },
+      { key: 'statusGoLive',   label: 'STATUS GO LIVE' },
+      { key: 'tanggalGoLive',  label: 'TANGGAL GO LIVE' },
+      { key: 'namaAlpro',      label: 'NAMA ALPRO' },
+      { key: 'idSw',           label: 'ID SW' },
+      { key: 'ketKendala',     label: 'KET KENDALA' },
+      { key: 'newStatus',      label: 'NEW STATUS' },
+      { key: 'statusProyek',   label: 'STATUS PROYEK' },
+      { key: 'statusTask',     label: 'STATUS TASK' }
+    ];
+
+    // Modal VIEW (poin 5) -- ambil row LENGKAP dari halaman yang sedang
+    // tampil (monitoringGoLiveCurrentPageData_), render 23 field lewat
+    // pola .detail-box/.detail-row yang sudah dipakai modal Profil Saya.
+    function openMonitoringGoLiveDetail(idx) {
+      const row = monitoringGoLiveCurrentPageData_[idx];
+      if (!row) return;
+      const body = document.getElementById('glDetailModalBody');
+      body.innerHTML = MONITORING_GOLIVE_FULL_COLUMNS_.map(function(c) {
+        const raw = c.key === 'totalOdp' || c.key === 'totalPort' ? formatNum_(row[c.key]) : (escapeHtml(row[c.key]) || '-');
+        return `<div class="detail-row"><span class="detail-lbl">${escapeHtml(c.label)}:</span><span class="detail-val">${raw}</span></div>`;
+      }).join('');
+      document.getElementById('glDetailModalOverlay').style.display = 'flex';
+    }
+
+    function closeMonitoringGoLiveDetail() {
+      document.getElementById('glDetailModalOverlay').style.display = 'none';
+    }
+
+    function golive_csvEscape_(v) {
+      const s = (v === null || v === undefined) ? '' : String(v);
+      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }
+
+    // Export (poin 3) -- SELALU ambil dari monitoringGoLiveLastFiltered_
+    // (hasil filter/pencarian AKTIF saat ini, bukan cuma satu halaman
+    // yang sedang tampil), dengan 23 kolom penuh DISTRICT s/d STATUS
+    // TASK, jadi hasil export otomatis mengikuti apa pun yang sedang
+    // difilter di layar. Diexport sebagai CSV (UTF-8 + BOM supaya Excel
+    // langsung baca dengan benar), tanpa dependency library eksternal.
+    function exportMonitoringGoLiveData() {
+      const rows = monitoringGoLiveLastFiltered_ || [];
+      if (!rows.length) {
+        alert('Tidak ada data untuk diexport. Sesuaikan filter/pencarian terlebih dahulu.');
+        return;
+      }
+      const header = MONITORING_GOLIVE_FULL_COLUMNS_.map(function(c) { return golive_csvEscape_(c.label); }).join(',');
+      const lines = rows.map(function(row) {
+        return MONITORING_GOLIVE_FULL_COLUMNS_.map(function(c) { return golive_csvEscape_(row[c.key]); }).join(',');
+      });
+      const csv = '\uFEFF' + [header].concat(lines).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      const pad = function(n) { return String(n).padStart(2, '0'); };
+      const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
+      a.href = url;
+      a.download = `monitoring-golive-${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 
