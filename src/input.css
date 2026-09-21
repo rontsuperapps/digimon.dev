@@ -1,0 +1,20 @@
+/* ================================================================
+   ENTRY TAILWIND — DIGIMON (Digital Monitoring)
+   Build:  npm run build:css   ->  assets/app.css
+   ================================================================ */
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+/* Scan markup statis (termasuk class yang muncul di template string JS) */
+@source "../index.html";
+@source "../login.html";
+
+/* Dark mode: dipicu atribut data-theme="dark" pada <body>
+   (sama dengan toggle tema yang sudah ada di JS). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@import "./theme.css";
+/* Ikon SVG-mask (class fa-*). Di layer components supaya utility
+   Tailwind (size-*, text-*) bisa menimpa ukuran/warnanya. */
+@import "./icons.css" layer(components);
+@import "./components.css";
