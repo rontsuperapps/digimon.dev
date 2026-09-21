@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Login - DIGIMON</title>
+
+  <!-- PWA — manifest & meta (samakan dengan index.html) -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <meta name="theme-color" content="#07192F">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DIGIMON">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS v4 (hasil build: npm run build:css) -->
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-theme="light">
+
+  <!-- Container scroll sendiri: <body> di app.css dikunci h-screen/overflow-hidden untuk dashboard -->
+  <div class="fixed inset-0 overflow-y-auto bg-white dark:bg-gray-900">
+    <div class="grid min-h-full lg:grid-cols-2">
+
+      <!-- ══════════ KOLOM FORM ══════════ -->
+      <main class="flex items-center justify-center px-5 py-10 sm:px-8">
+        <section class="relative w-full max-w-[440px]" id="loginCard">
+
+          <!-- Brand (hanya tampil di layar kecil; di desktop ada di panel kanan) -->
+          <div class="mb-8 flex items-center gap-3 lg:hidden">
+            <img src="icons/icon-192.png" alt="" class="size-10 rounded-lg">
+            <div class="leading-tight">
+              <div class="text-lg font-semibold text-gray-800 dark:text-white/90">DIGIMON</div>
+              <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">Digital Monitoring</div>
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <h1 class="mb-2 text-title-sm font-semibold text-gray-800 dark:text-white/90">Selamat datang</h1>
+            <p class="text-theme-sm text-gray-500 dark:text-gray-400">Masuk untuk mengakses dashboard operasional dan monitoring layanan.</p>
+          </div>
+
+          <form onsubmit="doLogin(event); return false;" novalidate class="space-y-5">
+            <div>
+              <label for="inputUsername" class="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-400">Username</label>
+              <input id="inputUsername" class="auth-input" type="text" autocomplete="username" placeholder="Masukkan username" spellcheck="false">
+            </div>
+
+            <div>
+              <label for="inputPassword" class="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-400">Password</label>
+              <div class="relative">
+                <input id="inputPassword" class="auth-input pr-12" type="password" autocomplete="current-password" placeholder="Masukkan password">
+                <button type="button" id="togglePasswordBtn" onclick="togglePassword()" aria-label="Tampilkan password" title="Tampilkan/Sembunyikan Password"
+                        class="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                  <svg id="eyeOpen" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg id="eyeClosed" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                    <path d="M3 3l18 18"></path><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4.1"></path><path d="M6.4 6.4A17.5 17.5 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 4.2-.9"></path><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex cursor-pointer select-none items-center gap-2.5 text-theme-sm text-gray-700 dark:text-gray-400">
+                <input type="checkbox" id="rememberMe" class="size-4.5 rounded border-gray-300 text-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-900">
+                <span>Ingat username</span>
+              </label>
+              <span class="inline-flex items-center gap-1.5 text-theme-xs text-gray-400">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                Secure Access
+              </span>
+            </div>
+
+            <button type="submit" id="btnLogin"
+                    class="relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-brand-500 px-5 text-theme-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-70">
+              <span id="btnSpinner" class="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" style="display:none"></span>
+              <span id="btnText">Masuk ke Dashboard</span>
+              <svg id="btnArrow" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+            </button>
+          </form>
+
+          <div class="alert-box" id="alertBox" role="alert">
+            <span id="alertIcon"></span>
+            <span id="alertText"></span>
+          </div>
+
+          <p class="mt-10 text-center text-theme-xs text-gray-400"><span class="font-medium text-gray-500 dark:text-gray-400">DIGIMON</span> &nbsp;·&nbsp; © 2026</p>
+        </section>
+      </main>
+
+      <!-- ══════════ PANEL BRAND (desktop) ══════════ -->
+      <aside class="login-panel relative hidden items-center justify-center overflow-hidden p-12 lg:flex" aria-hidden="true">
+        <div class="relative max-w-md text-center">
+          <div class="mx-auto mb-7 flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur">
+            <img src="icons/icon-192.png" alt="" class="size-14 rounded-xl">
+          </div>
+          <h2 class="mb-1 text-title-sm font-semibold text-white">DIGIMON</h2>
+          <p class="mb-5 text-theme-xs uppercase tracking-[0.22em] text-white/50">Digital Monitoring</p>
+          <p class="text-theme-sm leading-6 text-white/70">Pantau progres Go Live, rekap per District &amp; Sub District, dan run rate harian dalam satu dashboard.</p>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Toggle tema terang/gelap (tampilan awal selalu terang, tidak disimpan) -->
+  <button type="button" id="themeToggleBtn" onclick="toggleLoginTheme()" title="Ganti Tema" aria-label="Ganti tema terang/gelap"
+          class="fixed right-5 bottom-5 z-50 flex size-12 items-center justify-center rounded-full bg-brand-500 text-white shadow-theme-lg transition-colors hover:bg-brand-600 dark:bg-brand-500">
+    <svg id="loginThemeIconMoon" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path></svg>
+    <svg id="loginThemeIconSun" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+  </button>
+
+  <script>
+    /* ============================================================
+       MIGRASI PWA — KONFIGURASI API GAS
+       ============================================================
+       Ganti GAS_EXEC_URL di bawah dengan URL deployment Web App GAS
+       kamu (Deploy > Manage deployments > Web app > URL, yang
+       berakhiran "/exec"). URL ini SAMA dipakai di index.html.
+       ============================================================ */
+    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby6qUomlq-4uDMvCJyj2BCUR-Oope1oaCGXZgWydnWjv5FKb7qDEP3yutQ8rbAdZWu7rw/exec';
+
+    // Wrapper pengganti google.script.run. Body dikirim sebagai STRING
+    // JSON dengan Content-Type text/plain supaya browser tidak kirim
+    // CORS preflight (GAS tidak bisa merespons preflight OPTIONS).
+    async function callGAS(fn, args) {
+      const res = await fetch(GAS_EXEC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ fn: fn, args: args || [] })
+      });
+
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status + ' dari server GAS.');
+      }
+
+      return res.json();
+    }
+
+    /* ============================================================
+       UI HELPERS
+       ============================================================ */
+
+    function togglePassword() {
+      const input = document.getElementById('inputPassword');
+      const openIcon = document.getElementById('eyeOpen');
+      const closedIcon = document.getElementById('eyeClosed');
+      const btn = document.getElementById('togglePasswordBtn');
+
+      const isPassword = input.type === 'password';
+
+      input.type = isPassword ? 'text' : 'password';
+      openIcon.style.display = isPassword ? 'none' : 'block';
+      closedIcon.style.display = isPassword ? 'block' : 'none';
+
+      btn.setAttribute(
+        'aria-label',
+        isPassword ? 'Sembunyikan password' : 'Tampilkan password'
+      );
+    }
+
+
+    function showAlert(type, message) {
+      const box = document.getElementById('alertBox');
+      const text = document.getElementById('alertText');
+      const icon = document.getElementById('alertIcon');
+
+      box.className = 'alert-box ' + type + ' show';
+      text.textContent = message;
+
+      if (type === 'success') {
+        icon.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="m8 12.3 2.7 2.7L16 9.3"></path>
+          </svg>
+        `;
+      } else {
+        icon.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 8v4"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+        `;
+      }
+    }
+
+
+    function hideAlert() {
+      const box = document.getElementById('alertBox');
+      box.className = 'alert-box';
+    }
+
+
+    function addRipple(btn, event) {
+      if (!btn || !event) return;
+
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement('span');
+
+      ripple.className = 'ripple';
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (event.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (event.clientY - rect.top - size / 2) + 'px';
+
+      btn.appendChild(ripple);
+
+      setTimeout(function() {
+        ripple.remove();
+      }, 700);
+    }
+
+
+    /* ============================================================
+       TOGGLE TEMA TERANG/GELAP
+       Tampilan awal SELALU light (tidak disimpan ke localStorage),
+       sesuai permintaan. Ikon menunjukkan mode tujuan saat diklik.
+       ============================================================ */
+    function toggleLoginTheme() {
+      const body = document.body;
+      const iconSun = document.getElementById('loginThemeIconSun');
+      const iconMoon = document.getElementById('loginThemeIconMoon');
+
+      if (body.getAttribute('data-theme') === 'dark') {
+        body.setAttribute('data-theme', 'light');
+        iconSun.style.display = 'none';
+        iconMoon.style.display = 'block';
+      } else {
+        body.setAttribute('data-theme', 'dark');
+        iconSun.style.display = 'block';
+        iconMoon.style.display = 'none';
+      }
+    }
+
+
+    /* ============================================================
+       LOGIN SYSTEM
+       Dipertahankan kompatibel dengan Google Apps Script Anda.
+       ============================================================ */
+
+    let isSubmitting = false;
+
+    function doLogin(e) {
+      if (e) {
+        e.preventDefault();
+      }
+
+      if (isSubmitting) return;
+
+      if (e) {
+        addRipple(document.getElementById('btnLogin'), e);
+      }
+
+      hideAlert();
+
+      const username = document.getElementById('inputUsername').value.trim();
+      const password = document.getElementById('inputPassword').value.trim();
+
+      if (!username || !password) {
+        showAlert('error', 'Username dan password tidak boleh kosong.');
+        shakeCard();
+        return;
+      }
+
+      isSubmitting = true;
+      setLoading(true);
+
+      callGAS('validateLogin', [username, password])
+        .then(function(result) {
+          setLoading(false);
+
+          if (result.success) {
+            showAlert('success', 'Login berhasil! Mengalihkan ke dashboard...');
+
+            if (document.getElementById('rememberMe').checked) {
+              localStorage.setItem('nimon_user', username);
+            } else {
+              localStorage.removeItem('nimon_user');
+            }
+
+            // Token sesi disimpan di localStorage. index.html membacanya
+            // balik dari sini di setiap panggilan API.
+            localStorage.setItem('monproj_session_token', result.token);
+
+            setTimeout(function() {
+              // Dulu: window.top.location.href = result.redirectUrl
+              // (perlu window.top karena GAS berjalan di iframe sandbox).
+              // Sekarang halaman ini bukan iframe lagi -- redirect biasa
+              // ke halaman dashboard statis (ganti nama file di bawah
+              // kalau dashboard-mu tidak bernama index.html).
+              // AUDIT PERFORMA: delay diturunkan dari 800ms -> 300ms.
+              // 300ms masih cukup untuk toast "Login berhasil" sempat
+              // terlihat sekilas, tapi tidak menambah setengah detik lebih
+              // ke waktu tunggu total user sebelum dashboard mulai memuat.
+              window.location.href = 'index.html';
+            }, 300);
+
+          } else {
+            isSubmitting = false;
+            showAlert(
+              'error',
+              result.message || 'Username atau password salah.'
+            );
+            shakeCard();
+          }
+        })
+        .catch(function(err) {
+          isSubmitting = false;
+          setLoading(false);
+
+          showAlert(
+            'error',
+            'Gagal terhubung ke server. Coba lagi.'
+          );
+
+          shakeCard();
+          console.error('Login error:', err);
+        });
+    }
+
+
+    function setLoading(on) {
+      const btn = document.getElementById('btnLogin');
+      const spinner = document.getElementById('btnSpinner');
+      const text = document.getElementById('btnText');
+      const arrow = document.getElementById('btnArrow');
+
+      btn.disabled = on;
+      spinner.style.display = on ? 'block' : 'none';
+      arrow.style.display = on ? 'none' : 'block';
+      text.textContent = on ? 'Memeriksa akses...' : 'Masuk ke Dashboard';
+    }
+
+
+    function shakeCard() {
+      const card = document.getElementById('loginCard');
+
+      card.classList.remove('card-shake');
+      void card.offsetWidth;
+      card.classList.add('card-shake');
+    }
+
+
+    /* ============================================================
+       PREFILL REMEMBER USERNAME
+       ============================================================ */
+
+    // PWA — daftarkan service worker juga dari halaman login, supaya
+    // app-shell (termasuk index.html) sudah ter-cache SEBELUM user
+    // sempat login pertama kali (mis. dibuka dulu waktu online, baru
+    // dipakai offline nanti).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function (err) {
+        console.warn('Registrasi service worker gagal:', err);
+      });
+    }
+
+    window.onload = function() {
+      // MIGRASI PWA: kalau sudah ada token sesi tersimpan (belum logout
+      // & belum expired di server), tidak perlu login ulang -- langsung
+      // ke dashboard. index.html sendiri yang akan mem-validasi token
+      // ini ke server tiap kali fetch data (lihat callGAS di sana),
+      // jadi kalau ternyata sudah kadaluarsa, index.html yang akan
+      // melempar balik ke sini.
+      if (localStorage.getItem('monproj_session_token')) {
+        window.location.replace('index.html');
+        return;
+      }
+
+      const saved = localStorage.getItem('nimon_user');
+
+      if (saved) {
+        document.getElementById('inputUsername').value = saved;
+        document.getElementById('rememberMe').checked = true;
+        document.getElementById('inputPassword').focus();
+      } else {
+        document.getElementById('inputUsername').focus();
+      }
+    };
+  </script>
+
+</body>
+</html>
