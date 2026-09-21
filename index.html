@@ -1483,6 +1483,56 @@ tbody tr:hover td { background: var(--table-th-bg); }
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat run rate...</div>
           </div>
         </div>
+
+        <!-- Kartu "Need Go Live IHLD" -- source [Kolom A] DISTRICT,
+             [Kolom B] SUB DISTRICT, difilter [Kolom W] STATUS TASK =
+             "NEED GO LIVE IHLD" (lihat getMonitoringGoLiveNeedIhldSummary()
+             di code.gs). Cuma 1 angka "Total Order" per baris (bukan
+             breakdown MITRA/SDI), tapi tetap clickable seperti tabel
+             rekap lain -- klik memfilter tabel "Data Go Live B2C" lewat
+             quick filter Status Task (lihat initGoLiveSummaryDrilldown_). -->
+        <div class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-triangle-exclamation"></i> Need Go Live IHLD</div>
+          </div>
+
+          <div class="golive-tabs" role="tablist" aria-label="Need Go Live IHLD">
+            <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glNeedIhldPanel-district" onclick="switchGoLiveTab('needihld', 'district', this)"><i class="fa-solid fa-location-dot"></i> DISTRICT</button>
+            <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glNeedIhldPanel-subdistrict" onclick="switchGoLiveTab('needihld', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> SUB DISTRICT</button>
+          </div>
+
+          <div class="golive-tab-panel active" id="glNeedIhldPanel-district" data-group="needihld" data-tab="district" role="tabpanel">
+            <div class="pivot-table-wrap">
+              <table class="pivot-grouped-table" id="glNeedIhldDistrictTable">
+                <thead>
+                  <tr>
+                    <th class="hdr-navy">DISTRICT</th>
+                    <th class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  </tr>
+                </thead>
+                <tbody id="gl-needihld-district-target">
+                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="golive-tab-panel" id="glNeedIhldPanel-subdistrict" data-group="needihld" data-tab="subdistrict" role="tabpanel">
+            <div class="pivot-table-wrap">
+              <table class="pivot-grouped-table" id="glNeedIhldSubDistrictTable">
+                <thead>
+                  <tr>
+                    <th class="hdr-navy">SUB DISTRICT</th>
+                    <th class="hdr-band hdr-band-total">TOTAL ORDER</th>
+                  </tr>
+                </thead>
+                <tbody id="gl-needihld-subdistrict-target">
+                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ══════════════════════════════════════════════════════════
@@ -2142,7 +2192,8 @@ tbody tr:hover td { background: var(--table-th-bg); }
       'getLoggedInUserInfo', 'getMyProfile', 'getNotifications',
       'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal',
       'getDashboardBootstrap',
-      'getMonitoringGoLiveSummary', 'getMonitoringGoLivePT2Summary', 'getMonitoringGoLivePT3Summary'
+      'getMonitoringGoLiveSummary', 'getMonitoringGoLivePT2Summary', 'getMonitoringGoLivePT3Summary',
+      'getMonitoringGoLiveNeedIhldSummary'
     ];
 
     // Prefiks dinaikkan ke _v2 saat migrasi ke sheet "B2C": bentuk data
@@ -2311,6 +2362,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
     let isFetchingGoLivePT3Summary  = false;
     let goLivePT3SummaryLoadedOnce  = false;
 
+    // Kartu "Need Go Live IHLD" (tab DISTRICT / SUB DISTRICT).
+    let isFetchingGoLiveNeedIhldSummary = false;
+    let goLiveNeedIhldSummaryLoadedOnce = false;
+
     // IMPROVEMENT TAHAP 2 (poin 7) — filter dropdown tabel detail.
     // key = field di objek row (lihat getMonitoringGoLiveData()), id
     // = elemen <select> di markup. Dipakai bersama oleh
@@ -2361,6 +2416,13 @@ tbody tr:hover td { background: var(--table-th-bg); }
     // supaya tidak rapuh terhadap variasi huruf besar/kecil di data), sama
     // seperti alasan glQuickBucketFilter_ di atas.
     let glQuickNewStatusGoLive_ = false;
+
+    // Klik "Total Order" di kartu "Need Go Live IHLD" -> filter Status
+    // Task = "NEED GO LIVE IHLD" via klasifikasi (sama alasannya dengan
+    // glQuickNewStatusGoLive_ di atas -- exact-match klasifikasi, bukan
+    // dropdown, supaya konsisten dengan cara backend menghitungnya di
+    // golive_buildNeedIhldPivot_()).
+    let glQuickStatusTaskNeedIhld_ = false;
 
     const GOLIVE_BUCKET_MAP_JS_ = {
       'CREATE ABD':            'createAbd',
@@ -2424,9 +2486,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
       }
 
       document.addEventListener('click', function (e) {
-        const lopTd   = e.target.closest('[data-gl-lop-click="1"]');
-        const dailyTd = !lopTd ? e.target.closest('[data-gl-daily-click="1"]') : null;
-        if (!lopTd && !dailyTd) return;
+        const lopTd      = e.target.closest('[data-gl-lop-click="1"]');
+        const dailyTd    = !lopTd ? e.target.closest('[data-gl-daily-click="1"]') : null;
+        const needIhldTd = (!lopTd && !dailyTd) ? e.target.closest('[data-gl-needihld-click="1"]') : null;
+        if (!lopTd && !dailyTd && !needIhldTd) return;
 
         // Reset SEMUA filter (dropdown, tanggal, teks, + 2 quick filter)
         // dulu, supaya sel manapun yang diklik selalu mulai dari kondisi
@@ -2438,6 +2501,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         document.getElementById('glSearchInput').value = '';
         glQuickBucketFilter_    = '';
         glQuickNewStatusGoLive_ = false;
+        glQuickStatusTaskNeedIhld_ = false;
 
         const dateFromEl = document.getElementById('glFilterTanggalFrom');
         const dateToEl   = document.getElementById('glFilterTanggalTo');
@@ -2453,7 +2517,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           setSelectIfExists_(labelType === 'subDistrict' ? 'glFilterSubDistrict' : 'glFilterDistrict', label);
           setSelectIfExists_('glFilterTipeDesign', tipeDesign);
           glQuickBucketFilter_ = bucketKey;
-        } else {
+        } else if (dailyTd) {
           const labelType = dailyTd.getAttribute('data-label-type') || '';
           const label     = dailyTd.getAttribute('data-label') || '';
           const dateFrom  = dailyTd.getAttribute('data-date-from') || '';
@@ -2463,6 +2527,14 @@ tbody tr:hover td { background: var(--table-th-bg); }
           if (dateFromEl) dateFromEl.value = dateFrom;
           if (dateToEl)   dateToEl.value   = dateTo;
           glQuickNewStatusGoLive_ = true;
+        } else {
+          const labelType = needIhldTd.getAttribute('data-label-type') || '';
+          const label     = needIhldTd.getAttribute('data-label') || '';
+
+          if (dateFromEl) dateFromEl.value = '';
+          if (dateToEl)   dateToEl.value   = '';
+          setSelectIfExists_(labelType === 'subDistrict' ? 'glFilterSubDistrict' : 'glFilterDistrict', label);
+          glQuickStatusTaskNeedIhld_ = true;
         }
 
         applyMonitoringGoLiveSearchFilter(true);
@@ -2479,6 +2551,11 @@ tbody tr:hover td { background: var(--table-th-bg); }
 
     function clearGoLiveQuickNewStatusFilter_() {
       glQuickNewStatusGoLive_ = false;
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
+    function clearGoLiveQuickNeedIhldFilter_() {
+      glQuickStatusTaskNeedIhld_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
 
@@ -2640,6 +2717,15 @@ tbody tr:hover td { background: var(--table-th-bg); }
           }
           syncAllPivotStickyHeaders_();
 
+          // ── Kartu "Need Go Live IHLD" ──
+          goLiveNeedIhldSummaryLoadedOnce = true;
+          if (res.needIhldSummary) {
+            renderGoLiveNeedIhldTable_('gl-needihld-district-target', res.needIhldSummary.byDistrict, res.needIhldSummary.byDistrictGrandTotal, 'DISTRICT', 'district');
+            renderGoLiveNeedIhldTable_('gl-needihld-subdistrict-target', res.needIhldSummary.bySubDistrict, res.needIhldSummary.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict');
+          } else {
+            renderGoLiveNeedIhldError_(res.needIhldSummaryError);
+          }
+
           // ── Run rate 7 hari ──
           if (res.runRate) {
             renderGoLiveRunRateChart_(res.runRate.days || []);
@@ -2669,6 +2755,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
           fetchGoLiveSummary(!!forceFresh);
           fetchGoLivePT2Summary(!!forceFresh);
           fetchGoLivePT3Summary(!!forceFresh);
+          fetchGoLiveNeedIhldSummary(!!forceFresh);
           fetchGoLiveRunRate(!!forceFresh);
           fetchGoLiveDaily(!!forceFresh);
         })
@@ -3075,6 +3162,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
         if (!goLiveSummaryLoadedOnce) fetchGoLiveSummary();
         if (!goLivePT2SummaryLoadedOnce) fetchGoLivePT2Summary();
         if (!goLivePT3SummaryLoadedOnce) fetchGoLivePT3Summary();
+        if (!goLiveNeedIhldSummaryLoadedOnce) fetchGoLiveNeedIhldSummary();
         if (!goLiveRunRateLoadedOnce) fetchGoLiveRunRate();
         if (!goLiveDailyLoadedOnce) { ensureGoLiveDailyFilterOptions_(); fetchGoLiveDaily(); }
       }
@@ -3211,6 +3299,89 @@ tbody tr:hover td { background: var(--table-th-bg); }
           renderGoLiveSummaryError_(err.message, ['gl-summary-pt3-district-target', 'gl-summary-pt3-subdistrict-target']);
         })
         .getMonitoringGoLivePT3Summary(!!forceFresh);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ── REKAP "NEED GO LIVE IHLD" (tab DISTRICT / SUB DISTRICT) ──
+    // Sumber: [Kolom A] DISTRICT, [Kolom B] SUB DISTRICT, difilter
+    // [Kolom W] STATUS TASK = "NEED GO LIVE IHLD" (lihat
+    // getMonitoringGoLiveNeedIhldSummary() di code.gs). Cuma 1 angka
+    // "Total Order" per baris (COUNT baris), tidak ada breakdown
+    // MITRA/SDI seperti "Rekap Go Live" -- tabelnya sengaja dibuat
+    // ringan (2 kolom). Klik "Total Order" tetap ikut drill-down yang
+    // sama ke tabel "Data Go Live B2C", lewat quick filter Status Task
+    // (lihat glQuickStatusTaskNeedIhld_ & initGoLiveSummaryDrilldown_).
+    // ══════════════════════════════════════════════════════════════
+
+    function goLiveNeedIhldRowHtml_(row, isGrandTotal, labelType) {
+      // Baris GRAND TOTAL tidak mewakili satu district/sub district
+      // tertentu -- klik tetap jalan (memfilter Status Task saja), tapi
+      // TIDAK ikut mengisi dropdown District/Sub District.
+      const clickLabel = isGrandTotal ? '' : row.label;
+      const labelHtml  = escapeHtml(row.label) || '-';
+      const clickAttrs =
+        ' data-gl-needihld-click="1"' +
+        ' data-label-type="' + escapeHtml(labelType || '') + '"' +
+        ' data-label="' + escapeHtml(clickLabel) + '"' +
+        ' title="Klik untuk lihat detail datanya di tabel Data Go Live B2C"';
+
+      return `
+        <tr${isGrandTotal ? ' class="pivot-total-row"' : ''}>
+          <td class="label-cell">${labelHtml}</td>
+          <td class="num-cell cell-total cell-lop-click"${clickAttrs}>${formatNum_(row.total)}</td>
+        </tr>`;
+    }
+
+    function renderGoLiveNeedIhldTable_(tbodyId, rows, grandTotal, emptyLabel, rowLabelType) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="2" class="golive-summary-empty">
+          <i class="fa-solid fa-inbox"></i>Tidak ada data ${escapeHtml(emptyLabel)} dengan STATUS TASK "NEED GO LIVE IHLD".
+        </td></tr>`;
+        return;
+      }
+
+      const bodyHtml  = rows.map(function (r) { return goLiveNeedIhldRowHtml_(r, false, rowLabelType); }).join('');
+      const totalHtml = grandTotal ? goLiveNeedIhldRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType) : '';
+
+      tbody.innerHTML = bodyHtml + totalHtml;
+    }
+
+    function renderGoLiveNeedIhldError_(message) {
+      const errHtml = `<tr><td colspan="2" class="golive-summary-empty" style="color:var(--danger-color);">
+        <i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat rekap: ${escapeHtml(message || 'Terjadi kesalahan.')}
+      </td></tr>`;
+      ['gl-needihld-district-target', 'gl-needihld-subdistrict-target'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = errHtml;
+      });
+    }
+
+    function fetchGoLiveNeedIhldSummary(forceFresh) {
+      if (isFetchingGoLiveNeedIhldSummary) return;
+      isFetchingGoLiveNeedIhldSummary = true;
+
+      google.script.run
+        .withSuccessHandler(function (response) {
+          isFetchingGoLiveNeedIhldSummary = false;
+          goLiveNeedIhldSummaryLoadedOnce = true;
+
+          if (!response || response.success === false) {
+            renderGoLiveNeedIhldError_(response && response.message);
+            return;
+          }
+
+          renderGoLiveNeedIhldTable_('gl-needihld-district-target', response.byDistrict, response.byDistrictGrandTotal, 'DISTRICT', 'district');
+          renderGoLiveNeedIhldTable_('gl-needihld-subdistrict-target', response.bySubDistrict, response.bySubDistrictGrandTotal, 'SUB DISTRICT', 'subDistrict');
+        })
+        .withFailureHandler(function (err) {
+          isFetchingGoLiveNeedIhldSummary = false;
+          console.error('Gagal mengambil rekap Need Go Live IHLD:', err.message);
+          renderGoLiveNeedIhldError_(err.message);
+        })
+        .getMonitoringGoLiveNeedIhldSummary(!!forceFresh);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -3934,7 +4105,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       // sel tabel Perolehan Harian (lihat initGoLiveSummaryDrilldown_())
       // -- bukan dropdown biasa, jadi dihitung terpisah dari fieldFilters.
       const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
-        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0);
+        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0) + (glQuickStatusTaskNeedIhld_ ? 1 : 0);
 
       let filtered = activeMonitoringGoLiveRows;
 
@@ -3963,6 +4134,12 @@ tbody tr:hover td { background: var(--table-th-bg); }
       if (glQuickNewStatusGoLive_) {
         filtered = filtered.filter(function (row) {
           return golive_normJs_(row.newStatus) === 'GO LIVE';
+        });
+      }
+
+      if (glQuickStatusTaskNeedIhld_) {
+        filtered = filtered.filter(function (row) {
+          return golive_normJs_(row.statusTask) === 'NEED GO LIVE IHLD';
         });
       }
 
@@ -4002,7 +4179,10 @@ tbody tr:hover td { background: var(--table-th-bg); }
           const newStatusChip = glQuickNewStatusGoLive_
             ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNewStatusFilter_()">New Status: Go Live <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
-          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + newStatusChip;
+          const needIhldChip = glQuickStatusTaskNeedIhld_
+            ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNeedIhldFilter_()">Status Task: Need Go Live IHLD <i class="fa-solid fa-circle-xmark"></i></button>'
+            : '';
+          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + newStatusChip + needIhldChip;
           hintEl.classList.add('show');
         } else {
           hintEl.classList.remove('show');
@@ -4040,6 +4220,7 @@ tbody tr:hover td { background: var(--table-th-bg); }
       document.getElementById('glSearchInput').value = '';
       glQuickBucketFilter_    = '';
       glQuickNewStatusGoLive_ = false;
+      glQuickStatusTaskNeedIhld_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
 
