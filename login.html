@@ -140,56 +140,104 @@
     .form-decor-chevrons span:nth-child(2) { left: 90px;  background: #2c3979; opacity: .09; }
     .form-decor-chevrons span:nth-child(3) { left: 150px; background: #bdbec0; opacity: .09; }
     body[data-theme="dark"] .form-decor-chevrons span { opacity: .16; }
+
+    /* ============================================================
+       LAYOUT LOGIN — PETA FULL-BLEED (desktop) + FORM MENGAMBANG
+       DI KANAN
+       Sebelumnya split 2 kolom sama besar (grid lg:grid-cols-2).
+       Sekarang peta mengisi SELURUH layar (>=1024px), dan form
+       login jadi kartu yang mengambang di sisi kanan di atasnya.
+       Ditulis manual (bukan class Tailwind) karena butuh gradient
+       fade & pergeseran posisi yang tidak ada di assets/app.css.
+       Di mobile (<1024px) perilaku TIDAK berubah: peta tetap
+       disembunyikan, form tetap di tengah layar seperti sebelumnya.
+       ============================================================ */
+    .login-form-col {
+      position: relative;
+      z-index: 10;
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (min-width: 1024px) {
+      .login-form-col { justify-content: flex-end; }
+
+      /* Gradient fade supaya form tetap terbaca jelas di atas peta,
+         tanpa perlu kartu solid/border terpisah. */
+      .login-form-col::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(
+          to left,
+          rgba(255, 255, 255, .98) 0%,
+          rgba(255, 255, 255, .98) 38%,
+          rgba(255, 255, 255, 0) 78%
+        );
+      }
+      body[data-theme="dark"] .login-form-col::before {
+        background: linear-gradient(
+          to left,
+          rgba(7, 25, 47, .98) 0%,
+          rgba(7, 25, 47, .98) 38%,
+          rgba(7, 25, 47, 0) 78%
+        );
+      }
+
+      #loginCard { margin-right: clamp(24px, 6vw, 96px); }
+    }
   </style>
 </head>
 <body data-theme="light">
 
   <!-- Container scroll sendiri: <body> di app.css dikunci h-screen/overflow-hidden untuk dashboard -->
   <div class="fixed inset-0 overflow-y-auto bg-white dark:bg-gray-900">
-    <div class="grid min-h-full lg:grid-cols-2">
 
-      <!-- ══════════ PANEL PETA DISTRICT (desktop, kiri) ══════════
-           Ditaruh SEBELUM <main> di DOM supaya otomatis jadi kolom
-           kiri di grid desktop, tanpa perlu class Tailwind "order-*"
-           yang tidak ada di assets/app.css. Di mobile tetap tidak
-           tampil (hidden lg:flex — sama seperti panel brand lama). ══════════ -->
-      <aside class="login-panel relative hidden overflow-hidden lg:flex" aria-hidden="true">
+    <!-- ══════════ PANEL PETA DISTRICT (desktop) — FULL-BLEED ══════════
+         Mengisi SELURUH layar (bukan cuma setengah lagi) mulai
+         breakpoint lg. Form login (di bawah) mengambang di atasnya,
+         digeser ke kanan. Di mobile tetap tidak tampil, sama seperti
+         sebelumnya. ══════════ -->
+    <aside class="login-panel absolute inset-0 hidden overflow-hidden lg:flex" aria-hidden="true">
 
-        <!-- Peta Leaflet mengisi seluruh panel -->
-        <div id="loginMap"></div>
+      <!-- Peta Leaflet mengisi seluruh panel -->
+      <div id="loginMap"></div>
 
-        <!-- Overlay brand, mengambang di atas peta -->
-        <div class="map-overlay map-overlay--top">
-          <img src="icons/logo-infranexia.png" alt="Infranexia" style="height:28px;width:auto;display:block">
-          <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
-          <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
+      <!-- Overlay brand, mengambang di atas peta -->
+      <div class="map-overlay map-overlay--top">
+        <img src="icons/logo-digimon.png" alt="DIGIMON" style="height:28px;width:auto;display:block">
+        <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
+        <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
+      </div>
+
+      <!-- Legend district, di bagian bawah panel -->
+      <div class="map-overlay map-overlay--bottom">
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Suramadu</span>
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Lamongan</span>
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Madiun</span>
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Sidoarjo</span>
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Malang</span>
+        <span class="map-legend-item"><span class="map-legend-dot"></span>Jember</span>
+      </div>
+    </aside>
+
+    <!-- ══════════ KOLOM FORM — mengambang di kanan (desktop), tengah (mobile) ══════════ -->
+    <main class="login-form-col relative overflow-hidden px-5 py-10 sm:px-8">
+
+      <!-- Motif 3 warna (merah/biru/abu-abu) khas logo Infranexia -->
+      <div class="form-decor-bar" aria-hidden="true"></div>
+      <div class="form-decor-chevrons" aria-hidden="true"><span></span><span></span><span></span></div>
+
+      <section class="relative w-full max-w-[440px]" id="loginCard">
+
+        <!-- Brand (hanya tampil di layar kecil; di desktop ada di panel peta) -->
+        <div class="mb-8 flex items-center gap-3 lg:hidden">
+          <img src="icons/logo-digimon.png" alt="DIGIMON" style="height:30px;width:auto;display:block">
+          <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">DIGIMON · Digital Monitoring</div>
         </div>
-
-        <!-- Legend district, di bagian bawah panel -->
-        <div class="map-overlay map-overlay--bottom">
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Suramadu</span>
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Lamongan</span>
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Madiun</span>
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Sidoarjo</span>
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Malang</span>
-          <span class="map-legend-item"><span class="map-legend-dot"></span>Jember</span>
-        </div>
-      </aside>
-
-      <!-- ══════════ KOLOM FORM (kanan di desktop) ══════════ -->
-      <main class="relative flex items-center justify-center overflow-hidden px-5 py-10 sm:px-8">
-
-        <!-- Motif 3 warna (merah/biru/abu-abu) khas logo Infranexia -->
-        <div class="form-decor-bar" aria-hidden="true"></div>
-        <div class="form-decor-chevrons" aria-hidden="true"><span></span><span></span><span></span></div>
-
-        <section class="relative w-full max-w-[440px]" id="loginCard">
-
-          <!-- Brand (hanya tampil di layar kecil; di desktop ada di panel peta) -->
-          <div class="mb-8 flex items-center gap-3 lg:hidden">
-            <img src="icons/logo-infranexia.png" alt="Infranexia" style="height:30px;width:auto;display:block">
-            <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">DIGIMON · Digital Monitoring</div>
-          </div>
 
           <div class="mb-8">
             <h1 class="mb-2 text-title-sm font-semibold text-gray-800 dark:text-white/90">Selamat datang</h1>
@@ -244,9 +292,7 @@
 
           <p class="mt-10 text-center text-theme-xs text-gray-400"><span class="font-medium text-gray-500 dark:text-gray-400">DIGIMON</span> &nbsp;·&nbsp; © 2026</p>
         </section>
-      </main>
-
-    </div>
+    </main>
   </div>
 
   <!-- Toggle tema terang/gelap (tampilan awal selalu terang, tidak disimpan) -->
