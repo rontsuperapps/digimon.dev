@@ -145,14 +145,6 @@
     body[data-theme="dark"] .map-legend-item { color: #e2e8f0; }
     body[data-theme="dark"] .map-legend-dot { background: var(--color-brand-400, #6a8dfb); }
 
-    .map-overlay-logo-chip {
-      display: inline-block;
-      background: #fff;
-      padding: 5px 10px;
-      border-radius: 8px;
-      line-height: 0;
-    }
-
     /* ============================================================
        MOTIF DIAGONAL (merah/biru/abu-abu) — terinspirasi garis
        diagonal pada logo Infranexia. Ditulis manual (bukan class
@@ -259,7 +251,11 @@
 
       <!-- Overlay brand, mengambang di atas peta -->
       <div class="map-overlay map-overlay--top">
-        <span class="map-overlay-logo-chip"><img src="icons/logo-infranexia.png" alt="Infranexia" style="height:24px;width:auto;display:block"></span>
+        <img id="infranexiaLogo" src="icons/logo-infranexia-light.png"
+             data-src-light="icons/logo-infranexia-light.png"
+             data-src-dark="icons/logo-infranexia-dark.png"
+             onerror="this.onerror=null;this.src=this.dataset.srcDark;"
+             alt="Infranexia" style="height:24px;width:auto;display:block">
         <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
         <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
       </div>
@@ -284,16 +280,14 @@
       <section class="relative w-full" id="loginCard">
 
         <!-- Brand DIGIMON, selalu tampil di atas form (desktop & mobile).
-             Logo dibuat center & besar, teks di sampingnya dihapus
-             karena sudah terwakili oleh logo itu sendiri.
-             data-src-light/data-src-dark: hook untuk 2 versi warna logo
-             (terang/gelap) kalau filenya sudah tersedia — lihat
-             applyDigimonLogoForTheme() di bawah. Sampai file itu ada,
-             keduanya fallback ke file yang sama. -->
+             Logo dual-mode: logo-digimon-light.png (teks navy, dipakai
+             saat tema terang) & logo-digimon-dark.png (teks putih asli,
+             dipakai saat tema gelap) — ditukar otomatis lewat
+             applyDigimonLogoForTheme() di bawah setiap toggleLoginTheme(). -->
         <div class="mb-2 flex justify-center">
-          <img id="digimonLogo" src="icons/logo-digimon.png"
+          <img id="digimonLogo" src="icons/logo-digimon-light.png"
                data-src-light="icons/logo-digimon-light.png"
-               data-src-dark="icons/logo-digimon.png"
+               data-src-dark="icons/logo-digimon-dark.png"
                onerror="this.onerror=null;this.src=this.dataset.srcDark;"
                alt="DIGIMON" style="height:96px;width:auto;display:block">
         </div>
@@ -486,24 +480,26 @@
         body.setAttribute('data-theme', 'light');
         iconSun.style.display = 'none';
         iconMoon.style.display = 'block';
-        applyDigimonLogoForTheme('light');
+        applyLogosForTheme('light');
       } else {
         body.setAttribute('data-theme', 'dark');
         iconSun.style.display = 'block';
         iconMoon.style.display = 'none';
-        applyDigimonLogoForTheme('dark');
+        applyLogosForTheme('dark');
       }
     }
 
-    // Tukar file logo DIGIMON sesuai tema. Sampai file
-    // icons/logo-digimon-light.png benar-benar diupload, ini akan
-    // otomatis fallback ke logo-digimon.png (lihat onerror di <img>),
-    // jadi aman dipanggil kapan saja tanpa merusak tampilan sekarang.
-    function applyDigimonLogoForTheme(theme) {
-      const img = document.getElementById('digimonLogo');
-      if (!img) return;
-      const src = theme === 'dark' ? img.dataset.srcDark : img.dataset.srcLight;
-      if (src) img.src = src;
+    // Tukar semua logo dual-mode (DIGIMON di form, infraNexia di
+    // overlay peta) sesuai tema aktif. Aman dipanggil kapan saja —
+    // kalau file versi tertentu belum diupload, <img onerror> di HTML
+    // otomatis fallback ke versi dark supaya tidak pernah kosong.
+    function applyLogosForTheme(theme) {
+      ['digimonLogo', 'infranexiaLogo'].forEach(function (id) {
+        const img = document.getElementById(id);
+        if (!img) return;
+        const src = theme === 'dark' ? img.dataset.srcDark : img.dataset.srcLight;
+        if (src) img.src = src;
+      });
     }
 
 
