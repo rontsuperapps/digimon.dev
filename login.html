@@ -69,6 +69,36 @@
     }
     .district-tooltip::before { display: none; }
 
+    /* Garis koneksi animasi hub -> district: dash bergerak simulasi
+       "data mengalir" khas visual network monitoring. */
+    .district-link-line {
+      stroke: var(--color-brand-400, #6a8dfb);
+      stroke-dasharray: 1 7;
+      animation: district-link-flow 1s linear infinite;
+      transition: opacity .2s ease, stroke-width .2s ease;
+    }
+    @keyframes district-link-flow {
+      to { stroke-dashoffset: -16; }
+    }
+    body[data-theme="dark"] .district-link-line { stroke: var(--color-brand-300, #9db3fc); }
+
+    /* Marker hub (NOC) — sedikit lebih besar & warna beda dari district */
+    .hub-marker { position: relative; width: 18px; height: 18px; }
+    .hub-marker-dot {
+      position: absolute; inset: 0; margin: auto;
+      width: 12px; height: 12px; border-radius: 9999px;
+      background: #df1d26;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    }
+    .hub-marker-pulse {
+      position: absolute; inset: 0; margin: auto;
+      width: 12px; height: 12px; border-radius: 9999px;
+      background: #df1d26;
+      opacity: .6;
+      animation: district-pulse 2.2s ease-out infinite;
+    }
+
     /* Kartu overlay brand di atas peta — dibuat TERANG (bukan gelap)
        supaya logo asli (teks hitam) tetap terbaca jelas. */
     .map-overlay {
@@ -472,13 +502,17 @@
     let loginMap = null;
 
     const DISTRICT_MARKERS = [
-      { name: 'Suramadu', lat: -7.1667, lng: 112.7500 },
-      { name: 'Lamongan', lat: -7.1219, lng: 112.4171 },
-      { name: 'Madiun',   lat: -7.6298, lng: 111.5239 },
-      { name: 'Sidoarjo', lat: -7.4478, lng: 112.7183 },
-      { name: 'Malang',   lat: -7.9666, lng: 112.6326 },
-      { name: 'Jember',   lat: -8.1844, lng: 113.6681 }
+      { name: 'Suramadu', lat: -7.334766, lng: 112.724391 },
+      { name: 'Lamongan', lat: -7.120873, lng: 112.566203 },
+      { name: 'Madiun',   lat: -7.627721, lng: 111.520189 },
+      { name: 'Sidoarjo', lat: -7.448807, lng: 112.717775 },
+      { name: 'Malang',   lat: -7.955166, lng: 112.638130 },
+      { name: 'Jember',   lat: -8.174740, lng: 113.693352 }
     ];
+
+    // Pusat "NOC" — titik asal garis koneksi animasi ke tiap district
+    // (kira-kira di Surabaya, sesuai cakupan Area 3 Jawa Timur).
+    const HUB_CENTER = { lat: -7.2575, lng: 112.7521 };
 
     function initLoginMap() {
       const mapEl = document.getElementById('loginMap');
@@ -495,7 +529,29 @@
         attribution: '&copy; OpenStreetMap'
       }).addTo(loginMap);
 
-      const bounds = [];
+      const bounds = [[HUB_CENTER.lat, HUB_CENTER.lng]];
+      const districtLines = {};
+
+      // Garis koneksi animasi dari hub (NOC) ke tiap district — digambar
+      // duluan supaya berada DI BAWAH marker district.
+      DISTRICT_MARKERS.forEach(function (d) {
+        const line = L.polyline(
+          [[HUB_CENTER.lat, HUB_CENTER.lng], [d.lat, d.lng]],
+          { className: 'district-link-line', weight: 1.6, opacity: .55, interactive: false }
+        ).addTo(loginMap);
+        districtLines[d.name] = line;
+      });
+
+      // Marker hub (NOC) — titik pusat, sedikit lebih besar dari marker district.
+      const hubIcon = L.divIcon({
+        className: 'hub-marker',
+        html: '<span class="hub-marker-pulse"></span><span class="hub-marker-dot"></span>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      L.marker([HUB_CENTER.lat, HUB_CENTER.lng], { icon: hubIcon })
+        .addTo(loginMap)
+        .bindTooltip('NOC · Command Center', { direction: 'top', offset: [0, -8], className: 'district-tooltip' });
 
       DISTRICT_MARKERS.forEach(function (d) {
         const icon = L.divIcon({
@@ -505,9 +561,18 @@
           iconAnchor: [7, 7]
         });
 
-        L.marker([d.lat, d.lng], { icon: icon })
+        const marker = L.marker([d.lat, d.lng], { icon: icon })
           .addTo(loginMap)
           .bindTooltip(d.name, { direction: 'top', offset: [0, -6], className: 'district-tooltip' });
+
+        // Interaktif: hover marker district -> garis koneksinya menyala.
+        const line = districtLines[d.name];
+        marker.on('mouseover', function () {
+          if (line) line.setStyle({ opacity: 1, weight: 3 });
+        });
+        marker.on('mouseout', function () {
+          if (line) line.setStyle({ opacity: .55, weight: 1.6 });
+        });
 
         bounds.push([d.lat, d.lng]);
       });
