@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
-  <title>Login - DIGIMON</title>
+  <title>Login - Infranexia</title>
 
   <!-- PWA — manifest & meta (samakan dengan index.html) -->
   <link rel="manifest" href="manifest.json">
@@ -135,8 +135,8 @@
        Sebelumnya split 2 kolom sama besar (grid lg:grid-cols-2).
        Sekarang peta mengisi SELURUH layar (>=1024px), dan form
        login jadi kartu yang mengambang di sisi kanan di atasnya.
-       Ditulis manual (bukan class Tailwind) karena butuh gradient
-       fade & pergeseran posisi yang tidak ada di assets/app.css.
+       Ditulis manual (bukan class Tailwind) karena butuh warna &
+       shadow spesifik yang tidak ada di assets/app.css.
        Di mobile (<1024px) perilaku TIDAK berubah: peta tetap
        disembunyikan, form tetap di tengah layar seperti sebelumnya.
        ============================================================ */
@@ -150,32 +150,25 @@
     }
     @media (min-width: 1024px) {
       .login-form-col { justify-content: flex-end; }
-
-      /* Gradient fade supaya form tetap terbaca jelas di atas peta,
-         tanpa perlu kartu solid/border terpisah. */
-      .login-form-col::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        background: linear-gradient(
-          to left,
-          rgba(255, 255, 255, .98) 0%,
-          rgba(255, 255, 255, .98) 38%,
-          rgba(255, 255, 255, 0) 78%
-        );
-      }
-      body[data-theme="dark"] .login-form-col::before {
-        background: linear-gradient(
-          to left,
-          rgba(7, 25, 47, .98) 0%,
-          rgba(7, 25, 47, .98) 38%,
-          rgba(7, 25, 47, 0) 78%
-        );
-      }
-
       #loginCard { margin-right: clamp(24px, 6vw, 96px); }
+    }
+
+    /* Kartu form login — PUTIH SOLID (bukan transparan), supaya
+       kontras tegas dari peta di belakangnya dan logo DIGIMON di
+       dalamnya selalu kebaca jelas, terkesan modern & simple. */
+    #loginCard {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-2xl);
+      padding: 40px 32px;
+      box-shadow: var(--shadow-theme-xl);
+    }
+    @media (min-width: 640px) {
+      #loginCard { padding: 44px 40px; }
+    }
+    body[data-theme="dark"] #loginCard {
+      background: var(--color-gray-dark);
+      border-color: var(--color-gray-800);
     }
   </style>
 </head>
@@ -197,8 +190,8 @@
       <!-- Overlay brand, mengambang di atas peta -->
       <div class="map-overlay map-overlay--top">
         <img src="icons/logo-infranexia.png" alt="Infranexia" style="height:28px;width:auto;display:block">
-        <div class="map-overlay-subtitle">AREA 3 · REGION JAWA TIMUR</div>
-        <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district.</p>
+        <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
+        <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
       </div>
 
       <!-- Legend district, di bagian bawah panel -->
