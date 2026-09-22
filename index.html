@@ -214,6 +214,111 @@
     .golive-kendala-row.is-total .golive-kendala-row-label{
       color: var(--color-brand-600);
     }
+
+    /* 6b) Tabel "Need Go Live IHLD" dibatasi tingginya + scroll vertikal
+       (sama seperti list versi sebelumnya) supaya card tidak jadi
+       terlalu tinggi kalau District/Sub District-nya banyak baris. */
+    #glNeedIhldPanel-district .pivot-table-wrap,
+    #glNeedIhldPanel-subdistrict .pivot-table-wrap{
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* 7) Icon badge "Ringkasan Total Go Live (LOP)" yang selama ini
+       tampil kotak/kosong (fa-pen-to-square, fa-arrows-rotate,
+       fa-clipboard-check, fa-compass-drafting, fa-plug-circle-check,
+       fa-tower-broadcast belum punya mask-image sendiri di app.css).
+       Ditambahkan di sini (bukan app.css) supaya tetap tampil walau
+       app.css belum di-update, dan supaya tiap bucket beda bentuk
+       ikonnya. Base rule i[class*="fa-"] (background-color: currentColor,
+       mask-size: contain, dst.) sudah ada di app.css, jadi cukup isi
+       mask-image per class di sini. */
+    .fa-pen-to-square{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDcxLjYgMjEuN2MtMjEuOS0yMS45LTU3LjMtMjEuOS03OS4yIDBMMzYyLjMgNTEuN2w5Ny45IDk3LjkgMzAuMS0zMC4xYzIxLjktMjEuOSAyMS45LTU3LjMgMC03OS4yTDQ3MS42IDIxLjd6bS0yOTkuMiAyMjBjLTYuMSA2LjEtMTAuOCAxMy42LTEzLjUgMjEuOWwtMjkuNiA4OC44Yy0yLjkgOC42LS42IDE4LjEgNS44IDI0LjZzMTUuOSA4LjcgMjQuNiA1LjhsODguOC0yOS42YzguMi0yLjcgMTUuNy03LjQgMjEuOS0xMy41TDQzNy43IDE3Mi4zIDMzOS43IDc0LjMgMTcyLjQgMjQxLjd6TTk2IDY0QzQzIDY0IDAgMTA3IDAgMTYwTDAgNDE2YzAgNTMgNDMgOTYgOTYgOTZsMjU2IDBjNTMgMCA5Ni00MyA5Ni05NmwwLTk2YzAtMTcuNy0xNC4zLTMyLTMyLTMycy0zMiAxNC4zLTMyIDMybDAgOTZjMCAxNy43LTE0LjMgMzItMzIgMzJMOTYgNDQ4Yy0xNy43IDAtMzItMTQuMy0zMi0zMmwwLTI1NmMwLTE3LjcgMTQuMy0zMiAzMi0zMmw5NiAwYzE3LjcgMCAzMi0xNC4zIDMyLTMycy0xNC4zLTMyLTMyLTMyTDk2IDY0eiIvPjwvc3ZnPg==");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDcxLjYgMjEuN2MtMjEuOS0yMS45LTU3LjMtMjEuOS03OS4yIDBMMzYyLjMgNTEuN2w5Ny45IDk3LjkgMzAuMS0zMC4xYzIxLjktMjEuOSAyMS45LTU3LjMgMC03OS4yTDQ3MS42IDIxLjd6bS0yOTkuMiAyMjBjLTYuMSA2LjEtMTAuOCAxMy42LTEzLjUgMjEuOWwtMjkuNiA4OC44Yy0yLjkgOC42LS42IDE4LjEgNS44IDI0LjZzMTUuOSA4LjcgMjQuNiA1LjhsODguOC0yOS42YzguMi0yLjcgMTUuNy03LjQgMjEuOS0xMy41TDQzNy43IDE3Mi4zIDMzOS43IDc0LjMgMTcyLjQgMjQxLjd6TTk2IDY0QzQzIDY0IDAgMTA3IDAgMTYwTDAgNDE2YzAgNTMgNDMgOTYgOTYgOTZsMjU2IDBjNTMgMCA5Ni00MyA5Ni05NmwwLTk2YzAtMTcuNy0xNC4zLTMyLTMyLTMycy0zMiAxNC4zLTMyIDMybDAgOTZjMCAxNy43LTE0LjMgMzItMzIgMzJMOTYgNDQ4Yy0xNy43IDAtMzItMTQuMy0zMi0zMmwwLTI1NmMwLTE3LjcgMTQuMy0zMiAzMi0zMmw5NiAwYzE3LjcgMCAzMi0xNC4zIDMyLTMycy0xNC4zLTMyLTMyLTMyTDk2IDY0eiIvPjwvc3ZnPg==");
+    }
+    .fa-arrows-rotate{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMTA1LjEgMjAyLjZjNy43LTIxLjggMjAuMi00Mi4zIDM3LjgtNTkuOGM2Mi41LTYyLjUgMTYzLjgtNjIuNSAyMjYuMyAwTDM4Ni4zIDE2MCAzNTIgMTYwYy0xNy43IDAtMzIgMTQuMy0zMiAzMnMxNC4zIDMyIDMyIDMybDExMS41IDBjMCAwIDAgMCAwIDBsLjQgMGMxNy43IDAgMzItMTQuMyAzMi0zMmwwLTExMmMwLTE3LjctMTQuMy0zMi0zMi0zMnMtMzIgMTQuMy0zMiAzMmwwIDM1LjJMNDE0LjQgOTcuNmMtODcuNS04Ny41LTIyOS4zLTg3LjUtMzE2LjggMEM3My4yIDEyMiA1NS42IDE1MC43IDQ0LjggMTgxLjRjLTUuOSAxNi43IDIuOSAzNC45IDE5LjUgNDAuOHMzNC45LTIuOSA0MC44LTE5LjV6TTM5IDI4OS4zYy01IDEuNS05LjggNC4yLTEzLjcgOC4yYy00IDQtNi43IDguOC04LjEgMTRjLS4zIDEuMi0uNiAyLjUtLjggMy44Yy0uMyAxLjctLjQgMy40LS40IDUuMUwxNiA0MzJjMCAxNy43IDE0LjMgMzIgMzIgMzJzMzItMTQuMyAzMi0zMmwwLTM1LjEgMTcuNiAxNy41YzAgMCAwIDAgMCAwYzg3LjUgODcuNCAyMjkuMyA4Ny40IDMxNi43IDBjMjQuNC0yNC40IDQyLjEtNTMuMSA1Mi45LTgzLjhjNS45LTE2LjctMi45LTM0LjktMTkuNS00MC44cy0zNC45IDIuOS00MC44IDE5LjVjLTcuNyAyMS44LTIwLjIgNDIuMy0zNy44IDU5LjhjLTYyLjUgNjIuNS0xNjMuOCA2Mi41LTIyNi4zIDBsLS4xLS4xTDEyNS42IDM1MmwzNC40IDBjMTcuNyAwIDMyLTE0LjMgMzItMzJzLTE0LjMtMzItMzItMzJMNDguNCAyODhjLTEuNiAwLTMuMiAuMS00LjggLjNzLTMuMSAuNS00LjYgMXoiLz48L3N2Zz4=");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMTA1LjEgMjAyLjZjNy43LTIxLjggMjAuMi00Mi4zIDM3LjgtNTkuOGM2Mi41LTYyLjUgMTYzLjgtNjIuNSAyMjYuMyAwTDM4Ni4zIDE2MCAzNTIgMTYwYy0xNy43IDAtMzIgMTQuMy0zMiAzMnMxNC4zIDMyIDMyIDMybDExMS41IDBjMCAwIDAgMCAwIDBsLjQgMGMxNy43IDAgMzItMTQuMyAzMi0zMmwwLTExMmMwLTE3LjctMTQuMy0zMi0zMi0zMnMtMzIgMTQuMy0zMiAzMmwwIDM1LjJMNDE0LjQgOTcuNmMtODcuNS04Ny41LTIyOS4zLTg3LjUtMzE2LjggMEM3My4yIDEyMiA1NS42IDE1MC43IDQ0LjggMTgxLjRjLTUuOSAxNi43IDIuOSAzNC45IDE5LjUgNDAuOHMzNC45LTIuOSA0MC44LTE5LjV6TTM5IDI4OS4zYy01IDEuNS05LjggNC4yLTEzLjcgOC4yYy00IDQtNi43IDguOC04LjEgMTRjLS4zIDEuMi0uNiAyLjUtLjggMy44Yy0uMyAxLjctLjQgMy40LS40IDUuMUwxNiA0MzJjMCAxNy43IDE0LjMgMzIgMzIgMzJzMzItMTQuMyAzMi0zMmwwLTM1LjEgMTcuNiAxNy41YzAgMCAwIDAgMCAwYzg3LjUgODcuNCAyMjkuMyA4Ny40IDMxNi43IDBjMjQuNC0yNC40IDQyLjEtNTMuMSA1Mi45LTgzLjhjNS45LTE2LjctMi45LTM0LjktMTkuNS00MC44cy0zNC45IDIuOS00MC44IDE5LjVjLTcuNyAyMS44LTIwLjIgNDIuMy0zNy44IDU5LjhjLTYyLjUgNjIuNS0xNjMuOCA2Mi41LTIyNi4zIDBsLS4xLS4xTDEyNS42IDM1MmwzNC40IDBjMTcuNyAwIDMyLTE0LjMgMzItMzJzLTE0LjMtMzItMzItMzJMNDguNCAyODhjLTEuNiAwLTMuMiAuMS00LjggLjNzLTMuMSAuNS00LjYgMXoiLz48L3N2Zz4=");
+    }
+    .fa-clipboard-check{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgNTEyIj48cGF0aCBkPSJNMTkyIDBjLTQxLjggMC03Ny40IDI2LjctOTAuNSA2NEw2NCA2NEMyOC43IDY0IDAgOTIuNyAwIDEyOEwwIDQ0OGMwIDM1LjMgMjguNyA2NCA2NCA2NGwyNTYgMGMzNS4zIDAgNjQtMjguNyA2NC02NGwwLTMyMGMwLTM1LjMtMjguNy02NC02NC02NGwtMzcuNSAwQzI2OS40IDI2LjcgMjMzLjggMCAxOTIgMHptMCA2NGEzMiAzMiAwIDEgMSAwIDY0IDMyIDMyIDAgMSAxIDAtNjR6TTMwNSAyNzNMMTc3IDQwMWMtOS40IDkuNC0yNC42IDkuNC0zMy45IDBMNzkgMzM3Yy05LjQtOS40LTkuNC0yNC42IDAtMzMuOXMyNC42LTkuNCAzMy45IDBsNDcgNDdMMjcxIDIzOWM5LjQtOS40IDI0LjYtOS40IDMzLjkgMHM5LjQgMjQuNiAwIDMzLjl6Ii8+PC9zdmc+");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgNTEyIj48cGF0aCBkPSJNMTkyIDBjLTQxLjggMC03Ny40IDI2LjctOTAuNSA2NEw2NCA2NEMyOC43IDY0IDAgOTIuNyAwIDEyOEwwIDQ0OGMwIDM1LjMgMjguNyA2NCA2NCA2NGwyNTYgMGMzNS4zIDAgNjQtMjguNyA2NC02NGwwLTMyMGMwLTM1LjMtMjguNy02NC02NC02NGwtMzcuNSAwQzI2OS40IDI2LjcgMjMzLjggMCAxOTIgMHptMCA2NGEzMiAzMiAwIDEgMSAwIDY0IDMyIDMyIDAgMSAxIDAtNjR6TTMwNSAyNzNMMTc3IDQwMWMtOS40IDkuNC0yNC42IDkuNC0zMy45IDBMNzkgMzM3Yy05LjQtOS40LTkuNC0yNC42IDAtMzMuOXMyNC42LTkuNCAzMy45IDBsNDcgNDdMMjcxIDIzOWM5LjQtOS40IDI0LjYtOS40IDMzLjkgMHM5LjQgMjQuNiAwIDMzLjl6Ii8+PC9zdmc+");
+    }
+    .fa-compass-drafting{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMzUyIDk2YzAgMTQuMy0zLjEgMjcuOS04LjggNDAuMkwzOTYgMjI3LjRjLTIzLjcgMjUuMy01NC4yIDQ0LjEtODguNSA1My42TDI1NiAxOTJjMCAwIDAgMCAwIDBzMCAwIDAgMGwtNjggMTE3LjVjMjEuNSA2LjggNDQuMyAxMC41IDY4LjEgMTAuNWM3MC43IDAgMTMzLjgtMzIuNyAxNzQuOS04NGMxMS4xLTEzLjggMzEuMi0xNiA0NS01czE2IDMxLjIgNSA0NUM0MjguMSAzNDEuOCAzNDcgMzg0IDI1NiAzODRjLTM1LjQgMC02OS40LTYuNC0xMDAuNy0xOC4xTDk4LjcgNDYzLjdDOTQgNDcxLjggODcgNDc4LjQgNzguNiA0ODIuNkwyMy4yIDUxMC4zYy01IDIuNS0xMC45IDIuMi0xNS42LS43UzAgNTAxLjUgMCA0OTZsMC01NS40YzAtOC40IDIuMi0xNi43IDYuNS0yNC4xbDYwLTEwMy43QzUzLjcgMzAxLjYgNDEuOCAyODkuMyAzMS4yIDI3NmMtMTEuMS0xMy44LTguOC0zMy45IDUtNDVzMzMuOS04LjggNDUgNWM1LjcgNy4xIDExLjggMTMuOCAxOC4yIDIwLjFsNjkuNC0xMTkuOWMtNS42LTEyLjItOC44LTI1LjgtOC44LTQwLjJjMC01MyA0My05NiA5Ni05NnM5NiA0MyA5NiA5NnptMjEgMjk3LjljMzIuNi0xMi44IDYyLjUtMzAuOCA4OC45LTUyLjlsNDMuNyA3NS41YzQuMiA3LjMgNi41IDE1LjYgNi41IDI0LjFsMCA1NS40YzAgNS41LTIuOSAxMC43LTcuNiAxMy42cy0xMC42IDMuMi0xNS42IC43bC01NS40LTI3LjdjLTguNC00LjItMTUuNC0xMC44LTIwLjEtMTguOUwzNzMgMzkzLjl6TTI1NiAxMjhhMzIgMzIgMCAxIDAgMC02NCAzMiAzMiAwIDEgMCAwIDY0eiIvPjwvc3ZnPg==");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMzUyIDk2YzAgMTQuMy0zLjEgMjcuOS04LjggNDAuMkwzOTYgMjI3LjRjLTIzLjcgMjUuMy01NC4yIDQ0LjEtODguNSA1My42TDI1NiAxOTJjMCAwIDAgMCAwIDBzMCAwIDAgMGwtNjggMTE3LjVjMjEuNSA2LjggNDQuMyAxMC41IDY4LjEgMTAuNWM3MC43IDAgMTMzLjgtMzIuNyAxNzQuOS04NGMxMS4xLTEzLjggMzEuMi0xNiA0NS01czE2IDMxLjIgNSA0NUM0MjguMSAzNDEuOCAzNDcgMzg0IDI1NiAzODRjLTM1LjQgMC02OS40LTYuNC0xMDAuNy0xOC4xTDk4LjcgNDYzLjdDOTQgNDcxLjggODcgNDc4LjQgNzguNiA0ODIuNkwyMy4yIDUxMC4zYy01IDIuNS0xMC45IDIuMi0xNS42LS43UzAgNTAxLjUgMCA0OTZsMC01NS40YzAtOC40IDIuMi0xNi43IDYuNS0yNC4xbDYwLTEwMy43QzUzLjcgMzAxLjYgNDEuOCAyODkuMyAzMS4yIDI3NmMtMTEuMS0xMy44LTguOC0zMy45IDUtNDVzMzMuOS04LjggNDUgNWM1LjcgNy4xIDExLjggMTMuOCAxOC4yIDIwLjFsNjkuNC0xMTkuOWMtNS42LTEyLjItOC44LTI1LjgtOC44LTQwLjJjMC01MyA0My05NiA5Ni05NnM5NiA0MyA5NiA5NnptMjEgMjk3LjljMzIuNi0xMi44IDYyLjUtMzAuOCA4OC45LTUyLjlsNDMuNyA3NS41YzQuMiA3LjMgNi41IDE1LjYgNi41IDI0LjFsMCA1NS40YzAgNS41LTIuOSAxMC43LTcuNiAxMy42cy0xMC42IDMuMi0xNS42IC43bC01NS40LTI3LjdjLTguNC00LjItMTUuNC0xMC44LTIwLjEtMTguOUwzNzMgMzkzLjl6TTI1NiAxMjhhMzIgMzIgMCAxIDAgMC02NCAzMiAzMiAwIDEgMCAwIDY0eiIvPjwvc3ZnPg==");
+    }
+    .fa-plug-circle-check{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIj48cGF0aCBkPSJNOTYgMEM3OC4zIDAgNjQgMTQuMyA2NCAzMmwwIDk2IDY0IDAgMC05NmMwLTE3LjctMTQuMy0zMi0zMi0zMnpNMjg4IDBjLTE3LjcgMC0zMiAxNC4zLTMyIDMybDAgOTYgNjQgMCAwLTk2YzAtMTcuNy0xNC4zLTMyLTMyLTMyek0zMiAxNjBjLTE3LjcgMC0zMiAxNC4zLTMyIDMyczE0LjMgMzIgMzIgMzJsMCAzMmMwIDc3LjQgNTUgMTQyIDEyOCAxNTYuOGwwIDY3LjJjMCAxNy43IDE0LjMgMzIgMzIgMzJzMzItMTQuMyAzMi0zMmwwLTY3LjJjMTIuMy0yLjUgMjQuMS02LjQgMzUuMS0xMS41Yy0yLjEtMTAuOC0zLjEtMjEuOS0zLjEtMzMuM2MwLTgwLjMgNTMuOC0xNDggMTI3LjMtMTY5LjJjLjUtMi4yIC43LTQuNSAuNy02LjhjMC0xNy43LTE0LjMtMzItMzItMzJMMzIgMTYwek01NzYgMzY4YTE0NCAxNDQgMCAxIDAgLTI4OCAwIDE0NCAxNDQgMCAxIDAgMjg4IDB6bS03Ni43LTQzLjNjNi4yIDYuMiA2LjIgMTYuNCAwIDIyLjZsLTcyIDcyYy02LjIgNi4yLTE2LjQgNi4yLTIyLjYgMGwtNDAtNDBjLTYuMi02LjItNi4yLTE2LjQgMC0yMi42czE2LjQtNi4yIDIyLjYgMEw0MTYgMzg1LjRsNjAuNy02MC43YzYuMi02LjIgMTYuNC02LjIgMjIuNiAweiIvPjwvc3ZnPg==");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIj48cGF0aCBkPSJNOTYgMEM3OC4zIDAgNjQgMTQuMyA2NCAzMmwwIDk2IDY0IDAgMC05NmMwLTE3LjctMTQuMy0zMi0zMi0zMnpNMjg4IDBjLTE3LjcgMC0zMiAxNC4zLTMyIDMybDAgOTYgNjQgMCAwLTk2YzAtMTcuNy0xNC4zLTMyLTMyLTMyek0zMiAxNjBjLTE3LjcgMC0zMiAxNC4zLTMyIDMyczE0LjMgMzIgMzIgMzJsMCAzMmMwIDc3LjQgNTUgMTQyIDEyOCAxNTYuOGwwIDY3LjJjMCAxNy43IDE0LjMgMzIgMzIgMzJzMzItMTQuMyAzMi0zMmwwLTY3LjJjMTIuMy0yLjUgMjQuMS02LjQgMzUuMS0xMS41Yy0yLjEtMTAuOC0zLjEtMjEuOS0zLjEtMzMuM2MwLTgwLjMgNTMuOC0xNDggMTI3LjMtMTY5LjJjLjUtMi4yIC43LTQuNSAuNy02LjhjMC0xNy43LTE0LjMtMzItMzItMzJMMzIgMTYwek01NzYgMzY4YTE0NCAxNDQgMCAxIDAgLTI4OCAwIDE0NCAxNDQgMCAxIDAgMjg4IDB6bS03Ni43LTQzLjNjNi4yIDYuMiA2LjIgMTYuNCAwIDIyLjZsLTcyIDcyYy02LjIgNi4yLTE2LjQgNi4yLTIyLjYgMGwtNDAtNDBjLTYuMi02LjItNi4yLTE2LjQgMC0yMi42czE2LjQtNi4yIDIyLjYgMEw0MTYgMzg1LjRsNjAuNy02MC43YzYuMi02LjIgMTYuNC02LjIgMjIuNiAweiIvPjwvc3ZnPg==");
+    }
+    .fa-tower-broadcast{
+      -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIj48cGF0aCBkPSJNODAuMyA0NEM2OS44IDY5LjkgNjQgOTguMiA2NCAxMjhzNS44IDU4LjEgMTYuMyA4NGM2LjYgMTYuNC0xLjMgMzUtMTcuNyA0MS43cy0zNS0xLjMtNDEuNy0xNy43QzcuNCAyMDIuNiAwIDE2Ni4xIDAgMTI4UzcuNCA1My40IDIwLjkgMjBDMjcuNiAzLjYgNDYuMi00LjMgNjIuNiAyLjNTODYuOSAyNy42IDgwLjMgNDR6TTU1NS4xIDIwQzU2OC42IDUzLjQgNTc2IDg5LjkgNTc2IDEyOHMtNy40IDc0LjYtMjAuOSAxMDhjLTYuNiAxNi40LTI1LjMgMjQuMy00MS43IDE3LjdTNDg5LjEgMjI4LjQgNDk1LjcgMjEyYzEwLjUtMjUuOSAxNi4zLTU0LjIgMTYuMy04NHMtNS44LTU4LjEtMTYuMy04NEM0ODkuMSAyNy42IDQ5NyA5IDUxMy40IDIuM3MzNSAxLjMgNDEuNyAxNy43ek0zNTIgMTI4YzAgMjMuNy0xMi45IDQ0LjQtMzIgNTUuNEwzMjAgNDgwYzAgMTcuNy0xNC4zIDMyLTMyIDMycy0zMi0xNC4zLTMyLTMybDAtMjk2LjZjLTE5LjEtMTEuMS0zMi0zMS43LTMyLTU1LjRjMC0zNS4zIDI4LjctNjQgNjQtNjRzNjQgMjguNyA2NCA2NHpNMTcwLjYgNzYuOEMxNjMuOCA5Mi40IDE2MCAxMDkuNyAxNjAgMTI4czMuOCAzNS42IDEwLjYgNTEuMmM3LjEgMTYuMi0uMyAzNS4xLTE2LjUgNDIuMXMtMzUuMS0uMy00Mi4xLTE2LjVjLTEwLjMtMjMuNi0xNi00OS42LTE2LTc2LjhzNS43LTUzLjIgMTYtNzYuOGM3LjEtMTYuMiAyNS45LTIzLjYgNDIuMS0xNi41czIzLjYgMjUuOSAxNi41IDQyLjF6TTQ2NCA1MS4yYzEwLjMgMjMuNiAxNiA0OS42IDE2IDc2LjhzLTUuNyA1My4yLTE2IDc2LjhjLTcuMSAxNi4yLTI1LjkgMjMuNi00Mi4xIDE2LjVzLTIzLjYtMjUuOS0xNi41LTQyLjFjNi44LTE1LjYgMTAuNi0zMi45IDEwLjYtNTEuMnMtMy44LTM1LjYtMTAuNi01MS4yYy03LjEtMTYuMiAuMy0zNS4xIDE2LjUtNDIuMXMzNS4xIC4zIDQyLjEgMTYuNXoiLz48L3N2Zz4=");
+      mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIj48cGF0aCBkPSJNODAuMyA0NEM2OS44IDY5LjkgNjQgOTguMiA2NCAxMjhzNS44IDU4LjEgMTYuMyA4NGM2LjYgMTYuNC0xLjMgMzUtMTcuNyA0MS43cy0zNS0xLjMtNDEuNy0xNy43QzcuNCAyMDIuNiAwIDE2Ni4xIDAgMTI4UzcuNCA1My40IDIwLjkgMjBDMjcuNiAzLjYgNDYuMi00LjMgNjIuNiAyLjNTODYuOSAyNy42IDgwLjMgNDR6TTU1NS4xIDIwQzU2OC42IDUzLjQgNTc2IDg5LjkgNTc2IDEyOHMtNy40IDc0LjYtMjAuOSAxMDhjLTYuNiAxNi40LTI1LjMgMjQuMy00MS43IDE3LjdTNDg5LjEgMjI4LjQgNDk1LjcgMjEyYzEwLjUtMjUuOSAxNi4zLTU0LjIgMTYuMy04NHMtNS44LTU4LjEtMTYuMy04NEM0ODkuMSAyNy42IDQ5NyA5IDUxMy40IDIuM3MzNSAxLjMgNDEuNyAxNy43ek0zNTIgMTI4YzAgMjMuNy0xMi45IDQ0LjQtMzIgNTUuNEwzMjAgNDgwYzAgMTcuNy0xNC4zIDMyLTMyIDMycy0zMi0xNC4zLTMyLTMybDAtMjk2LjZjLTE5LjEtMTEuMS0zMi0zMS43LTMyLTU1LjRjMC0zNS4zIDI4LjctNjQgNjQtNjRzNjQgMjguNyA2NCA2NHpNMTcwLjYgNzYuOEMxNjMuOCA5Mi40IDE2MCAxMDkuNyAxNjAgMTI4czMuOCAzNS42IDEwLjYgNTEuMmM3LjEgMTYuMi0uMyAzNS4xLTE2LjUgNDIuMXMtMzUuMS0uMy00Mi4xLTE2LjVjLTEwLjMtMjMuNi0xNi00OS42LTE2LTc2LjhzNS43LTUzLjIgMTYtNzYuOGM3LjEtMTYuMiAyNS45LTIzLjYgNDIuMS0xNi41czIzLjYgMjUuOSAxNi41IDQyLjF6TTQ2NCA1MS4yYzEwLjMgMjMuNiAxNiA0OS42IDE2IDc2LjhzLTUuNyA1My4yLTE2IDc2LjhjLTcuMSAxNi4yLTI1LjkgMjMuNi00Mi4xIDE2LjVzLTIzLjYtMjUuOS0xNi41LTQyLjFjNi44LTE1LjYgMTAuNi0zMi45IDEwLjYtNTEuMnMtMy44LTM1LjYtMTAuNi01MS4yYy03LjEtMTYuMiAuMy0zNS4xIDE2LjUtNDIuMXMzNS4xIC4zIDQyLjEgMTYuNXoiLz48L3N2Zz4=");
+    }
+
+    /* 8) Rapikan font legend chart "Persentase MITRA (LOP)" & "Persentase
+       SDI (LOP)": item legend selama ini kelihatan berantakan (ukuran &
+       weight font tidak konsisten). Dibuat 1 baris rapi per bucket:
+       swatch bulat kecil - nama (truncate kalau kepanjangan) - jumlah -
+       persentase, dengan ukuran huruf & angka (tabular-nums) konsisten. */
+    .golive-chart-legend{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+    .golive-chart-legend-item{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+    .golive-chart-legend-swatch{
+      flex-shrink: 0;
+      width: 9px;
+      height: 9px;
+      border-radius: 3px;
+    }
+    .golive-chart-legend-name{
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-700);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .golive-chart-legend-val{
+      font-size: 12px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-gray-800);
+      font-variant-numeric: tabular-nums;
+    }
+    .golive-chart-legend-pct{
+      font-size: 11px;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-400);
+      font-variant-numeric: tabular-nums;
+    }
+    .golive-donut-hole .dn-total{
+      font-size: 15px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-gray-800);
+      line-height: 1.15;
+    }
+    .golive-donut-hole .dn-label{
+      font-size: 8px;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-400);
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -425,8 +530,37 @@
         </div>
       </section>
 
-      <!-- 2. Chart: donut MITRA, donut SDI, run rate 7 hari, Need Go Live IHLD -->
+      <!-- 2. Need Go Live IHLD (tabel), donut MITRA, donut SDI, run rate 7 hari -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+        <section class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-triangle-exclamation"></i> Need Go Live IHLD</div>
+          </div>
+        <div class="golive-tabs" role="tablist" aria-label="Need Go Live IHLD">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glNeedIhldPanel-district" onclick="switchGoLiveTab('needihld', 'district', this)"><i class="fa-solid fa-location-dot"></i> District</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glNeedIhldPanel-subdistrict" onclick="switchGoLiveTab('needihld', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> Sub District</button>
+        </div>
+          <div class="golive-tab-panel active" id="glNeedIhldPanel-district" data-group="needihld" data-tab="district" role="tabpanel">
+            <div class="pivot-table-wrap pivot-table-wrap-full">
+              <table class="pivot-grouped-table" id="glNeedIhldDistrictTable">
+                <thead><tr class="pivot-hdr-r1"><th class="hdr-navy">DISTRICT</th><th class="hdr-band hdr-band-total">TOTAL ORDER</th></tr></thead>
+                <tbody id="gl-needihld-district-target">
+                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="golive-tab-panel" id="glNeedIhldPanel-subdistrict" data-group="needihld" data-tab="subdistrict" role="tabpanel">
+            <div class="pivot-table-wrap pivot-table-wrap-full">
+              <table class="pivot-grouped-table" id="glNeedIhldSubDistrictTable">
+                <thead><tr class="pivot-hdr-r1"><th class="hdr-navy">SUB DISTRICT</th><th class="hdr-band hdr-band-total">TOTAL ORDER</th></tr></thead>
+                <tbody id="gl-needihld-subdistrict-target">
+                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
         <section class="golive-chart-card">
           <div class="golive-summary-head">
             <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (LOP)</div>
@@ -449,25 +583,6 @@
           </div>
           <div class="golive-runrate-body" id="gl-runrate-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat run rate...</div>
-          </div>
-        </section>
-        <section class="golive-chart-card">
-          <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-triangle-exclamation"></i> Need Go Live IHLD</div>
-          </div>
-        <div class="golive-tabs" role="tablist" aria-label="Need Go Live IHLD">
-          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="glNeedIhldPanel-district" onclick="switchGoLiveTab('needihld', 'district', this)"><i class="fa-solid fa-location-dot"></i> District</button>
-          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glNeedIhldPanel-subdistrict" onclick="switchGoLiveTab('needihld', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> Sub District</button>
-        </div>
-          <div class="golive-tab-panel active" id="glNeedIhldPanel-district" data-group="needihld" data-tab="district" role="tabpanel">
-            <div class="golive-kendala-list" id="gl-needihld-district-target">
-              <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</div>
-            </div>
-          </div>
-          <div class="golive-tab-panel" id="glNeedIhldPanel-subdistrict" data-group="needihld" data-tab="subdistrict" role="tabpanel">
-            <div class="golive-kendala-list" id="gl-needihld-subdistrict-target">
-              <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</div>
-            </div>
           </div>
         </section>
       </div>
@@ -1996,11 +2111,11 @@
     // (lihat glQuickStatusTaskNeedIhld_ & initGoLiveSummaryDrilldown_).
     // ══════════════════════════════════════════════════════════════
 
-    // Baris bar-list (label + bar horizontal + value), gaya "Detail
-    // Kendala": lebar bar = persentase row.total terhadap total
-    // keseluruhan (jumlah semua row, BUKAN cuma grandTotal dari
-    // backend supaya konsisten walau grandTotal tidak dikirim).
-    function goLiveNeedIhldRowHtml_(row, isGrandTotal, labelType, sumAll) {
+    // Baris tabel (label + Total Order, klik angkanya untuk drill-down
+    // ke tabel Data Go Live B2C) -- dikembalikan ke format tabel seperti
+    // "Rekap Go Live" (bukan lagi bar-list), cuma 2 kolom karena Need Go
+    // Live IHLD cuma punya 1 angka (COUNT baris) per District/Sub District.
+    function goLiveNeedIhldRowHtml_(row, isGrandTotal, labelType) {
       // Baris GRAND TOTAL tidak mewakili satu district/sub district
       // tertentu -- klik tetap jalan (memfilter Status Task saja), tapi
       // TIDAK ikut mengisi dropdown District/Sub District.
@@ -2013,44 +2128,35 @@
         ' title="Klik untuk lihat detail datanya di tabel Data Go Live B2C"';
 
       const total = row.total || 0;
-      const pct = sumAll > 0 ? Math.min(100, (total / sumAll) * 100) : 0;
 
       return `
-        <div class="golive-kendala-row${isGrandTotal ? ' is-total' : ''}">
-          <div class="golive-kendala-row-top">
-            <span class="golive-kendala-row-label">${labelHtml}</span>
-            <span class="golive-kendala-row-val cell-lop-click"${clickAttrs}>${formatNum_(total)} (${pct.toFixed(0)}%)</span>
-          </div>
-          <div class="golive-kendala-row-bar-track"><div class="golive-kendala-row-bar-fill" style="width:${pct.toFixed(1)}%;"></div></div>
-        </div>`;
+        <tr${isGrandTotal ? ' class="pivot-total-row"' : ''}>
+          <td class="label-cell">${labelHtml}</td>
+          <td class="num-cell cell-total cell-lop-click"${clickAttrs}>${formatNum_(total)}</td>
+        </tr>`;
     }
 
     function renderGoLiveNeedIhldTable_(tbodyId, rows, grandTotal, emptyLabel, rowLabelType) {
-      const wrap = document.getElementById(tbodyId);
-      if (!wrap) return;
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
 
       if (!rows || rows.length === 0) {
-        wrap.innerHTML = `<div class="golive-summary-empty">
+        tbody.innerHTML = `<tr><td colspan="2" class="golive-summary-empty">
           <i class="fa-solid fa-inbox"></i>Tidak ada data ${escapeHtml(emptyLabel)} dengan STATUS TASK "NEED GO LIVE IHLD".
-        </div>`;
+        </td></tr>`;
         return;
       }
 
-      // Persentase tiap bar dihitung terhadap jumlah semua row (bukan
-      // grandTotal dari backend), supaya tetap benar walau grandTotal
-      // kosong/tidak dikirim.
-      const sumAll = rows.reduce(function (a, r) { return a + (r.total || 0); }, 0);
+      const bodyHtml  = rows.map(function (r) { return goLiveNeedIhldRowHtml_(r, false, rowLabelType); }).join('');
+      const totalHtml = grandTotal ? goLiveNeedIhldRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType) : '';
 
-      const bodyHtml  = rows.map(function (r) { return goLiveNeedIhldRowHtml_(r, false, rowLabelType, sumAll); }).join('');
-      const totalHtml = grandTotal ? goLiveNeedIhldRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType, sumAll) : '';
-
-      wrap.innerHTML = bodyHtml + totalHtml;
+      tbody.innerHTML = bodyHtml + totalHtml;
     }
 
     function renderGoLiveNeedIhldError_(message) {
-      const errHtml = `<div class="golive-summary-empty" style="color:var(--danger-color);">
+      const errHtml = `<tr><td colspan="2" class="golive-summary-empty" style="color:var(--danger-color);">
         <i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat rekap: ${escapeHtml(message || 'Terjadi kesalahan.')}
-      </div>`;
+      </td></tr>`;
       ['gl-needihld-district-target', 'gl-needihld-subdistrict-target'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el) el.innerHTML = errHtml;
