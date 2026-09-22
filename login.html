@@ -44,7 +44,11 @@
 
     /* Marker district: titik solid + cincin radar berputar (referensi
        visual: peta network/migration khas AntV L7 — cincin partial yang
-       berotasi terus-menerus, bukan pulse membesar-menghilang). */
+       berotasi terus-menerus, bukan pulse membesar-menghilang).
+       CATATAN: icon district sekarang dikosongkan (lihat initLoginMap,
+       html: '') sesuai permintaan — hanya nama district (tooltip
+       permanen) yang ditampilkan. Style di bawah ini disimpan saja
+       kalau-kalau titik/dot ingin dimunculkan lagi nanti. */
     .district-marker { position: relative; width: 24px; height: 24px; }
     .district-marker-dot {
       position: absolute; inset: 0; margin: auto;
@@ -81,8 +85,19 @@
       background: #0b1c33; color: #fff; border: none;
       font-family: "Outfit", sans-serif; font-size: 11.5px; font-weight: 500;
       padding: 3px 9px; border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      transition: background-color .2s ease, color .2s ease;
     }
     .district-tooltip::before { display: none; }
+    /* Dark mode: tile peta di-invert jadi gelap (lihat filter di
+       #loginMap .leaflet-tile-pane di bawah), jadi label navy pekat
+       kurang kontras. Dark mode pakai aksen brand terang + teks gelap
+       supaya tetap menonjol di atas peta gelap. */
+    body[data-theme="dark"] .district-tooltip {
+      background: var(--color-brand-400, #6a8dfb);
+      color: #07192f;
+      box-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
 
     /* ============================================================
        GARIS KONEKSI HUB -> DISTRICT — versi melengkung (arc) dengan
@@ -705,9 +720,14 @@
         .bindTooltip('NOC · Command Center', { direction: 'top', offset: [0, -8], className: 'district-tooltip' });
 
       DISTRICT_MARKERS.forEach(function (d) {
+        // Icon dikosongkan (tidak ada dot/halo/ring) sesuai permintaan —
+        // cukup nama district (tooltip permanen) yang ditampilkan.
+        // iconSize/iconAnchor tetap dipertahankan supaya area hover untuk
+        // menyalakan garis koneksi (lihat marker.on('mouseover', ...))
+        // tetap berfungsi sama seperti sebelumnya.
         const icon = L.divIcon({
           className: 'district-marker',
-          html: '<span class="district-marker-ring"></span><span class="district-marker-halo"></span><span class="district-marker-dot"></span>',
+          html: '',
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         });
