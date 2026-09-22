@@ -212,6 +212,7 @@
       background: var(--color-white);
       border: 1px solid var(--color-gray-200);
       border-radius: var(--radius-2xl);
+      max-width: 400px;
       padding: 28px 28px;
       box-shadow: var(--shadow-theme-xl);
     }
@@ -221,6 +222,23 @@
     body[data-theme="dark"] #loginCard {
       background: var(--color-gray-dark);
       border-color: var(--color-gray-800);
+    }
+
+    /* ============================================================
+       UTILITY TAMBAHAN — belum ada di assets/app.css
+       app.css adalah hasil BUILD STATIS (npm run build:css), jadi
+       class baru yang dipakai di sini TIDAK otomatis punya CSS
+       sampai kamu build ulang. Supaya halaman ini tidak patah
+       sebelum sempat rebuild, class yang dipakai di bawah didefinisikan
+       manual di sini dengan nilai IDENTIK skala Tailwind (--spacing =
+       4px). Kalau nanti kamu jalankan build ulang, class asli akan
+       ter-generate juga dengan nilai yang sama persis — aman, tidak
+       bentrok.
+       ============================================================ */
+    .mb-6 { margin-bottom: calc(var(--spacing, .25rem) * 6); }
+    .mt-6 { margin-top: calc(var(--spacing, .25rem) * 6); }
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+      margin-top: calc(var(--spacing, .25rem) * 4);
     }
   </style>
 </head>
@@ -263,7 +281,7 @@
       <!-- Motif diagonal (merah/biru/abu-abu) khas logo Infranexia -->
       <div class="form-decor-chevrons" aria-hidden="true"><span></span><span></span><span></span></div>
 
-      <section class="relative w-full max-w-[400px]" id="loginCard">
+      <section class="relative w-full" id="loginCard">
 
         <!-- Brand DIGIMON, selalu tampil di atas form (desktop & mobile).
              Logo dibuat center & besar, teks di sampingnya dihapus
