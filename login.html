@@ -204,12 +204,12 @@
       background: var(--color-white);
       border: 1px solid var(--color-gray-200);
       border-radius: var(--radius-2xl);
-      max-width: 380px;
-      padding: 22px 24px;
+      max-width: 400px;
+      padding: 28px 28px;
       box-shadow: var(--shadow-theme-xl);
     }
     @media (min-width: 640px) {
-      #loginCard { padding: 26px 30px; }
+      #loginCard { padding: 32px 36px; }
     }
     body[data-theme="dark"] #loginCard {
       background: var(--color-gray-dark);
@@ -228,9 +228,9 @@
        bentrok.
        ============================================================ */
     .mb-6 { margin-bottom: calc(var(--spacing, .25rem) * 6); }
-    .mt-6 { margin-top: calc(var(--spacing, .25rem) * 4); }
+    .mt-6 { margin-top: calc(var(--spacing, .25rem) * 6); }
     .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-      margin-top: calc(var(--spacing, .25rem) * 3);
+      margin-top: calc(var(--spacing, .25rem) * 4);
     }
   </style>
 </head>
@@ -284,12 +284,12 @@
              saat tema terang) & logo-digimon-dark.png (teks putih asli,
              dipakai saat tema gelap) — ditukar otomatis lewat
              applyDigimonLogoForTheme() di bawah setiap toggleLoginTheme(). -->
-        <div class="mb-2 flex justify-center">
+        <div class="mb-4 flex justify-center">
           <img id="digimonLogo" src="icons/logo-digimon-light.png"
                data-src-light="icons/logo-digimon-light.png"
                data-src-dark="icons/logo-digimon-dark.png"
                onerror="this.onerror=null;this.src=this.dataset.srcDark;"
-               alt="DIGIMON" style="height:96px;width:auto;display:block">
+               alt="DIGIMON" style="height:48px;width:auto;display:block">
         </div>
 
           <div class="mb-5 text-center">
