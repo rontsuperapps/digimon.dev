@@ -52,31 +52,37 @@
           khusus untuk input di dalam .pw-field-wrap.
   ══════════════════════════════════════════════════════════════ -->
   <style>
-    /* 1) Chart donut + legend sejajar (row), semua breakpoint */
+    /* 1) Chart "Persentase MITRA/SDI (LOP)": konsep baru, stacked bar
+       horizontal (bukan donut lagi) supaya konsisten & tetap informatif
+       walau datanya timpang (mis. SDI 99%+ di satu bucket). */
     .golive-chart-card .golive-chart-body{
-      flex-direction: row;
-      align-items: center;
+      flex-direction: column;
+      align-items: stretch;
       justify-content: flex-start;
-      gap: calc(var(--spacing) * 4);
+      gap: calc(var(--spacing) * 3);
+      width: 100%;
     }
-    .golive-chart-card .golive-donut-wrap{
-      margin-inline: 0;
-      width: 88px;
-      height: 88px;
+    .golive-stackbar-total{
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .golive-stackbar-total .dn-total{ font-size: 20px; }
+    .golive-stackbar-total .dn-label{ margin-top: 0; }
+    .golive-stackbar-track{
+      display: flex;
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background-color: var(--color-gray-100);
+    }
+    .golive-stackbar-segment{
+      height: 100%;
+      transition: flex-basis .2s ease;
     }
     .golive-chart-card .golive-chart-legend{
-      flex: 1;
-      min-width: 0;
-    }
-    /* Di layar sangat sempit, baru ditumpuk supaya legend tidak
-       terlalu mepet dengan donat */
-    @media (max-width: 420px){
-      .golive-chart-card .golive-chart-body{
-        flex-direction: column;
-      }
-      .golive-chart-card .golive-donut-wrap{
-        margin-inline: auto;
-      }
+      width: 100%;
     }
 
     /* 2) Icon menu benar-benar center saat sidebar fold */
@@ -563,7 +569,7 @@
         </section>
         <section class="golive-chart-card">
           <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase MITRA (LOP)</div>
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Persentase MITRA (LOP)</div>
           </div>
           <div class="golive-chart-body" id="gl-chart-mitra-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
@@ -571,7 +577,7 @@
         </section>
         <section class="golive-chart-card">
           <div class="golive-summary-head">
-            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase SDI (LOP)</div>
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Persentase SDI (LOP)</div>
           </div>
           <div class="golive-chart-body" id="gl-chart-sdi-body">
             <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
@@ -2254,10 +2260,20 @@
       }
     };
 
-    // Bangun 1 donut + legend untuk satu grup (mitra/sdi) dari objek
-    // "buckets" GRAND TOTAL (tiap bucket = { lop, odp, port }). Nilai
-    // yang dipakai KHUSUS "lop" karena itu count baris/Nama LOP, sesuai
-    // permintaan (bukan penjumlahan ODP/PORT).
+    // Bangun 1 stacked-bar horizontal + legend untuk satu grup (mitra/sdi)
+    // dari objek "buckets" GRAND TOTAL (tiap bucket = { lop, odp, port }).
+    // Nilai yang dipakai KHUSUS "lop" karena itu count baris/Nama LOP,
+    // sesuai permintaan (bukan penjumlahan ODP/PORT). Konsep baru (ganti
+    // donut) supaya tetap informatif walau datanya timpang -- mis. SDI
+    // yang hampir 100% di satu bucket saja, donut jadi nyaris solid.
+    function goLiveChartPctLabel_(v, pct) {
+      // Nilai kecil (mis. 1 dari 3000+) dibulatkan 1 desimal bisa jadi
+      // "0.0%" dan terkesan seolah nol -- tampilkan "<0.1%" supaya tetap
+      // kelihatan ada datanya.
+      if (v > 0 && pct < 0.1) return '<0.1%';
+      return pct.toFixed(1) + '%';
+    }
+
     function renderOneGoLiveChart_(groupKey, grandTotal) {
       const cfg = GOLIVE_CHART_GROUPS[groupKey];
       const body = document.getElementById(cfg.bodyId);
@@ -2268,42 +2284,38 @@
       const total = values.reduce(function (a, b) { return a + b; }, 0);
 
       if (total === 0) {
-        body.innerHTML = `<div class="golive-chart-empty"><i class="fa-solid fa-chart-pie"></i>Belum ada data Nama LOP untuk grup ini</div>`;
+        body.innerHTML = `<div class="golive-chart-empty"><i class="fa-solid fa-chart-simple"></i>Belum ada data Nama LOP untuk grup ini</div>`;
         return;
       }
 
-      // Susun stop conic-gradient berurutan sesuai persentase tiap slice.
-      let cursorDeg = 0;
-      const gradientParts = [];
+      // Segmen stacked bar: pakai flex-basis = persentase, dengan lebar
+      // minimum kecil (3px) untuk bucket yang nilainya kecil tapi > 0,
+      // supaya tetap kelihatan sebagai garis di bar (bukan hilang total).
+      const segmentParts = [];
       const legendItems = [];
       cfg.slices.forEach(function (s, i) {
         const v = values[i];
         const pct = (v / total) * 100;
-        const deg = (v / total) * 360;
         if (v > 0) {
-          gradientParts.push(s.color + ' ' + cursorDeg.toFixed(2) + 'deg ' + (cursorDeg + deg).toFixed(2) + 'deg');
+          segmentParts.push(
+            '<div class="golive-stackbar-segment" style="flex-basis:' + pct.toFixed(2) + '%;min-width:3px;background:' + s.color + ';" title="' + s.label + ': ' + formatNum_(v) + ' (' + pct.toFixed(1) + '%)"></div>'
+          );
         }
-        cursorDeg += deg;
         legendItems.push(`
           <div class="golive-chart-legend-item">
             <span class="golive-chart-legend-swatch" style="background:${s.color};"></span>
             <span class="golive-chart-legend-name">${s.label}</span>
             <span class="golive-chart-legend-val">${formatNum_(v)}</span>
-            <span class="golive-chart-legend-pct">${pct.toFixed(1)}%</span>
+            <span class="golive-chart-legend-pct">${goLiveChartPctLabel_(v, pct)}</span>
           </div>`);
       });
-      const gradientCss = gradientParts.length
-        ? 'conic-gradient(' + gradientParts.join(', ') + ')'
-        : 'conic-gradient(var(--table-th-bg) 0deg 360deg)';
 
       body.innerHTML = `
-        <div class="golive-donut-wrap">
-          <div class="golive-donut" style="background:${gradientCss};"></div>
-          <div class="golive-donut-hole">
-            <div class="dn-total">${formatNum_(total)}</div>
-            <div class="dn-label">${cfg.unitLabel}</div>
-          </div>
+        <div class="golive-stackbar-total">
+          <span class="dn-total">${formatNum_(total)}</span>
+          <span class="dn-label">${cfg.unitLabel}</span>
         </div>
+        <div class="golive-stackbar-track">${segmentParts.join('')}</div>
         <div class="golive-chart-legend">${legendItems.join('')}</div>`;
     }
 
