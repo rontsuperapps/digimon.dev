@@ -667,8 +667,16 @@
       // duluan supaya berada DI BAWAH marker. Tiap garis terdiri dari
       // 2 layer: base (redup, selalu tampil) + flow (dash bercahaya
       // yang bergerak, kesan "data mengalir").
+      //
+      // PENTING: seluruh titik sepanjang kurva (pts) ikut dimasukkan ke
+      // `bounds`, bukan cuma titik awal/akhir. Kalau cuma endpoint yang
+      // dipakai, fitBounds bisa menghasilkan area render yang lebih
+      // sempit dari lengkungan aslinya -> bagian tengah kurva yang
+      // menggembung keluar area tsb jadi TERPOTONG oleh SVG renderer
+      // Leaflet (terlihat seperti garis tidak sampai ke titik district).
       DISTRICT_MARKERS.forEach(function (d) {
         const pts = arcPoints(HUB_CENTER, d);
+        pts.forEach(function (p) { bounds.push(p); });
 
         const baseLine = L.polyline(pts, {
           className: 'district-link-base',
@@ -706,7 +714,12 @@
 
         const marker = L.marker([d.lat, d.lng], { icon: icon })
           .addTo(loginMap)
-          .bindTooltip(d.name, { direction: 'top', offset: [0, -6], className: 'district-tooltip' });
+          .bindTooltip(d.name, {
+            permanent: true,
+            direction: 'top',
+            offset: [0, -8],
+            className: 'district-tooltip'
+          });
 
         // Interaktif: hover marker district -> garis koneksinya menyala.
         const lines = districtLines[d.name];
