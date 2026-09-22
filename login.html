@@ -42,26 +42,41 @@
       filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.8);
     }
 
-    /* Marker district: titik solid + cincin pulse */
-    .district-marker { position: relative; width: 14px; height: 14px; }
+    /* Marker district: titik solid + cincin radar berputar (referensi
+       visual: peta network/migration khas AntV L7 — cincin partial yang
+       berotasi terus-menerus, bukan pulse membesar-menghilang). */
+    .district-marker { position: relative; width: 24px; height: 24px; }
     .district-marker-dot {
       position: absolute; inset: 0; margin: auto;
-      width: 10px; height: 10px; border-radius: 9999px;
+      width: 8px; height: 8px; border-radius: 9999px;
       background: var(--color-brand-400, #6a8dfb);
       border: 2px solid #fff;
-      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+      box-shadow: 0 0 6px 1px rgba(106,141,251,.7);
+      z-index: 2;
     }
-    .district-marker-pulse {
+    /* Cincin tipis statis, penanda "radius" titik */
+    .district-marker-halo {
       position: absolute; inset: 0; margin: auto;
-      width: 10px; height: 10px; border-radius: 9999px;
-      background: var(--color-brand-400, #6a8dfb);
-      opacity: .6;
-      animation: district-pulse 2.2s ease-out infinite;
+      width: 22px; height: 22px; border-radius: 9999px;
+      border: 1px solid rgba(106,141,251,.35);
+      z-index: 1;
     }
-    @keyframes district-pulse {
-      0%   { transform: scale(1);   opacity: .55; }
-      100% { transform: scale(3.2); opacity: 0;   }
+    /* Cincin radar: sebagian lingkaran (conic-gradient) yang berputar
+       terus — di-mask jadi outline tipis supaya menyerupai "sapuan radar". */
+    .district-marker-ring {
+      position: absolute; inset: 0; margin: auto;
+      width: 22px; height: 22px; border-radius: 9999px;
+      background: conic-gradient(from 0deg,
+        transparent 0deg,
+        var(--color-brand-400, #6a8dfb) 55deg,
+        transparent 130deg, transparent 360deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2.2px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2.2px));
+      animation: district-ring-spin 2.4s linear infinite;
+      opacity: .9;
+      z-index: 1;
     }
+    @keyframes district-ring-spin { to { transform: rotate(360deg); } }
     .district-tooltip {
       background: #0b1c33; color: #fff; border: none;
       font-family: "Outfit", sans-serif; font-size: 11.5px; font-weight: 500;
@@ -69,34 +84,66 @@
     }
     .district-tooltip::before { display: none; }
 
-    /* Garis koneksi animasi hub -> district: dash bergerak simulasi
-       "data mengalir" khas visual network monitoring. */
-    .district-link-line {
+    /* ============================================================
+       GARIS KONEKSI HUB -> DISTRICT — versi melengkung (arc) dengan
+       efek "energi mengalir" yang lebih halus (glow + dash panjang),
+       menggantikan garis lurus dash-kecil sebelumnya yang terlihat kaku.
+       Dirender sebagai 2 layer per garis:
+       1) .district-link-base  = jalur redup, selalu terlihat (guide line)
+       2) .district-link-flow  = dash bercahaya yang bergerak sepanjang
+                                  jalur, memberi kesan data mengalir dari
+                                  NOC ke tiap district.
+       ============================================================ */
+    .district-link-base {
+      fill: none;
       stroke: var(--color-brand-400, #6a8dfb);
-      stroke-dasharray: 1 7;
-      animation: district-link-flow 1s linear infinite;
+      stroke-linecap: round;
+      opacity: .28;
+      transition: opacity .2s ease, stroke-width .2s ease;
+    }
+    .district-link-flow {
+      fill: none;
+      stroke: var(--color-brand-400, #6a8dfb);
+      stroke-linecap: round;
+      stroke-dasharray: 5 46;
+      filter: drop-shadow(0 0 3px rgba(106,141,251,.9));
+      animation: district-link-flow 2.8s linear infinite;
       transition: opacity .2s ease, stroke-width .2s ease;
     }
     @keyframes district-link-flow {
-      to { stroke-dashoffset: -16; }
+      to { stroke-dashoffset: -510; }
     }
-    body[data-theme="dark"] .district-link-line { stroke: var(--color-brand-300, #9db3fc); }
+    body[data-theme="dark"] .district-link-base,
+    body[data-theme="dark"] .district-link-flow { stroke: var(--color-brand-300, #9db3fc); }
 
-    /* Marker hub (NOC) — sedikit lebih besar & warna beda dari district */
-    .hub-marker { position: relative; width: 18px; height: 18px; }
+    /* Marker hub (NOC) — sedikit lebih besar, warna beda, cincin radar
+       berputar arah sebaliknya supaya terasa jadi "pusat sinyal". */
+    .hub-marker { position: relative; width: 30px; height: 30px; }
     .hub-marker-dot {
       position: absolute; inset: 0; margin: auto;
-      width: 12px; height: 12px; border-radius: 9999px;
+      width: 11px; height: 11px; border-radius: 9999px;
       background: #df1d26;
       border: 2px solid #fff;
-      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+      box-shadow: 0 0 7px 1px rgba(223,29,38,.7);
+      z-index: 2;
     }
-    .hub-marker-pulse {
+    .hub-marker-halo {
       position: absolute; inset: 0; margin: auto;
-      width: 12px; height: 12px; border-radius: 9999px;
-      background: #df1d26;
-      opacity: .6;
-      animation: district-pulse 2.2s ease-out infinite;
+      width: 28px; height: 28px; border-radius: 9999px;
+      border: 1px solid rgba(223,29,38,.35);
+      z-index: 1;
+    }
+    .hub-marker-ring {
+      position: absolute; inset: 0; margin: auto;
+      width: 28px; height: 28px; border-radius: 9999px;
+      background: conic-gradient(from 0deg,
+        transparent 0deg, #df1d26 70deg,
+        transparent 160deg, transparent 360deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 2.4px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 2.4px));
+      animation: district-ring-spin 3.2s linear infinite reverse;
+      opacity: .9;
+      z-index: 1;
     }
 
     /* Kartu overlay brand di atas peta — dibuat TERANG (bukan gelap)
@@ -515,6 +562,7 @@
        ============================================================ */
 
     let loginMap = null;
+    let loginMapBounds = null; // disimpan supaya bisa re-fit saat resize
 
     const DISTRICT_MARKERS = [
       { name: 'Suramadu', lat: -7.334766, lng: 112.724391 },
@@ -528,6 +576,74 @@
     // Pusat "NOC" — titik asal garis koneksi animasi ke tiap district
     // (kira-kira di Surabaya, sesuai cakupan Area 3 Jawa Timur).
     const HUB_CENTER = { lat: -7.2575, lng: 112.7521 };
+
+    // ------------------------------------------------------------
+    // ARC PATH — menghasilkan rangkaian titik lengkung (quadratic
+    // bezier) antara 2 koordinat, dipakai supaya garis koneksi tidak
+    // lurus kaku, tapi melengkung seperti visual flight-route/network.
+    // curveFactor mengatur seberapa besar lengkungannya relatif jarak
+    // titik awal-akhir; arah lengkung dibuat konsisten (searah) supaya
+    // semua garis "mekar" dari hub dengan gaya yang seragam.
+    // ------------------------------------------------------------
+    function arcPoints(from, to, curveFactor, segments) {
+      curveFactor = curveFactor || 0.18;
+      segments = segments || 48;
+
+      const lat1 = from.lat, lng1 = from.lng;
+      const lat2 = to.lat, lng2 = to.lng;
+
+      const midLat = (lat1 + lat2) / 2;
+      const midLng = (lng1 + lng2) / 2;
+
+      const dLat = lat2 - lat1;
+      const dLng = lng2 - lng1;
+
+      // Titik kontrol bezier: digeser tegak lurus terhadap garis
+      // hub->district sejauh curveFactor * panjang garis.
+      const ctrlLat = midLat + (-dLng) * curveFactor;
+      const ctrlLng = midLng + (dLat) * curveFactor;
+
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const mt = 1 - t;
+        const lat = mt * mt * lat1 + 2 * mt * t * ctrlLat + t * t * lat2;
+        const lng = mt * mt * lng1 + 2 * mt * t * ctrlLng + t * t * lng2;
+        pts.push([lat, lng]);
+      }
+      return pts;
+    }
+
+    // ------------------------------------------------------------
+    // PADDING ASIMETRIS UNTUK fitBounds
+    // Kartu form (#loginCard) mengambang di KANAN peta (lihat CSS
+    // .login-form-col & #loginCard). Kalau fitBounds pakai padding
+    // simetris, titik district di sisi kanan bisa tertutup kartu.
+    // Di sini padding sisi kanan dihitung dinamis dari lebar kartu
+    // + margin-right aktualnya (termasuk clamp() di CSS), plus sedikit
+    // ruang napas tambahan.
+    // ------------------------------------------------------------
+    function computeMapPadding() {
+      const card = document.getElementById('loginCard');
+      let rightPad = 48;
+
+      if (card) {
+        const cardWidth = card.offsetWidth || 400;
+        const marginRight = parseFloat(window.getComputedStyle(card).marginRight) || 64;
+        rightPad = cardWidth + marginRight + 40; // +40px ruang napas
+      }
+
+      return {
+        paddingTopLeft: [48, 48],
+        paddingBottomRight: [rightPad, 48]
+      };
+    }
+
+    function fitLoginMapBounds() {
+      if (!loginMap || !loginMapBounds) return;
+      const pad = computeMapPadding();
+      loginMap.fitBounds(loginMapBounds, pad);
+    }
 
     function initLoginMap() {
       const mapEl = document.getElementById('loginMap');
@@ -547,22 +663,34 @@
       const bounds = [[HUB_CENTER.lat, HUB_CENTER.lng]];
       const districtLines = {};
 
-      // Garis koneksi animasi dari hub (NOC) ke tiap district — digambar
-      // duluan supaya berada DI BAWAH marker district.
+      // Garis koneksi hub -> district, digambar melengkung (arc) dan
+      // duluan supaya berada DI BAWAH marker. Tiap garis terdiri dari
+      // 2 layer: base (redup, selalu tampil) + flow (dash bercahaya
+      // yang bergerak, kesan "data mengalir").
       DISTRICT_MARKERS.forEach(function (d) {
-        const line = L.polyline(
-          [[HUB_CENTER.lat, HUB_CENTER.lng], [d.lat, d.lng]],
-          { className: 'district-link-line', weight: 1.6, opacity: .55, interactive: false }
-        ).addTo(loginMap);
-        districtLines[d.name] = line;
+        const pts = arcPoints(HUB_CENTER, d);
+
+        const baseLine = L.polyline(pts, {
+          className: 'district-link-base',
+          weight: 1.4,
+          interactive: false
+        }).addTo(loginMap);
+
+        const flowLine = L.polyline(pts, {
+          className: 'district-link-flow',
+          weight: 2,
+          interactive: false
+        }).addTo(loginMap);
+
+        districtLines[d.name] = { base: baseLine, flow: flowLine };
       });
 
       // Marker hub (NOC) — titik pusat, sedikit lebih besar dari marker district.
       const hubIcon = L.divIcon({
         className: 'hub-marker',
-        html: '<span class="hub-marker-pulse"></span><span class="hub-marker-dot"></span>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
+        html: '<span class="hub-marker-ring"></span><span class="hub-marker-halo"></span><span class="hub-marker-dot"></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
       });
       L.marker([HUB_CENTER.lat, HUB_CENTER.lng], { icon: hubIcon })
         .addTo(loginMap)
@@ -571,9 +699,9 @@
       DISTRICT_MARKERS.forEach(function (d) {
         const icon = L.divIcon({
           className: 'district-marker',
-          html: '<span class="district-marker-pulse"></span><span class="district-marker-dot"></span>',
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
+          html: '<span class="district-marker-ring"></span><span class="district-marker-halo"></span><span class="district-marker-dot"></span>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
         });
 
         const marker = L.marker([d.lat, d.lng], { icon: icon })
@@ -581,18 +709,23 @@
           .bindTooltip(d.name, { direction: 'top', offset: [0, -6], className: 'district-tooltip' });
 
         // Interaktif: hover marker district -> garis koneksinya menyala.
-        const line = districtLines[d.name];
+        const lines = districtLines[d.name];
         marker.on('mouseover', function () {
-          if (line) line.setStyle({ opacity: 1, weight: 3 });
+          if (!lines) return;
+          lines.base.setStyle({ opacity: .6, weight: 2 });
+          lines.flow.setStyle({ opacity: 1, weight: 3 });
         });
         marker.on('mouseout', function () {
-          if (line) line.setStyle({ opacity: .55, weight: 1.6 });
+          if (!lines) return;
+          lines.base.setStyle({ opacity: .28, weight: 1.4 });
+          lines.flow.setStyle({ opacity: 1, weight: 2 });
         });
 
         bounds.push([d.lat, d.lng]);
       });
 
-      loginMap.fitBounds(bounds, { padding: [48, 48] });
+      loginMapBounds = bounds;
+      fitLoginMapBounds();
     }
 
     function handleMapVisibility() {
@@ -603,8 +736,12 @@
         if (loginMap) {
           // Container baru kelihatan / berubah ukuran -> paksa Leaflet
           // menghitung ulang dimensinya, kalau tidak tile-nya bisa
-          // kepotong/abu-abu.
-          setTimeout(function () { loginMap.invalidateSize(); }, 200);
+          // kepotong/abu-abu. Setelah itu re-fit bounds dengan padding
+          // asimetris terbaru (lebar kartu bisa berubah saat resize).
+          setTimeout(function () {
+            loginMap.invalidateSize();
+            fitLoginMapBounds();
+          }, 200);
         }
       }
     }
