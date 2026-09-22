@@ -35,6 +35,73 @@
 
   <!-- Tailwind CSS v4 (hasil build: npm run build:css) -->
   <link rel="stylesheet" href="assets/app.css">
+  <!-- ══════════════════════════════════════════════════════════════
+       PATCH PERBAIKAN TAMPILAN (override, tidak mengubah app.css):
+       1) Chart Persentase MITRA/SDI: donat + legend disusun sejajar
+          (row) supaya rapi & ringkas, legend tidak lagi "menumpuk"
+          di bawah donat.
+       2) Sidebar posisi fold (72px, belum di-hover/pin): icon menu
+          dipastikan benar-benar center, tanpa sisa gap kosong dari
+          label teks/arrow yang disembunyikan (sumber "icon lain"
+          yang terlihat nyempil).
+       3) Modal "Profil Saya": 3 input password memakai class
+          "form-select" yang aslinya untuk elemen <select> (bawa
+          background-image panah dropdown). Panah itu numpuk sama
+          tombol mata (show/hide password) di pojok kanan sehingga
+          terlihat seperti 2 icon dobel. Panah dropdown dimatikan
+          khusus untuk input di dalam .pw-field-wrap.
+  ══════════════════════════════════════════════════════════════ -->
+  <style>
+    /* 1) Chart donut + legend sejajar (row), semua breakpoint */
+    .golive-chart-card .golive-chart-body{
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: calc(var(--spacing) * 4);
+    }
+    .golive-chart-card .golive-donut-wrap{
+      margin-inline: 0;
+      width: 88px;
+      height: 88px;
+    }
+    .golive-chart-card .golive-chart-legend{
+      flex: 1;
+      min-width: 0;
+    }
+    /* Di layar sangat sempit, baru ditumpuk supaya legend tidak
+       terlalu mepet dengan donat */
+    @media (max-width: 420px){
+      .golive-chart-card .golive-chart-body{
+        flex-direction: column;
+      }
+      .golive-chart-card .golive-donut-wrap{
+        margin-inline: auto;
+      }
+    }
+
+    /* 2) Icon menu benar-benar center saat sidebar fold */
+    .sidebar:not(.pinned):not(.active) .nav-header-left{
+      gap: 0;
+      width: 100%;
+      justify-content: center;
+    }
+    .sidebar:not(.pinned):not(.active) .menu-title-text,
+    .sidebar:not(.pinned):not(.active) .arrow-icon{
+      display: none;
+    }
+
+    /* 3) Matikan panah dropdown bawaan .form-select khusus input
+       password (bukan <select>), supaya tidak dobel sama tombol mata */
+    .pw-field-wrap .form-select{
+      background-image: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .pw-field-wrap .form-select::-ms-reveal,
+    .pw-field-wrap .form-select::-ms-clear{
+      display: none;
+    }
+  </style>
 </head>
 <body data-theme="light">
 
