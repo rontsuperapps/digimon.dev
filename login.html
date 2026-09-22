@@ -69,12 +69,47 @@
     }
     .district-tooltip::before { display: none; }
 
-    /* Kartu overlay brand di atas peta */
-    .map-brand-card {
+    /* Kartu overlay brand di atas peta — ditulis sebagai CSS murni
+       (bukan class Tailwind) karena assets/app.css adalah hasil BUILD
+       yang sudah di-purge; class Tailwind baru yang belum pernah
+       dipakai di file sumber saat build tidak akan ikut ter-generate
+       di sana, jadi tidak aman dipakai di sini. */
+    .map-overlay {
+      position: absolute;
+      z-index: 10;
+      max-width: 300px;
+      padding: 16px 20px;
+      border-radius: 12px;
       background: rgba(7, 25, 47, 0.72);
       backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border: 1px solid rgba(255,255,255,.1);
+      pointer-events: none;
+      font-family: "Outfit", sans-serif;
     }
+    .map-overlay--top { top: 32px; left: 32px; }
+    .map-overlay--bottom {
+      bottom: 32px; left: 32px;
+      display: flex; flex-wrap: wrap;
+      gap: 6px 16px;
+      max-width: calc(100% - 64px);
+      padding: 12px 16px;
+    }
+    .map-overlay-brand { display: flex; align-items: center; gap: 12px; }
+    .map-overlay-logo {
+      flex-shrink: 0; width: 40px; height: 40px;
+      border-radius: 8px; background: var(--color-brand-500, #364c9c);
+      color: #fff; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .map-overlay-title { font-size: 16px; font-weight: 600; color: #fff; line-height: 1.25; }
+    .map-overlay-subtitle {
+      font-size: 10px; font-weight: 500; text-transform: uppercase;
+      letter-spacing: .16em; color: rgba(255,255,255,.5); margin-top: 2px;
+    }
+    .map-overlay-desc { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,.7); }
+    .map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.8); }
+    .map-legend-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-brand-400, #6a8dfb); flex-shrink: 0; }
   </style>
 </head>
 <body data-theme="light">
@@ -83,15 +118,50 @@
   <div class="fixed inset-0 overflow-y-auto bg-white dark:bg-gray-900">
     <div class="grid min-h-full lg:grid-cols-2">
 
+      <!-- ══════════ PANEL PETA DISTRICT (desktop, kiri) ══════════
+           Ditaruh SEBELUM <main> di DOM supaya otomatis jadi kolom
+           kiri di grid desktop, tanpa perlu class Tailwind "order-*"
+           yang tidak ada di assets/app.css. Di mobile tetap tidak
+           tampil (hidden lg:flex — sama seperti panel brand lama). ══════════ -->
+      <aside class="login-panel relative hidden overflow-hidden lg:flex" aria-hidden="true">
+
+        <!-- Peta Leaflet mengisi seluruh panel -->
+        <div id="loginMap"></div>
+
+        <!-- Overlay brand, mengambang di atas peta -->
+        <div class="map-overlay map-overlay--top">
+          <div class="map-overlay-brand">
+            <!-- TODO: ganti div logo ini dengan <img src="icons/logo-infranexia.png" ...>
+                 begitu file logo Infranexia sudah tersedia. -->
+            <div class="map-overlay-logo">IX</div>
+            <div>
+              <div class="map-overlay-title">Infranexia</div>
+              <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
+            </div>
+          </div>
+          <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
+        </div>
+
+        <!-- Legend district, di bagian bawah panel -->
+        <div class="map-overlay map-overlay--bottom">
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Suramadu</span>
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Lamongan</span>
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Madiun</span>
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Sidoarjo</span>
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Malang</span>
+          <span class="map-legend-item"><span class="map-legend-dot"></span>Jember</span>
+        </div>
+      </aside>
+
       <!-- ══════════ KOLOM FORM (kanan di desktop) ══════════ -->
-      <main class="flex items-center justify-center px-5 py-10 sm:px-8 lg:order-2">
+      <main class="flex items-center justify-center px-5 py-10 sm:px-8">
         <section class="relative w-full max-w-[440px]" id="loginCard">
 
           <!-- Brand (hanya tampil di layar kecil; di desktop ada di panel peta) -->
           <div class="mb-8 flex items-center gap-3 lg:hidden">
             <!-- TODO: ganti src di bawah dengan logo Infranexia asli begitu file-nya ada.
                  Sementara pakai monogram placeholder. -->
-            <div class="flex size-10 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">IX</div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-brand-500 text-theme-sm font-semibold text-white">IX</div>
             <div class="leading-tight">
               <div class="text-lg font-semibold text-gray-800 dark:text-white/90">Infranexia</div>
               <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">DIGIMON · Digital Monitoring</div>
@@ -152,39 +222,6 @@
           <p class="mt-10 text-center text-theme-xs text-gray-400"><span class="font-medium text-gray-500 dark:text-gray-400">DIGIMON</span> &nbsp;·&nbsp; © 2026</p>
         </section>
       </main>
-
-      <!-- ══════════ PANEL PETA DISTRICT (desktop, kiri) ══════════ -->
-      <aside class="login-panel relative hidden overflow-hidden lg:order-1 lg:block" aria-hidden="true">
-
-        <!-- Peta Leaflet mengisi seluruh panel -->
-        <div id="loginMap"></div>
-
-        <!-- Overlay brand, mengambang di atas peta -->
-        <div class="map-brand-card pointer-events-none absolute top-8 left-8 max-w-xs rounded-xl px-5 py-4">
-          <div class="flex items-center gap-3">
-            <!-- TODO: ganti div monogram ini dengan <img src="icons/logo-infranexia.png" ...>
-                 begitu file logo Infranexia sudah tersedia. -->
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">IX</div>
-            <div class="leading-tight">
-              <div class="text-base font-semibold text-white">Infranexia</div>
-              <div class="text-[10px] uppercase tracking-[0.18em] text-white/50">DIGIMON · Digital Monitoring</div>
-            </div>
-          </div>
-          <p class="mt-3 text-theme-xs leading-5 text-white/70">
-            Pantau progres Go Live secara langsung di setiap district cakupan jaringan.
-          </p>
-        </div>
-
-        <!-- Legend district, di bagian bawah panel -->
-        <div class="map-brand-card pointer-events-none absolute bottom-8 left-8 flex flex-wrap gap-x-4 gap-y-1.5 rounded-xl px-4 py-3 text-theme-xs text-white/80">
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Suramadu</span>
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Lamongan</span>
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Madiun</span>
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Sidoarjo</span>
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Malang</span>
-          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-brand-400"></span>Jember</span>
-        </div>
-      </aside>
 
     </div>
   </div>
