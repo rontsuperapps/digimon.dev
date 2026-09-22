@@ -101,6 +101,119 @@
     .pw-field-wrap .form-select::-ms-clear{
       display: none;
     }
+
+    /* 4) Badge Ringkasan Total: icon bulat + value + persentase,
+       ala referensi "OPEN/ASSIGN/.../TOTAL ORDER" */
+    .golive-badge-item{
+      display: flex;
+      align-items: center;
+      gap: calc(var(--spacing) * 3);
+    }
+    .golive-badge-icon{
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-500);
+    }
+    .golive-badge-item.badge-mitra .golive-badge-icon{
+      background-color: var(--color-warning-100);
+      color: var(--color-warning-500);
+    }
+    .golive-badge-item.badge-sdi .golive-badge-icon{
+      background-color: var(--color-success-100);
+      color: var(--color-success-500);
+    }
+    .golive-badge-item.badge-total .golive-badge-icon{
+      background-color: var(--color-brand-100);
+      color: var(--color-brand-500);
+    }
+    .golive-badge-body{ min-width: 0; }
+    .golive-badge-item .golive-badge-label{
+      margin-bottom: 2px;
+    }
+    .golive-badge-item .golive-badge-value{
+      color: var(--color-gray-800);
+    }
+    .golive-badge-pct{
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--color-gray-400);
+    }
+
+    /* 5) Legend chart Persentase MITRA/SDI: kolom value & persen rata
+       kanan biar sejajar rapi, mirip referensi "Persentase Status
+       Tactical" */
+    .golive-chart-legend-item{
+      justify-content: space-between;
+    }
+    .golive-chart-legend-name{
+      flex: 1;
+    }
+    .golive-chart-legend-val{
+      min-width: 34px;
+      text-align: right;
+    }
+    .golive-chart-legend-pct{
+      min-width: 42px !important;
+    }
+
+    /* 6) "Need Go Live IHLD": list + bar horizontal per District/Sub
+       District, mirip referensi "Detail Kendala" */
+    .golive-kendala-list{
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--spacing) * 3);
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .golive-kendala-row{ min-width: 0; }
+    .golive-kendala-row-top{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: calc(var(--spacing) * 2);
+      margin-bottom: 6px;
+    }
+    .golive-kendala-row-label{
+      font-size: var(--text-theme-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-700);
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .golive-kendala-row-val{
+      flex-shrink: 0;
+      font-size: var(--text-theme-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-gray-800);
+      white-space: nowrap;
+    }
+    .golive-kendala-row-bar-track{
+      height: 6px;
+      border-radius: 999px;
+      background-color: var(--color-gray-100);
+      overflow: hidden;
+    }
+    .golive-kendala-row-bar-fill{
+      height: 100%;
+      border-radius: 999px;
+      background-color: var(--color-warning-500);
+    }
+    .golive-kendala-row.is-total .golive-kendala-row-bar-fill{
+      background-color: var(--color-brand-500);
+    }
+    .golive-kendala-row.is-total .golive-kendala-row-label{
+      color: var(--color-brand-600);
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -246,36 +359,68 @@
         </div>
         <div class="golive-badge-grid" id="gl-badge-grid">
           <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="createAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Create ABD</div>
-            <div class="golive-badge-value" id="gl-badge-createAbd">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Create ABD</div>
+              <div class="golive-badge-value" id="gl-badge-createAbd">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-createAbd">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="revisionAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Revision ABD</div>
-            <div class="golive-badge-value" id="gl-badge-revisionAbd">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Revision ABD</div>
+              <div class="golive-badge-value" id="gl-badge-revisionAbd">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-revisionAbd">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-mitra badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="kendalaAbd" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Kendala ABD</div>
-            <div class="golive-badge-value" id="gl-badge-kendalaAbd">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Kendala ABD</div>
+              <div class="golive-badge-value" id="gl-badge-kendalaAbd">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-kendalaAbd">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="validation" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Validation</div>
-            <div class="golive-badge-value" id="gl-badge-validation">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Validation</div>
+              <div class="golive-badge-value" id="gl-badge-validation">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-validation">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="drawing" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Drawing</div>
-            <div class="golive-badge-value" id="gl-badge-drawing">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-compass-drafting"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Drawing</div>
+              <div class="golive-badge-value" id="gl-badge-drawing">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-drawing">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="termination" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Termination</div>
-            <div class="golive-badge-value" id="gl-badge-termination">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-plug-circle-check"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Termination</div>
+              <div class="golive-badge-value" id="gl-badge-termination">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-termination">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-sdi badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="goLive" data-tipe-design="" title="Klik untuk lihat detail datanya di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Go Live</div>
-            <div class="golive-badge-value" id="gl-badge-goLive">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Go Live</div>
+              <div class="golive-badge-value" id="gl-badge-goLive">0</div>
+              <div class="golive-badge-pct" id="gl-badge-pct-goLive">0%</div>
+            </div>
           </div>
           <div class="golive-badge-item badge-total badge-lop-click" data-gl-lop-click="1" data-label-type="" data-label="" data-bucket="" data-tipe-design="" title="Klik untuk lihat semua data Go Live B2C di tabel Data Go Live B2C">
-            <div class="golive-badge-label">Total Order</div>
-            <div class="golive-badge-value" id="gl-badge-totalOrder">0</div>
+            <div class="golive-badge-icon"><i class="fa-solid fa-chart-simple"></i></div>
+            <div class="golive-badge-body">
+              <div class="golive-badge-label">Total Order</div>
+              <div class="golive-badge-value" id="gl-badge-totalOrder">0</div>
+              <div class="golive-badge-pct">100%</div>
+            </div>
           </div>
         </div>
       </section>
@@ -315,27 +460,13 @@
           <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="glNeedIhldPanel-subdistrict" onclick="switchGoLiveTab('needihld', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> Sub District</button>
         </div>
           <div class="golive-tab-panel active" id="glNeedIhldPanel-district" data-group="needihld" data-tab="district" role="tabpanel">
-            <div class="pivot-table-wrap">
-              <table class="pivot-grouped-table" id="glNeedIhldDistrictTable">
-                <thead>
-                  <tr><th class="hdr-navy">DISTRICT</th><th class="hdr-band hdr-band-total">TOTAL ORDER</th></tr>
-                </thead>
-                <tbody id="gl-needihld-district-target">
-                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
-                </tbody>
-              </table>
+            <div class="golive-kendala-list" id="gl-needihld-district-target">
+              <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</div>
             </div>
           </div>
           <div class="golive-tab-panel" id="glNeedIhldPanel-subdistrict" data-group="needihld" data-tab="subdistrict" role="tabpanel">
-            <div class="pivot-table-wrap">
-              <table class="pivot-grouped-table" id="glNeedIhldSubDistrictTable">
-                <thead>
-                  <tr><th class="hdr-navy">SUB DISTRICT</th><th class="hdr-band hdr-band-total">TOTAL ORDER</th></tr>
-                </thead>
-                <tbody id="gl-needihld-subdistrict-target">
-                  <tr><td colspan="2" class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</td></tr>
-                </tbody>
-              </table>
+            <div class="golive-kendala-list" id="gl-needihld-subdistrict-target">
+              <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data...</div>
             </div>
           </div>
         </section>
@@ -1865,7 +1996,11 @@
     // (lihat glQuickStatusTaskNeedIhld_ & initGoLiveSummaryDrilldown_).
     // ══════════════════════════════════════════════════════════════
 
-    function goLiveNeedIhldRowHtml_(row, isGrandTotal, labelType) {
+    // Baris bar-list (label + bar horizontal + value), gaya "Detail
+    // Kendala": lebar bar = persentase row.total terhadap total
+    // keseluruhan (jumlah semua row, BUKAN cuma grandTotal dari
+    // backend supaya konsisten walau grandTotal tidak dikirim).
+    function goLiveNeedIhldRowHtml_(row, isGrandTotal, labelType, sumAll) {
       // Baris GRAND TOTAL tidak mewakili satu district/sub district
       // tertentu -- klik tetap jalan (memfilter Status Task saja), tapi
       // TIDAK ikut mengisi dropdown District/Sub District.
@@ -1877,34 +2012,45 @@
         ' data-label="' + escapeHtml(clickLabel) + '"' +
         ' title="Klik untuk lihat detail datanya di tabel Data Go Live B2C"';
 
+      const total = row.total || 0;
+      const pct = sumAll > 0 ? Math.min(100, (total / sumAll) * 100) : 0;
+
       return `
-        <tr${isGrandTotal ? ' class="pivot-total-row"' : ''}>
-          <td class="label-cell">${labelHtml}</td>
-          <td class="num-cell cell-total cell-lop-click"${clickAttrs}>${formatNum_(row.total)}</td>
-        </tr>`;
+        <div class="golive-kendala-row${isGrandTotal ? ' is-total' : ''}">
+          <div class="golive-kendala-row-top">
+            <span class="golive-kendala-row-label">${labelHtml}</span>
+            <span class="golive-kendala-row-val cell-lop-click"${clickAttrs}>${formatNum_(total)} (${pct.toFixed(0)}%)</span>
+          </div>
+          <div class="golive-kendala-row-bar-track"><div class="golive-kendala-row-bar-fill" style="width:${pct.toFixed(1)}%;"></div></div>
+        </div>`;
     }
 
     function renderGoLiveNeedIhldTable_(tbodyId, rows, grandTotal, emptyLabel, rowLabelType) {
-      const tbody = document.getElementById(tbodyId);
-      if (!tbody) return;
+      const wrap = document.getElementById(tbodyId);
+      if (!wrap) return;
 
       if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="2" class="golive-summary-empty">
+        wrap.innerHTML = `<div class="golive-summary-empty">
           <i class="fa-solid fa-inbox"></i>Tidak ada data ${escapeHtml(emptyLabel)} dengan STATUS TASK "NEED GO LIVE IHLD".
-        </td></tr>`;
+        </div>`;
         return;
       }
 
-      const bodyHtml  = rows.map(function (r) { return goLiveNeedIhldRowHtml_(r, false, rowLabelType); }).join('');
-      const totalHtml = grandTotal ? goLiveNeedIhldRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType) : '';
+      // Persentase tiap bar dihitung terhadap jumlah semua row (bukan
+      // grandTotal dari backend), supaya tetap benar walau grandTotal
+      // kosong/tidak dikirim.
+      const sumAll = rows.reduce(function (a, r) { return a + (r.total || 0); }, 0);
 
-      tbody.innerHTML = bodyHtml + totalHtml;
+      const bodyHtml  = rows.map(function (r) { return goLiveNeedIhldRowHtml_(r, false, rowLabelType, sumAll); }).join('');
+      const totalHtml = grandTotal ? goLiveNeedIhldRowHtml_(Object.assign({ label: 'GRAND TOTAL' }, grandTotal), true, rowLabelType, sumAll) : '';
+
+      wrap.innerHTML = bodyHtml + totalHtml;
     }
 
     function renderGoLiveNeedIhldError_(message) {
-      const errHtml = `<tr><td colspan="2" class="golive-summary-empty" style="color:var(--danger-color);">
+      const errHtml = `<div class="golive-summary-empty" style="color:var(--danger-color);">
         <i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat rekap: ${escapeHtml(message || 'Terjadi kesalahan.')}
-      </td></tr>`;
+      </div>`;
       ['gl-needihld-district-target', 'gl-needihld-subdistrict-target'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el) el.innerHTML = errHtml;
@@ -1954,14 +2100,19 @@
     };
 
     function renderGoLiveBadgeTotals_(grandTotal) {
+      const totalLop = (grandTotal && grandTotal.total) ? (grandTotal.total.lop || 0) : 0;
       const totalEl = document.getElementById('gl-badge-totalOrder');
-      if (totalEl) totalEl.textContent = formatNum_(grandTotal && grandTotal.total ? grandTotal.total.lop : 0);
+      if (totalEl) totalEl.textContent = formatNum_(totalLop);
 
       Object.keys(GOLIVE_BADGE_BUCKET_IDS).forEach(function (key) {
         const el = document.getElementById(GOLIVE_BADGE_BUCKET_IDS[key]);
         if (!el) return;
         const bucket = grandTotal && grandTotal.buckets ? grandTotal.buckets[key] : null;
-        el.textContent = formatNum_(bucket ? bucket.lop : 0);
+        const val = bucket ? (bucket.lop || 0) : 0;
+        el.textContent = formatNum_(val);
+
+        const pctEl = document.getElementById('gl-badge-pct-' + key);
+        if (pctEl) pctEl.textContent = (totalLop > 0 ? Math.round((val / totalLop) * 100) : 0) + '%';
       });
     }
 
