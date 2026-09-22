@@ -69,21 +69,19 @@
     }
     .district-tooltip::before { display: none; }
 
-    /* Kartu overlay brand di atas peta — ditulis sebagai CSS murni
-       (bukan class Tailwind) karena assets/app.css adalah hasil BUILD
-       yang sudah di-purge; class Tailwind baru yang belum pernah
-       dipakai di file sumber saat build tidak akan ikut ter-generate
-       di sana, jadi tidak aman dipakai di sini. */
+    /* Kartu overlay brand di atas peta — dibuat TERANG (bukan gelap)
+       supaya logo asli (teks hitam) tetap terbaca jelas. */
     .map-overlay {
       position: absolute;
       z-index: 10;
       max-width: 300px;
       padding: 16px 20px;
       border-radius: 12px;
-      background: rgba(7, 25, 47, 0.72);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,.1);
+      border: 1px solid rgba(15, 23, 42, .07);
+      box-shadow: 0 10px 30px rgba(7, 25, 47, .18);
       pointer-events: none;
       font-family: "Outfit", sans-serif;
     }
@@ -95,21 +93,53 @@
       max-width: calc(100% - 64px);
       padding: 12px 16px;
     }
-    .map-overlay-brand { display: flex; align-items: center; gap: 12px; }
-    .map-overlay-logo {
-      flex-shrink: 0; width: 40px; height: 40px;
-      border-radius: 8px; background: var(--color-brand-500, #364c9c);
-      color: #fff; font-weight: 700; font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .map-overlay-title { font-size: 16px; font-weight: 600; color: #fff; line-height: 1.25; }
     .map-overlay-subtitle {
       font-size: 10px; font-weight: 500; text-transform: uppercase;
-      letter-spacing: .16em; color: rgba(255,255,255,.5); margin-top: 2px;
+      letter-spacing: .16em; color: #667085; margin-top: 8px;
     }
-    .map-overlay-desc { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,.7); }
-    .map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.8); }
-    .map-legend-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-brand-400, #6a8dfb); flex-shrink: 0; }
+    .map-overlay-desc { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: #475467; }
+    .map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #344054; }
+    .map-legend-dot { width: 6px; height: 6px; border-radius: 50%; background: #2c3979; flex-shrink: 0; }
+
+    /* ============================================================
+       MOTIF 3 WARNA (merah/biru/abu-abu) — terinspirasi garis
+       diagonal pada logo Infranexia. Ditulis manual (bukan class
+       Tailwind arbitrary) karena kombinasi warna ini tidak ada di
+       app.css.
+       ============================================================ */
+    .form-decor-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 7px;
+      z-index: 0;
+      background: repeating-linear-gradient(
+        100deg,
+        #df1d26 0px, #df1d26 16px,
+        #2c3979 16px, #2c3979 32px,
+        #bdbec0 32px, #bdbec0 48px
+      );
+    }
+    .form-decor-chevrons {
+      position: absolute;
+      right: -70px;
+      bottom: -50px;
+      width: 260px;
+      height: 260px;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .form-decor-chevrons span {
+      position: absolute;
+      top: 0;
+      width: 46px;
+      height: 240px;
+      border-radius: 8px;
+      transform: rotate(-24deg);
+    }
+    .form-decor-chevrons span:nth-child(1) { left: 30px;  background: #df1d26; opacity: .09; }
+    .form-decor-chevrons span:nth-child(2) { left: 90px;  background: #2c3979; opacity: .09; }
+    .form-decor-chevrons span:nth-child(3) { left: 150px; background: #bdbec0; opacity: .09; }
+    body[data-theme="dark"] .form-decor-chevrons span { opacity: .16; }
   </style>
 </head>
 <body data-theme="light">
@@ -130,15 +160,8 @@
 
         <!-- Overlay brand, mengambang di atas peta -->
         <div class="map-overlay map-overlay--top">
-          <div class="map-overlay-brand">
-            <!-- TODO: ganti div logo ini dengan <img src="icons/logo-infranexia.png" ...>
-                 begitu file logo Infranexia sudah tersedia. -->
-            <div class="map-overlay-logo">IX</div>
-            <div>
-              <div class="map-overlay-title">Infranexia</div>
-              <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
-            </div>
-          </div>
+          <img src="icons/logo-infranexia.png" alt="Infranexia" style="height:28px;width:auto;display:block">
+          <div class="map-overlay-subtitle">DIGIMON · Digital Monitoring</div>
           <p class="map-overlay-desc">Pantau progres Go Live secara langsung di setiap district cakupan jaringan.</p>
         </div>
 
@@ -154,18 +177,18 @@
       </aside>
 
       <!-- ══════════ KOLOM FORM (kanan di desktop) ══════════ -->
-      <main class="flex items-center justify-center px-5 py-10 sm:px-8">
+      <main class="relative flex items-center justify-center overflow-hidden px-5 py-10 sm:px-8">
+
+        <!-- Motif 3 warna (merah/biru/abu-abu) khas logo Infranexia -->
+        <div class="form-decor-bar" aria-hidden="true"></div>
+        <div class="form-decor-chevrons" aria-hidden="true"><span></span><span></span><span></span></div>
+
         <section class="relative w-full max-w-[440px]" id="loginCard">
 
           <!-- Brand (hanya tampil di layar kecil; di desktop ada di panel peta) -->
           <div class="mb-8 flex items-center gap-3 lg:hidden">
-            <!-- TODO: ganti src di bawah dengan logo Infranexia asli begitu file-nya ada.
-                 Sementara pakai monogram placeholder. -->
-            <div class="flex size-10 items-center justify-center rounded-lg bg-brand-500 text-theme-sm font-semibold text-white">IX</div>
-            <div class="leading-tight">
-              <div class="text-lg font-semibold text-gray-800 dark:text-white/90">Infranexia</div>
-              <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">DIGIMON · Digital Monitoring</div>
-            </div>
+            <img src="icons/logo-infranexia.png" alt="Infranexia" style="height:30px;width:auto;display:block">
+            <div class="text-[11px] uppercase tracking-[0.14em] text-gray-400">DIGIMON · Digital Monitoring</div>
           </div>
 
           <div class="mb-8">
