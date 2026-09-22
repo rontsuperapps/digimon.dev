@@ -212,12 +212,12 @@
       background: var(--color-white);
       border: 1px solid var(--color-gray-200);
       border-radius: var(--radius-2xl);
-      max-width: 400px;
-      padding: 28px 28px;
+      max-width: 380px;
+      padding: 22px 24px;
       box-shadow: var(--shadow-theme-xl);
     }
     @media (min-width: 640px) {
-      #loginCard { padding: 32px 36px; }
+      #loginCard { padding: 26px 30px; }
     }
     body[data-theme="dark"] #loginCard {
       background: var(--color-gray-dark);
@@ -236,9 +236,9 @@
        bentrok.
        ============================================================ */
     .mb-6 { margin-bottom: calc(var(--spacing, .25rem) * 6); }
-    .mt-6 { margin-top: calc(var(--spacing, .25rem) * 6); }
+    .mt-6 { margin-top: calc(var(--spacing, .25rem) * 4); }
     .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-      margin-top: calc(var(--spacing, .25rem) * 4);
+      margin-top: calc(var(--spacing, .25rem) * 3);
     }
   </style>
 </head>
@@ -290,7 +290,7 @@
              (terang/gelap) kalau filenya sudah tersedia — lihat
              applyDigimonLogoForTheme() di bawah. Sampai file itu ada,
              keduanya fallback ke file yang sama. -->
-        <div class="mb-6 flex justify-center">
+        <div class="mb-4 flex justify-center">
           <img id="digimonLogo" src="icons/logo-digimon.png"
                data-src-light="icons/logo-digimon-light.png"
                data-src-dark="icons/logo-digimon.png"
@@ -298,7 +298,7 @@
                alt="DIGIMON" style="height:96px;width:auto;display:block">
         </div>
 
-          <div class="mb-6 text-center">
+          <div class="mb-5 text-center">
             <h1 class="mb-1 text-title-sm font-semibold text-gray-800 dark:text-white/90">Selamat datang</h1>
             <p class="text-theme-sm text-gray-500 dark:text-gray-400">Masuk untuk mengakses dashboard operasional dan monitoring project.</p>
           </div>
