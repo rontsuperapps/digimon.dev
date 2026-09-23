@@ -925,7 +925,58 @@
           </div>
           <div class="detail-box golive-detail-modal-body" id="glDetailModalBody"></div>
           <div class="modal-footer">
-            <button class="btn-modal btn-m-cancel" onclick="closeMonitoringGoLiveDetail()">Tutup</button>
+            <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeMonitoringGoLiveDetail()">Tutup</button>
+            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: UPDATE data Go Live (target: sheet terpisah, by ID IHLD).
+           Field ID IHLD & NAMA PROYEK view only; 7 field lain (ODP REAL 8,
+           ODP REAL 16, TOTAL PORT REAL, STATUS GOLIVE, NAMA ALPRO,
+           TANGGAL GOLIVE, ID SW) bisa diedit & disimpan ke sheet target. -->
+      <div id="glUpdateModalOverlay" class="modal-overlay">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2><i class="fa-solid fa-clipboard-list"></i> Update Data Go Live</h2>
+            <p>Perubahan disimpan ke sheet target (bukan sheet sumber tabel ini), dicari berdasarkan ID IHLD.</p>
+          </div>
+          <div class="detail-box">
+            <div class="detail-row"><span class="detail-lbl">ID IHLD</span><span class="detail-val" id="glu-id-ihld">-</span></div>
+            <div class="detail-row"><span class="detail-lbl">Nama Proyek</span><span class="detail-val" id="glu-nama-proyek">-</span></div>
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">ODP Real 8</label>
+            <input type="number" id="glu-odp-real-8" class="form-select" placeholder="0">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">ODP Real 16</label>
+            <input type="number" id="glu-odp-real-16" class="form-select" placeholder="0">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">Total Port Real</label>
+            <input type="number" id="glu-total-port-real" class="form-select" placeholder="0">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">Status Golive</label>
+            <input type="text" id="glu-status-golive" class="form-select" placeholder="Status golive">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">Nama Alpro</label>
+            <input type="text" id="glu-nama-alpro" class="form-select" placeholder="Nama ALPRO (ODP/OTB)">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">Tanggal Golive</label>
+            <input type="date" id="glu-tanggal-golive" class="form-select">
+          </div>
+          <div class="profile-modal-field">
+            <label class="profile-modal-label">ID SW</label>
+            <input type="text" id="glu-id-sw" class="form-select" placeholder="ID SW">
+          </div>
+          <div id="glu-message" style="font-size:12px; margin-top:10px; display:none;"></div>
+          <div class="modal-footer">
+            <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeGoLiveUpdateModal()">Batal</button>
+            <button class="btn-modal btn-m-accent" id="glu-save-btn" onclick="submitGoLiveUpdateForm()">Simpan Perubahan</button>
           </div>
         </div>
       </div>
@@ -3225,9 +3276,15 @@
     // Modal VIEW (poin 5) -- ambil row LENGKAP dari halaman yang sedang
     // tampil (monitoringGoLiveCurrentPageData_), render 23 field lewat
     // pola .detail-box/.detail-row yang sudah dipakai modal Profil Saya.
+    // Row yang sedang tampil di modal VIEW -- dipakai modal UPDATE
+    // (tombol "Update" di footer modal VIEW) supaya tahu ID IHLD & NAMA
+    // PROYEK-nya tanpa perlu cari ulang ke monitoringGoLiveCurrentPageData_.
+    let golive_currentDetailRow_ = null;
+
     function openMonitoringGoLiveDetail(idx) {
       const row = monitoringGoLiveCurrentPageData_[idx];
       if (!row) return;
+      golive_currentDetailRow_ = row;
       const body = document.getElementById('glDetailModalBody');
       body.innerHTML = MONITORING_GOLIVE_FULL_COLUMNS_.map(function(c) {
         const raw = c.key === 'totalOdp' || c.key === 'totalPort' ? formatNum_(row[c.key]) : (escapeHtml(row[c.key]) || '-');
@@ -3238,6 +3295,109 @@
 
     function closeMonitoringGoLiveDetail() {
       document.getElementById('glDetailModalOverlay').style.display = 'none';
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // UPDATE DATA GO LIVE (SHEET TARGET TERPISAH) — dipicu tombol
+    // "Update" di footer modal VIEW. Backend: getGoLiveUpdateTargetData
+    // (prefill) & updateGoLiveTargetData (simpan), keduanya cari baris
+    // lewat ID IHLD -> kolom bantu SHEET UPDATE (lihat code.gs).
+    // ══════════════════════════════════════════════════════════════
+    function openGoLiveUpdateModal() {
+      const row = golive_currentDetailRow_;
+      if (!row || !row.idIhld) {
+        alert('ID IHLD tidak ditemukan pada baris ini.');
+        return;
+      }
+
+      closeMonitoringGoLiveDetail();
+      hideGoLiveUpdateMessage();
+
+      document.getElementById('glu-id-ihld').textContent      = row.idIhld;
+      document.getElementById('glu-nama-proyek').textContent  = row.namaProyek || '-';
+      ['glu-odp-real-8', 'glu-odp-real-16', 'glu-total-port-real', 'glu-status-golive', 'glu-nama-alpro', 'glu-tanggal-golive', 'glu-id-sw']
+        .forEach(function(id) { document.getElementById(id).value = ''; });
+
+      const saveBtn = document.getElementById('glu-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Memuat data...';
+
+      document.getElementById('glUpdateModalOverlay').style.display = 'flex';
+
+      callGAS('getGoLiveUpdateTargetData', [row.idIhld])
+        .then(function(res) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Simpan Perubahan';
+          if (!res || !res.success) {
+            showGoLiveUpdateMessage((res && res.message) || 'Gagal memuat data dari sheet target.', true);
+            return;
+          }
+          document.getElementById('glu-odp-real-8').value      = res.odpReal8      || '';
+          document.getElementById('glu-odp-real-16').value     = res.odpReal16     || '';
+          document.getElementById('glu-total-port-real').value = res.totalPortReal || '';
+          document.getElementById('glu-status-golive').value   = res.statusGoLive  || '';
+          document.getElementById('glu-nama-alpro').value      = res.namaAlpro     || '';
+          document.getElementById('glu-tanggal-golive').value  = res.tanggalGoLive || '';
+          document.getElementById('glu-id-sw').value           = res.idSw         || '';
+        })
+        .catch(function(err) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Simpan Perubahan';
+          showGoLiveUpdateMessage('Gagal memuat data: ' + (err && err.message ? err.message : err), true);
+        });
+    }
+
+    function closeGoLiveUpdateModal() {
+      document.getElementById('glUpdateModalOverlay').style.display = 'none';
+    }
+
+    function showGoLiveUpdateMessage(msg, isError) {
+      const el = document.getElementById('glu-message');
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
+    }
+
+    function hideGoLiveUpdateMessage() {
+      const el = document.getElementById('glu-message');
+      el.style.display = 'none';
+      el.textContent = '';
+    }
+
+    function submitGoLiveUpdateForm() {
+      const row = golive_currentDetailRow_;
+      if (!row || !row.idIhld) return;
+
+      const payload = {
+        odpReal8:      document.getElementById('glu-odp-real-8').value,
+        odpReal16:     document.getElementById('glu-odp-real-16').value,
+        totalPortReal: document.getElementById('glu-total-port-real').value,
+        statusGoLive:  document.getElementById('glu-status-golive').value.trim(),
+        namaAlpro:     document.getElementById('glu-nama-alpro').value.trim(),
+        tanggalGoLive: document.getElementById('glu-tanggal-golive').value,
+        idSw:          document.getElementById('glu-id-sw').value.trim()
+      };
+
+      const saveBtn = document.getElementById('glu-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Menyimpan...';
+      hideGoLiveUpdateMessage();
+
+      callGAS('updateGoLiveTargetData', [row.idIhld, payload])
+        .then(function(res) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Simpan Perubahan';
+          if (res && res.success) {
+            showGoLiveUpdateMessage(res.message || 'Data berhasil diupdate.', false);
+          } else {
+            showGoLiveUpdateMessage((res && res.message) || 'Gagal menyimpan perubahan.', true);
+          }
+        })
+        .catch(function(err) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Simpan Perubahan';
+          showGoLiveUpdateMessage('Gagal menyimpan: ' + (err && err.message ? err.message : err), true);
+        });
     }
 
     // ══════════════════════════════════════════════════════════════
