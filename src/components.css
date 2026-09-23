@@ -236,7 +236,11 @@
 .golive-badge-item.badge-sdi::before { @apply bg-success-500; }
 .golive-badge-label { @apply mb-1 truncate text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400; }
 .golive-badge-value { @apply text-xl font-semibold leading-6 text-gray-800 dark:text-white/90; }
-.golive-badge-item.badge-total { @apply bg-brand-25 dark:bg-brand-500/[0.08]; }
+/* Badge Total Order sengaja TIDAK diberi background khusus lagi -- dulu
+   pakai bg-brand-25/dark:bg-brand-500/[0.08] (biru muda) sehingga beda
+   sendiri dari 7 badge MITRA/SDI lain yang latarnya putih (warisan dari
+   .golive-badge-item). Sekarang ikut warna dasar putih itu; pembeda
+   "Total Order" cukup dari garis aksen kiri (::before) yang tetap navy. */
 .golive-badge-item.badge-lop-click { @apply cursor-pointer transition hover:border-brand-300 hover:shadow-theme-sm active:scale-[0.98] dark:hover:border-brand-400/50; }
 
 /* ================================================================
@@ -534,9 +538,9 @@
 
 /* pembatas antar-grup di header/isi pivot (kanan 2px lebih tebal dari
    garis grid biasa, bawah tetap 1px normal var(--pv-line)) */
-.pivot-grouped-table .group-divider { box-shadow: inset -2px 0 0 0 var(--color-gray-300), inset 0 -1px 0 0 var(--pv-line); }
-[data-theme="dark"] .pivot-grouped-table .group-divider { box-shadow: inset -2px 0 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 var(--pv-line); }
-.pivot-grouped-table tbody tr.pivot-total-row td.group-divider { box-shadow: inset -2px -1px 0 0 rgba(255, 255, 255, 0.28); }
+.pivot-grouped-table .group-divider { box-shadow: inset -1px 0 0 0 var(--color-gray-300), inset 0 -1px 0 0 var(--pv-line); }
+[data-theme="dark"] .pivot-grouped-table .group-divider { box-shadow: inset -1px 0 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 var(--pv-line); }
+.pivot-grouped-table tbody tr.pivot-total-row td.group-divider { box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.28); }
 
 /* ================================================================
    TAMBAHAN — input tanggal, alert & panel login
