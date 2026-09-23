@@ -287,9 +287,23 @@
 .pivot-table-wrap-full { @apply max-h-none overflow-x-auto overflow-y-hidden rounded-lg border border-gray-200 dark:border-gray-800; }
 .pivot-table-wrap thead th { position: sticky; top: 0; z-index: 1; }
 
-.pivot-grouped-table { @apply w-full border-collapse text-[10.5px] leading-tight; }
+/* border-separate + box-shadow (bukan border-collapse + border biasa):
+   dengan border-collapse, garis antar sel dititipkan ke browser untuk
+   "menggabungkan" 2 border yang bertemu (punya sel ini & sel tetangga)
+   jadi 1 garis -- persis di titik itu, kalau ada baris header yang
+   position:sticky (thead di sini SEMUANYA sticky supaya tetap kelihatan
+   saat scroll), penggabungan itu SERING meleset beda render antar
+   browser/zoom, dan beda pula tergantung berapa banyak baris header
+   yang ditumpuk sticky (1 baris di Need Go Live IHLD vs 3 baris di
+   Rekap Go Live/PT2/PT3) -- itulah sumber garis "tebal tipisnya beda"
+   antar tabel walau CSS-nya sama persis. box-shadow inset di tiap sel
+   (cuma sisi bawah & kanan) tidak pernah digabung/dobel oleh browser,
+   jadi selalu 1px persis di semua tabel & kedua mode terang/gelap.
+   Border luar tabel didapat dari .pivot-table-wrap-full (border-nya
+   sendiri), bukan dari sel pojok atas/kiri. */
+.pivot-grouped-table { @apply w-full border-separate text-[10.5px] leading-tight; border-spacing: 0; }
 .pivot-grouped-table th, .pivot-grouped-table td {
-  border: 1px solid var(--pv-line);
+  box-shadow: inset -1px -1px 0 0 var(--pv-line);
   @apply px-1 py-1 align-middle;
 }
 .pivot-grouped-table th { @apply text-center text-[9px] font-semibold uppercase tracking-wide text-white; }
@@ -320,7 +334,13 @@
 .pivot-grouped-table td.cell-lop-click:hover, .pivot-grouped-table td.cell-date-click:hover { filter: brightness(0.92); }
 .pivot-grouped-table tbody tr:not(.pivot-total-row):hover td.label-cell { filter: brightness(0.96); }
 
-.pivot-grouped-table tbody tr.pivot-total-row td { @apply font-bold text-white; border-color: rgba(255, 255, 255, 0.28); }
+/* 11px = sama persis dengan hdr-navy/hdr-band (baris header "DISTRICT" /
+   "TOTAL ORDER" dst.), supaya grand total tidak lagi terasa lebih besar
+   dari header (sebelumnya grand total ikut ukuran dasar tabel 10.5px). */
+.pivot-grouped-table tbody tr.pivot-total-row td {
+  @apply font-bold text-white text-[11px];
+  box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.28);
+}
 .pivot-grouped-table tbody tr.pivot-total-row td.label-cell,
 .pivot-grouped-table tbody tr.pivot-total-row td.cell-total,
 .pivot-grouped-table tbody tr.pivot-total-row td.cell-date { background: var(--pv-total); color: #fff; }
@@ -334,12 +354,15 @@
 .pivot-table-wrap-full .pivot-grouped-table th.hdr-navy,
 .pivot-table-wrap-full .pivot-grouped-table tbody td:first-child {
   @apply sticky left-0 min-w-[150px] max-w-[220px] whitespace-normal break-words;
-  box-shadow: 2px 0 4px rgba(16, 24, 40, 0.06);
+  box-shadow: 2px 0 4px rgba(16, 24, 40, 0.06), inset -1px -1px 0 0 var(--pv-line);
 }
 .pivot-table-wrap-full .pivot-grouped-table th.hdr-navy { @apply z-[5]; }
 .pivot-table-wrap-full .pivot-grouped-table tbody td:first-child { @apply z-[3]; }
 .pivot-table-wrap-full .pivot-grouped-table tbody td.label-cell { background-image: linear-gradient(var(--pv-total-tint), var(--pv-total-tint)); background-color: var(--pv-sticky-bg); }
-.pivot-table-wrap-full .pivot-grouped-table tbody tr.pivot-total-row td:first-child { background: var(--pv-total); }
+.pivot-table-wrap-full .pivot-grouped-table tbody tr.pivot-total-row td:first-child {
+  background: var(--pv-total);
+  box-shadow: 2px 0 4px rgba(16, 24, 40, 0.06), inset -1px -1px 0 0 rgba(255, 255, 255, 0.28);
+}
 
 .golive-scroll-hint { @apply mb-1.5 hidden items-center gap-1.5 text-[11px] text-gray-400; }
 .golive-scroll-hint i { @apply text-brand-500 dark:text-brand-400; animation: golive-hint-nudge 1.4s ease-in-out infinite; }
@@ -500,9 +523,11 @@
 .ripple { position: absolute; border-radius: 9999px; background: rgba(255, 255, 255, 0.35); transform: scale(0); animation: ripple-anim 0.6s linear; pointer-events: none; }
 @keyframes ripple-anim { to { transform: scale(2.6); opacity: 0; } }
 
-/* pembatas antar-grup di header/isi pivot */
-.pivot-grouped-table .group-divider { border-right: 2px solid var(--color-gray-300); }
-[data-theme="dark"] .pivot-grouped-table .group-divider { border-right-color: rgba(255, 255, 255, 0.22); }
+/* pembatas antar-grup di header/isi pivot (kanan 2px lebih tebal dari
+   garis grid biasa, bawah tetap 1px normal var(--pv-line)) */
+.pivot-grouped-table .group-divider { box-shadow: inset -2px 0 0 0 var(--color-gray-300), inset 0 -1px 0 0 var(--pv-line); }
+[data-theme="dark"] .pivot-grouped-table .group-divider { box-shadow: inset -2px 0 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 var(--pv-line); }
+.pivot-grouped-table tbody tr.pivot-total-row td.group-divider { box-shadow: inset -2px -1px 0 0 rgba(255, 255, 255, 0.28); }
 
 /* ================================================================
    TAMBAHAN — input tanggal, alert & panel login
