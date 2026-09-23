@@ -52,90 +52,86 @@
           khusus untuk input di dalam .pw-field-wrap.
   ══════════════════════════════════════════════════════════════ -->
   <style>
-    /* 1) Chart "Persentase MITRA/SDI (LOP)": kembali ke donut, + efek 3D
-       (murni CSS, tanpa canvas/library) supaya tetap ringan & jalan
-       offline seperti prinsip PWA ini. Efek 3D: seluruh piringan donut
-       dimiringkan (perspective + rotateX) jadi terlihat seperti disk
-       elips, teksnya (dn-total/dn-label) di-counter-rotate balik supaya
-       tetap tegak & mudah dibaca, plus drop-shadow biar ada kesan
-       "melayang". */
+    /* 1) Chart "Persentase MITRA/SDI (LOP)": donut di ATAS, legend/info
+       total di BAWAH (bukan disejajarkan kiri-kanan lagi) supaya
+       proporsional dan tidak ada ruang kosong di bawah kartu. Kartu
+       dijadikan flex-column setinggi baris grid (menyamai tinggi kartu
+       "Need Go Live IHLD" di sebelahnya), lalu isi donut+legend mengisi
+       & ditengahkan ke sisa tinggi tersebut. Efek 3D dipertahankan tapi
+       kemiringan dikurangi (28deg -> 16deg) & donatnya diperbesar
+       (88px -> 132px) supaya proporsional dengan font legend -- solusi
+       "font besar vs donat kecil" adalah donatnya yang dibesarkan,
+       bukan fontnya yang dikecilkan lagi. */
+    .golive-chart-card{
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
     .golive-chart-card .golive-chart-body{
-      flex-direction: row;
+      flex: 1;
+      flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       gap: calc(var(--spacing) * 4);
     }
     .golive-chart-card .golive-donut-wrap{
-      margin-inline: 0;
-      width: 88px;
-      height: 88px;
-      perspective: 420px;
+      margin-inline: auto;
+      width: 132px;
+      height: 132px;
+      perspective: 520px;
     }
     .golive-donut-wrap .golive-donut,
     .golive-donut-wrap .golive-donut-hole{
-      transform: rotateX(28deg);
+      transform: rotateX(16deg);
       transform-style: preserve-3d;
     }
     .golive-donut-wrap .golive-donut{
-      filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.18));
+      filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.16));
     }
     .golive-donut-wrap .golive-donut-hole .dn-total,
     .golive-donut-wrap .golive-donut-hole .dn-label{
       display: block;
-      transform: rotateX(-28deg);
+      transform: rotateX(-16deg);
+    }
+    .golive-chart-card .golive-donut-hole .dn-total{
+      font-size: 20px;
+      line-height: 24px;
     }
     .golive-chart-card .golive-chart-legend{
-      flex: 1;
+      width: 100%;
+      max-width: 260px;
       min-width: 0;
     }
-    /* Di layar sangat sempit, baru ditumpuk supaya legend tidak
-       terlalu mepet dengan donat */
-    @media (max-width: 420px){
-      .golive-chart-card .golive-chart-body{
-        flex-direction: column;
-      }
-      .golive-chart-card .golive-donut-wrap{
-        margin-inline: auto;
-      }
-    }
 
-    /* 1b) Efek 3D untuk bar "Run Rate 7 Hari Terakhir": tiap batang
-       diberi sisi kanan (::after) & atas (::before) yang di-skew, warna
-       diambil dari background batang itu sendiri (background: inherit)
-       lalu digelapkan/diterangkan pakai filter -- jadi tetap 3D apa pun
-       warna aslinya dari app.css, tanpa perlu tahu kode warnanya. */
+    /* 1b) Efek 3D untuk bar "Run Rate 7 Hari Terakhir": sebelumnya pakai
+       2 potongan skew (::before atas, ::after kanan) yang sudutnya
+       tidak match satu sama lain, jadi menyisakan celah putih di
+       pojok/pinggir batang. Diganti 1 overlay gradient highlight->shadow
+       yang menempel pas di kotak batang (overflow:hidden mengikuti
+       border-radius aslinya), jadi tetap kelihatan 3D tanpa ada celah
+       ataupun sisa putih di mana pun ukurannya. Area chart dibuat
+       mengisi (flex:1) sisa tinggi kartu supaya sejajar dengan 3 kartu
+       lain (Need Go Live IHLD, Persentase MITRA, Persentase SDI) di
+       baris yang sama. */
+    .golive-chart-card .golive-runrate-body{
+      flex: 1;
+      height: auto;
+      min-height: 128px;
+    }
     .golive-runrate-bar{
       position: relative;
+      overflow: hidden;
     }
-    .golive-runrate-bar::before,
     .golive-runrate-bar::after{
       content: '';
       position: absolute;
-      background: inherit;
-    }
-    .golive-runrate-bar::before{
-      top: -5px;
-      left: 0;
-      right: 0;
-      height: 5px;
-      transform: skewX(-38deg);
-      transform-origin: bottom left;
-      filter: brightness(1.35);
-    }
-    .golive-runrate-bar::after{
-      top: 0;
-      right: -5px;
-      bottom: 0;
-      width: 5px;
-      transform: skewY(-52deg);
-      transform-origin: top left;
-      filter: brightness(0.65);
-    }
-    /* Supaya sisi 3D (::before/::after) di atas tidak terpotong kalau
-       track/kolom bar aslinya overflow:hidden di app.css. */
-    .golive-runrate-bar-track,
-    .golive-runrate-bar-col{
-      overflow: visible;
+      inset: 0;
+      background: linear-gradient(160deg,
+        rgb(255 255 255 / 0.38) 0%,
+        rgb(255 255 255 / 0) 32%,
+        rgb(0 0 0 / 0) 68%,
+        rgb(0 0 0 / 0.22) 100%);
+      pointer-events: none;
     }
 
     /* 2) Icon menu benar-benar center saat sidebar fold */
