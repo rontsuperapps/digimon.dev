@@ -3324,7 +3324,7 @@
 
       document.getElementById('glUpdateModalOverlay').style.display = 'flex';
 
-      callGAS('getGoLiveUpdateTargetData', [row.idIhld])
+      callGAS('getGoLiveUpdateTargetData', [SESSION_TOKEN, row.idIhld])
         .then(function(res) {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Simpan Perubahan';
@@ -3383,7 +3383,7 @@
       saveBtn.textContent = 'Menyimpan...';
       hideGoLiveUpdateMessage();
 
-      callGAS('updateGoLiveTargetData', [row.idIhld, payload])
+      callGAS('updateGoLiveTargetData', [SESSION_TOKEN, row.idIhld, payload])
         .then(function(res) {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Simpan Perubahan';
