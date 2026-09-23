@@ -284,7 +284,11 @@
    TABEL PIVOT (rekap, PT2, PT3, need IHLD, perolehan harian)
    ================================================================ */
 .pivot-table-wrap { @apply max-h-[220px] overflow-auto; -webkit-overflow-scrolling: touch; }
-.pivot-table-wrap-full { @apply max-h-none overflow-x-auto overflow-y-hidden rounded-lg border border-gray-200 dark:border-gray-800; }
+/* Border bingkai luar pakai var(--pv-line) yang SAMA dengan garis grid
+   di dalam tabel (sebelumnya border-gray-200/dark:border-gray-800 --
+   warnanya beda tipis dari --pv-line, jadi di sambungan tepi tabel
+   kelihatan seperti ada 2 ketebalan garis berbeda). */
+.pivot-table-wrap-full { @apply max-h-none overflow-x-auto overflow-y-hidden rounded-lg; border: 1px solid var(--pv-line); }
 .pivot-table-wrap thead th { position: sticky; top: 0; z-index: 1; }
 
 /* border-separate + box-shadow (bukan border-collapse + border biasa):
@@ -354,14 +358,19 @@
 .pivot-table-wrap-full .pivot-grouped-table th.hdr-navy,
 .pivot-table-wrap-full .pivot-grouped-table tbody td:first-child {
   @apply sticky left-0 min-w-[150px] max-w-[220px] whitespace-normal break-words;
-  box-shadow: 2px 0 4px rgba(16, 24, 40, 0.06), inset -1px -1px 0 0 var(--pv-line);
+  /* SEBELUMNYA ada tambahan drop-shadow "2px 0 4px" di sini (efek
+     elevasi kolom sticky) -- dihapus karena bikin garis di kolom
+     pertama ini kelihatan lebih tebal/kabur dibanding garis 1px tegas
+     di kolom-kolom lain. Sekarang semua kolom pakai lebar garis yang
+     identik. */
+  box-shadow: inset -1px -1px 0 0 var(--pv-line);
 }
 .pivot-table-wrap-full .pivot-grouped-table th.hdr-navy { @apply z-[5]; }
 .pivot-table-wrap-full .pivot-grouped-table tbody td:first-child { @apply z-[3]; }
 .pivot-table-wrap-full .pivot-grouped-table tbody td.label-cell { background-image: linear-gradient(var(--pv-total-tint), var(--pv-total-tint)); background-color: var(--pv-sticky-bg); }
 .pivot-table-wrap-full .pivot-grouped-table tbody tr.pivot-total-row td:first-child {
   background: var(--pv-total);
-  box-shadow: 2px 0 4px rgba(16, 24, 40, 0.06), inset -1px -1px 0 0 rgba(255, 255, 255, 0.28);
+  box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.28);
 }
 
 .golive-scroll-hint { @apply mb-1.5 hidden items-center gap-1.5 text-[11px] text-gray-400; }
