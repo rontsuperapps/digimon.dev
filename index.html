@@ -476,6 +476,57 @@
     .golive-donut-hole .dn-label:where([data-theme=dark],[data-theme=dark] *){
       color: var(--color-gray-300);
     }
+
+    /* 6) Modal "Update Data Go Live" — PISAHKAN proses "memuat data"
+       (prefill dari sheet target saat modal dibuka) dari tombol
+       "Simpan Perubahan". Sebelumnya keduanya numpang di 1 elemen yang
+       sama (teks tombol Simpan diganti-ganti jadi "Memuat data..." lalu
+       balik lagi ke "Simpan Perubahan"), jadi user tidak bisa
+       membedakan "form sedang dimuat" vs "form siap dipakai" hanya dari
+       sekilas lihat tombol. Sekarang proses memuat data punya overlay
+       sendiri (spinner + teks) yang menutupi BODY FORM saja (detail-box
+       + 7 field), sementara tombol Simpan Perubahan tetap starting
+       dengan teksnya sendiri & hanya berubah ("Menyimpan...") saat
+       proses submit berjalan -- 2 proses, 2 indikator terpisah. */
+    #glUpdateModalOverlay .gl-update-form-body{
+      position: relative;
+    }
+    #glUpdateModalOverlay .gl-update-loading-overlay{
+      display: none; /* di-toggle JS: golive_setUpdateLoading_() */
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--spacing) * 2);
+      border-radius: var(--radius-xl);
+      background-color: color-mix(in srgb, var(--color-white) 82%, transparent);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+    }
+    #glUpdateModalOverlay .gl-update-loading-overlay:where([data-theme=dark],[data-theme=dark] *){
+      background-color: color-mix(in srgb, var(--color-gray-dark) 82%, transparent);
+    }
+    #glUpdateModalOverlay .gl-update-loading-overlay i{
+      font-size: 22px;
+      color: var(--accent-color, var(--color-brand-500));
+    }
+    #glUpdateModalOverlay .gl-update-loading-overlay span{
+      font-size: var(--text-theme-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-500);
+    }
+    #glUpdateModalOverlay .gl-update-loading-overlay:where([data-theme=dark],[data-theme=dark] *) span{
+      color: var(--color-gray-400);
+    }
+    /* Tombol Simpan saat submit ("Menyimpan..."): spinner kecil inline
+       di depan teks, dipasang lewat innerHTML di submitGoLiveUpdateForm()
+       -- bukan cuma ganti textContent -- supaya beda dari sekadar teks
+       statis & terlihat jelas "sedang berjalan". */
+    #glUpdateModalOverlay #glu-save-btn .fa-spinner{
+      margin-right: calc(var(--spacing) * 1.5);
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -1021,7 +1072,7 @@
           <div class="detail-box golive-detail-modal-body" id="glDetailModalBody"></div>
           <div class="modal-footer">
             <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeMonitoringGoLiveDetail()">Tutup</button>
-            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update</button>
+            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update Go Live</button>
           </div>
         </div>
       </div>
@@ -1035,6 +1086,19 @@
           <div class="modal-header">
             <h2><i class="fa-solid fa-clipboard-list"></i> Update Data Go Live</h2>
             <p>Perubahan disimpan ke sheet target (bukan sheet sumber tabel ini), dicari berdasarkan ID IHLD.</p>
+          </div>
+          <!-- WRAPPER body form (poin improve: pisahkan proses "memuat data"
+               dari tombol "Simpan Perubahan"). Overlay loading di bawah
+               menutupi wrapper ini SAJA (bukan seluruh modal / footer),
+               jadi tombol Simpan & Batal tetap terlihat utuh, cuma
+               dikunci lewat golive_setUpdateFormDisabled_(). Teks tombol
+               Simpan TIDAK PERNAH lagi dipakai untuk menandai proses
+               "memuat data" -- itu sepenuhnya tanggung jawab overlay ini
+               (lihat golive_setUpdateLoading_ di script bawah). -->
+          <div class="gl-update-form-body" id="glu-form-body">
+          <div id="glu-loading-overlay" class="gl-update-loading-overlay">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span>Memuat data...</span>
           </div>
           <div class="detail-box">
             <div class="detail-row"><span class="detail-lbl">ID IHLD</span><span class="detail-val" id="glu-id-ihld">-</span></div>
@@ -1090,6 +1154,7 @@
             <input type="text" id="glu-id-sw" class="gl-update-input" placeholder="ID SW">
           </div>
           </div>
+          </div><!-- /.gl-update-form-body -->
           <div id="glu-message" style="font-size:12px; margin-top:10px; display:none;"></div>
           <div class="modal-footer">
             <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeGoLiveUpdateModal()">Batal</button>
@@ -3485,22 +3550,18 @@
       document.querySelectorAll('#glu-status-golive option[data-legacy="1"]')
         .forEach(function(opt) { opt.remove(); });
 
-      const saveBtn = document.getElementById('glu-save-btn');
-      saveBtn.textContent = 'Memuat data...';
-
-      // Selama data sedang dimuat dari sheet target, SEMUA input form
-      // (bukan cuma tombol Simpan) dikunci -- supaya user tidak bisa
-      // mengetik/menyimpan sebelum prefill selesai, atau sebelum
-      // ketahuan baris ID IHLD-nya benar-benar ada di sheet target.
-      golive_setUpdateFormDisabled_(true);
+      // Proses "memuat data" SEKARANG punya indikator sendiri (overlay
+      // spinner di atas body form) -- tombol Simpan Perubahan TIDAK lagi
+      // dipakai menampung teks "Memuat data...", teksnya biarkan apa
+      // adanya (lihat golive_setUpdateLoading_ di bawah).
+      golive_setUpdateLoading_(true);
 
       document.getElementById('glUpdateModalOverlay').style.display = 'flex';
 
       callGAS('getGoLiveUpdateTargetData', [SESSION_TOKEN, row.idIhld])
         .then(function(res) {
-          saveBtn.textContent = 'Simpan Perubahan';
           if (!res || !res.success) {
-            golive_setUpdateFormDisabled_(false);
+            golive_setUpdateLoading_(false);
             showGoLiveUpdateMessage((res && res.message) || 'Gagal memuat data dari sheet target.', true);
             return;
           }
@@ -3513,10 +3574,9 @@
           document.getElementById('glu-id-sw').value           = res.idSw         || '';
 
           // Baru dibuka kuncinya sesudah data benar-benar terisi.
-          golive_setUpdateFormDisabled_(false);
+          golive_setUpdateLoading_(false);
         })
         .catch(function(err) {
-          saveBtn.textContent = 'Simpan Perubahan';
           const msg = (err && err.message) ? err.message : String(err);
 
           // ID IHLD tidak ditemukan (baik di sheet "B2C" maupun di sheet
@@ -3526,7 +3586,11 @@
           // pesan inline, karena form memang tidak bisa dipakai sama
           // sekali (tidak ada baris target untuk diedit). Field TETAP
           // dikunci -- baru terbuka lagi lain kali modal ini dibuka
-          // untuk ID IHLD yang lain.
+          // untuk ID IHLD yang lain. Overlay loading tetap ditutup
+          // (bukan dibiarkan menggantung) supaya tidak nyangkut kalau
+          // modal notif di atasnya sempat tidak langsung menutup modal
+          // ini juga.
+          golive_hideUpdateLoadingOverlay_();
           if (msg.indexOf('ID IHLD') !== -1 && msg.toLowerCase().indexOf('tidak ditemukan') !== -1) {
             showGoLiveResultModal(
               false,
@@ -3541,8 +3605,24 @@
         });
     }
 
+    // ── Loading "Memuat data..." (poin improve: dipisah dari tombol
+    // Simpan Perubahan) ─────────────────────────────────────────────
+    // Overlay spinner menutupi body form (detail-box + 7 field) SAJA,
+    // ditambah semua field/tombol tetap dikunci lewat
+    // golive_setUpdateFormDisabled_ supaya tidak bisa diketik/disimpan
+    // selagi prefill dari sheet target masih berjalan.
+    function golive_setUpdateLoading_(loading) {
+      const overlay = document.getElementById('glu-loading-overlay');
+      if (overlay) overlay.style.display = loading ? 'flex' : 'none';
+      golive_setUpdateFormDisabled_(loading);
+    }
+    function golive_hideUpdateLoadingOverlay_() {
+      const overlay = document.getElementById('glu-loading-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
     // Kunci/buka SEMUA field form Update (7 input/select + tombol
-    // Simpan) sekaligus -- dipakai openGoLiveUpdateModal() di atas
+    // Simpan) sekaligus -- dipakai golive_setUpdateLoading_() di atas
     // selagi data prefill sedang dimuat dari sheet target.
     function golive_setUpdateFormDisabled_(disabled) {
       [
@@ -3687,15 +3767,20 @@
         idSw:          document.getElementById('glu-id-sw').value.trim()
       };
 
+      // Proses SUBMIT (simpan) -- indikator SENDIRI, terpisah total dari
+      // overlay "Memuat data..." di golive_setUpdateLoading_(). Dipakai
+      // innerHTML (bukan textContent) supaya bisa selip ikon spinner
+      // kecil di depan teks "Menyimpan...".
       const saveBtn = document.getElementById('glu-save-btn');
+      const SAVE_BTN_IDLE_HTML = 'Simpan Perubahan';
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Menyimpan...';
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
       hideGoLiveUpdateMessage();
 
       callGAS('updateGoLiveTargetData', [SESSION_TOKEN, row.idIhld, payload])
         .then(function(res) {
           saveBtn.disabled = false;
-          saveBtn.textContent = 'Simpan Perubahan';
+          saveBtn.innerHTML = SAVE_BTN_IDLE_HTML;
           if (res && res.success) {
             showGoLiveResultModal(true, res.message || 'Data berhasil diupdate.');
           } else {
@@ -3704,7 +3789,7 @@
         })
         .catch(function(err) {
           saveBtn.disabled = false;
-          saveBtn.textContent = 'Simpan Perubahan';
+          saveBtn.innerHTML = SAVE_BTN_IDLE_HTML;
           showGoLiveResultModal(false, 'Gagal menyimpan: ' + (err && err.message ? err.message : err));
         });
     }
