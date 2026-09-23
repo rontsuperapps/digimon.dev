@@ -57,11 +57,12 @@
        proporsional dan tidak ada ruang kosong di bawah kartu. Kartu
        dijadikan flex-column setinggi baris grid (menyamai tinggi kartu
        "Need Go Live IHLD" di sebelahnya), lalu isi donut+legend mengisi
-       & ditengahkan ke sisa tinggi tersebut. Efek 3D dipertahankan tapi
-       kemiringan dikurangi (28deg -> 16deg) & donatnya diperbesar
-       (88px -> 132px) supaya proporsional dengan font legend -- solusi
-       "font besar vs donat kecil" adalah donatnya yang dibesarkan,
-       bukan fontnya yang dikecilkan lagi. */
+       & ditengahkan ke sisa tinggi tersebut. Donat diperbesar (88px ->
+       132px). Efek tilt 3D (perspective+rotateX) DILEPAS -- teks total
+       yang di-counter-rotate tidak pernah presisi sejajar dengan ring
+       yang dimiringkan, jadi selalu ada bagian yang "nabrak"/tertutup
+       ring di sisi atas. Donat sekarang flat, kesan mengambang cukup
+       dari drop-shadow saja. */
     .golive-chart-card{
       display: flex;
       flex-direction: column;
@@ -78,20 +79,9 @@
       margin-inline: auto;
       width: 132px;
       height: 132px;
-      perspective: 520px;
-    }
-    .golive-donut-wrap .golive-donut,
-    .golive-donut-wrap .golive-donut-hole{
-      transform: rotateX(16deg);
-      transform-style: preserve-3d;
     }
     .golive-donut-wrap .golive-donut{
-      filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.16));
-    }
-    .golive-donut-wrap .golive-donut-hole .dn-total,
-    .golive-donut-wrap .golive-donut-hole .dn-label{
-      display: block;
-      transform: rotateX(-16deg);
+      filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.14));
     }
     .golive-chart-card .golive-donut-hole .dn-total{
       font-size: 16px;
