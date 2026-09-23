@@ -225,6 +225,21 @@
     /* Label field disamakan PERSIS dengan modal "Detail Proyek"
        (.detail-lbl), lewat variabel yang sama. Jarak antar field
        tetap dirapikan (poin improve UI sebelumnya). */
+    /* Landscape layout (poin improve UI): 7 field dibagi 2 kolom di
+       layar >=40rem, meniru grid modal "Detail Proyek"
+       (.golive-detail-modal-body) supaya modal ini lebih lebar &
+       pendek, bukan memanjang ke bawah 1 kolom seperti sebelumnya.
+       Di layar sempit (HP kecil) tetap 1 kolom seperti semula. */
+    #glUpdateModalOverlay .gl-update-form-grid{
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      column-gap: calc(var(--spacing) * 5);
+    }
+    @media (min-width: 40rem){
+      #glUpdateModalOverlay .gl-update-form-grid{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
     #glUpdateModalOverlay .profile-modal-field{
       margin-bottom: calc(var(--spacing) * 4);
     }
@@ -1016,7 +1031,7 @@
            ODP REAL 16, TOTAL PORT REAL, STATUS GOLIVE, NAMA ALPRO,
            TANGGAL GOLIVE, ID SW) bisa diedit & disimpan ke sheet target. -->
       <div id="glUpdateModalOverlay" class="modal-overlay">
-        <div class="modal-card">
+        <div class="modal-card" style="max-width:640px;">
           <div class="modal-header">
             <h2><i class="fa-solid fa-clipboard-list"></i> Update Data Go Live</h2>
             <p>Perubahan disimpan ke sheet target (bukan sheet sumber tabel ini), dicari berdasarkan ID IHLD.</p>
@@ -1025,6 +1040,10 @@
             <div class="detail-row"><span class="detail-lbl">ID IHLD</span><span class="detail-val" id="glu-id-ihld">-</span></div>
             <div class="detail-row"><span class="detail-lbl">Nama Proyek</span><span class="detail-val" id="glu-nama-proyek">-</span></div>
           </div>
+          <!-- 7 field editable dibungkus grid 2 kolom (poin: modal ini
+               landscape sama seperti modal "Detail Proyek", bukan
+               potrait/1 kolom memanjang ke bawah lagi). -->
+          <div class="gl-update-form-grid">
           <div class="profile-modal-field">
             <label class="profile-modal-label">ODP Real 8</label>
             <input type="number" inputmode="numeric" step="1" min="0" id="glu-odp-real-8" class="gl-update-input" placeholder="0">
@@ -1069,6 +1088,7 @@
           <div class="profile-modal-field">
             <label class="profile-modal-label">ID SW</label>
             <input type="text" id="glu-id-sw" class="gl-update-input" placeholder="ID SW">
+          </div>
           </div>
           <div id="glu-message" style="font-size:12px; margin-top:10px; display:none;"></div>
           <div class="modal-footer">
