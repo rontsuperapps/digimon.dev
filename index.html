@@ -92,12 +92,17 @@
       max-width: 260px;
       min-width: 0;
     }
-    /* Font legend (nama, nilai, persen) di-set 3px untuk testing. */
-    .golive-chart-card .golive-chart-legend-item{
-      font-size: 3px;
-    }
+    /* Satu-satunya titik kontrol ukuran font legend (nama, nilai,
+       persen) -- diseragamkan 10px. Aturan .golive-chart-legend-name /
+       -val / -pct di blok lain SUDAH tidak lagi membawa font-size
+       sendiri (sumber bug sebelumnya: 2 aturan berbeda menimpa 2
+       elemen yang beda pula), jadi cukup ganti angka di sini saja
+       kalau mau ubah ukurannya lagi. */
+    .golive-chart-card .golive-chart-legend-item,
+    .golive-chart-card .golive-chart-legend-name,
+    .golive-chart-card .golive-chart-legend-val,
     .golive-chart-card .golive-chart-legend-pct{
-      font-size: 3px;
+      font-size: 10px;
     }
 
     /* 1b) Efek 3D untuk bar "Run Rate 7 Hari Terakhir": sebelumnya pakai
@@ -325,7 +330,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
       line-height: 1.3;
     }
     .golive-chart-legend-swatch{
@@ -337,7 +341,6 @@
     .golive-chart-legend-name{
       flex: 1;
       min-width: 0;
-      font-size: 12px;
       font-weight: var(--font-weight-medium);
       color: var(--color-gray-700);
       white-space: nowrap;
@@ -345,13 +348,11 @@
       text-overflow: ellipsis;
     }
     .golive-chart-legend-val{
-      font-size: 12px;
       font-weight: var(--font-weight-semibold);
       color: var(--color-gray-800);
       font-variant-numeric: tabular-nums;
     }
     .golive-chart-legend-pct{
-      font-size: 11px;
       font-weight: var(--font-weight-medium);
       color: var(--color-gray-400);
       font-variant-numeric: tabular-nums;
