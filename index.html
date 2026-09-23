@@ -159,15 +159,77 @@
       display: none;
     }
 
-    /* 5) Modal "Update Data Go Live": field ODP Real 8/16, Total Port
-       Real, Nama Alpro, ID SW, dan Tanggal Golive memakai class
-       "form-select" (untuk styling kotak/border yang sama), tapi field
-       ini BUKAN <select> -- jadi panah dropdown bawaan .form-select
-       dimatikan khusus untuk field-field ini lewat class ".no-caret".
-       Field "Status Golive" SEKARANG beneran jadi <select>, jadi
-       panahnya TETAP dipertahankan (tidak dikasih class ini). */
-    .no-caret{
-      background-image: none !important;
+    /* 5) Modal "Update Data Go Live" — REDESIGN field input (poin
+       improve UI form update). Field ODP Real 8/16, Total Port Real,
+       Nama Alpro, Tanggal Golive, ID SW, & Status Golive (select)
+       sebelumnya numpang class ".form-select" apa adanya -> kelihatan
+       kotak (border-radius kecil/nol) & font kebesaran, plus ada bug
+       panah dropdown dobel di field yang bukan <select>.
+       Diganti total dengan 2 class baru (".gl-update-input" untuk
+       input teks/angka/tanggal, ".gl-update-select" untuk dropdown
+       Status Golive) yang stylingnya ditulis pakai VARIABEL DESAIN
+       TAILWIND v4 milik app.css sendiri (--radius-lg, --color-gray-*,
+       --font-weight-medium, --accent-color, dst) -- BUKAN warna/ukuran
+       ngarang sendiri -- supaya konsisten dengan tema Tailwind yang
+       sudah ada tanpa perlu rebuild app.css / npm run build:css. */
+    #glUpdateModalOverlay .gl-update-input,
+    #glUpdateModalOverlay .gl-update-select{
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
+      font-size: 0.875rem;      /* setara Tailwind text-sm, sebelumnya ikut ukuran <select> yang lebih besar */
+      line-height: 1.25rem;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-800);
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-lg);   /* sudut membulat -- sebelumnya kesan "kotak" */
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+      background-image: none !important; /* buang panah bawaan .form-select, no bug dobel lagi */
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    #glUpdateModalOverlay .gl-update-input::placeholder{
+      color: var(--color-gray-400);
+      font-weight: var(--font-weight-medium);
+    }
+    #glUpdateModalOverlay .gl-update-input:hover,
+    #glUpdateModalOverlay .gl-update-select:hover{
+      border-color: var(--color-gray-400);
+    }
+    #glUpdateModalOverlay .gl-update-input:focus,
+    #glUpdateModalOverlay .gl-update-select:focus{
+      outline: none;
+      border-color: var(--accent-color, var(--color-brand-500));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color, var(--color-brand-500)) 18%, transparent);
+    }
+    /* Status Golive TETAP <select> beneran -> panahnya sengaja
+       dipasang ulang secara manual (SVG chevron kecil, warna
+       --color-gray-500) supaya bentuknya rapi & senada, bukan bawaan
+       browser yang kadang gepeng/besar sendiri. */
+    #glUpdateModalOverlay .gl-update-select{
+      padding-right: calc(var(--spacing) * 9);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat;
+      background-position: right calc(var(--spacing) * 3) center;
+      background-size: 1em 1em;
+      cursor: pointer;
+    }
+    /* Label field & jarak antar field dirapikan senada gaya form
+       Tailwind (label kecil huruf kapital abu-abu, jarak konsisten) */
+    #glUpdateModalOverlay .profile-modal-field{
+      margin-bottom: calc(var(--spacing) * 4);
+    }
+    #glUpdateModalOverlay .profile-modal-label{
+      display: block;
+      margin-bottom: calc(var(--spacing) * 1.5);
+      font-size: var(--text-theme-xs);
+      font-weight: var(--font-weight-semibold);
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--text-muted);
     }
 
     /* 4) Badge Ringkasan Total: icon bulat + value + persentase,
@@ -958,22 +1020,22 @@
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">ODP Real 8</label>
-            <input type="number" inputmode="numeric" step="1" min="0" id="glu-odp-real-8" class="form-select no-caret" placeholder="0">
+            <input type="number" inputmode="numeric" step="1" min="0" id="glu-odp-real-8" class="gl-update-input" placeholder="0">
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">ODP Real 16</label>
-            <input type="number" inputmode="numeric" step="1" min="0" id="glu-odp-real-16" class="form-select no-caret" placeholder="0">
+            <input type="number" inputmode="numeric" step="1" min="0" id="glu-odp-real-16" class="gl-update-input" placeholder="0">
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">Total Port Real</label>
-            <input type="number" inputmode="numeric" step="1" min="0" id="glu-total-port-real" class="form-select no-caret" placeholder="0">
+            <input type="number" inputmode="numeric" step="1" min="0" id="glu-total-port-real" class="gl-update-input" placeholder="0">
           </div>
           <!-- Status Golive: SEKARANG beneran <select> (poin B) -- daftar
                opsi TETAP (bukan hasil baca sheet), dan panah dropdown-nya
                memang punya karena field ini beneran dropdown. -->
           <div class="profile-modal-field">
             <label class="profile-modal-label">Status Golive</label>
-            <select id="glu-status-golive" class="form-select">
+            <select id="glu-status-golive" class="gl-update-select">
               <option value="">-- Pilih Status Golive --</option>
               <option value="1. PROGRESS ABD">1. PROGRESS ABD</option>
               <option value="2. VALIDASI ABD">2. VALIDASI ABD</option>
@@ -991,15 +1053,15 @@
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">Nama Alpro</label>
-            <input type="text" id="glu-nama-alpro" class="form-select no-caret" placeholder="Nama ALPRO (ODP/OTB)">
+            <input type="text" id="glu-nama-alpro" class="gl-update-input" placeholder="Nama ALPRO (ODP/OTB)">
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">Tanggal Golive</label>
-            <input type="date" id="glu-tanggal-golive" class="form-select no-caret">
+            <input type="date" id="glu-tanggal-golive" class="gl-update-input">
           </div>
           <div class="profile-modal-field">
             <label class="profile-modal-label">ID SW</label>
-            <input type="text" id="glu-id-sw" class="form-select no-caret" placeholder="ID SW">
+            <input type="text" id="glu-id-sw" class="gl-update-input" placeholder="ID SW">
           </div>
           <div id="glu-message" style="font-size:12px; margin-top:10px; display:none;"></div>
           <div class="modal-footer">
