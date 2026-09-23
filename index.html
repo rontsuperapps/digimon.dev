@@ -178,10 +178,15 @@
       width: 100%;
       box-sizing: border-box;
       padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
-      font-size: 0.875rem;      /* setara Tailwind text-sm, sebelumnya ikut ukuran <select> yang lebih besar */
+      /* Font disamakan PERSIS dengan modal "Detail Proyek" (.detail-val)
+         lewat variabel yang diisi golive_syncUpdateFormFontToDetail_()
+         di script bawah. Nilai setelah koma cuma fallback kalau JS itu
+         belum sempat jalan. */
+      font-family: var(--gl-update-input-font-family, inherit);
+      font-size: var(--gl-update-input-font-size, 0.875rem);
       line-height: 1.25rem;
-      font-weight: var(--font-weight-medium);
-      color: var(--color-gray-800);
+      font-weight: var(--gl-update-input-font-weight, var(--font-weight-medium));
+      color: var(--gl-update-input-color, var(--color-gray-800));
       background-color: var(--color-white);
       border: 1px solid var(--color-gray-300);
       border-radius: var(--radius-lg);   /* sudut membulat -- sebelumnya kesan "kotak" */
@@ -193,7 +198,7 @@
     }
     #glUpdateModalOverlay .gl-update-input::placeholder{
       color: var(--color-gray-400);
-      font-weight: var(--font-weight-medium);
+      font-weight: var(--gl-update-input-font-weight, var(--font-weight-medium));
     }
     #glUpdateModalOverlay .gl-update-input:hover,
     #glUpdateModalOverlay .gl-update-select:hover{
@@ -217,19 +222,21 @@
       background-size: 1em 1em;
       cursor: pointer;
     }
-    /* Label field & jarak antar field dirapikan senada gaya form
-       Tailwind (label kecil huruf kapital abu-abu, jarak konsisten) */
+    /* Label field disamakan PERSIS dengan modal "Detail Proyek"
+       (.detail-lbl), lewat variabel yang sama. Jarak antar field
+       tetap dirapikan (poin improve UI sebelumnya). */
     #glUpdateModalOverlay .profile-modal-field{
       margin-bottom: calc(var(--spacing) * 4);
     }
     #glUpdateModalOverlay .profile-modal-label{
       display: block;
       margin-bottom: calc(var(--spacing) * 1.5);
-      font-size: var(--text-theme-xs);
-      font-weight: var(--font-weight-semibold);
+      font-family: var(--gl-update-label-font-family, inherit);
+      font-size: var(--gl-update-label-font-size, var(--text-theme-xs));
+      font-weight: var(--gl-update-label-font-weight, var(--font-weight-semibold));
       letter-spacing: .02em;
       text-transform: uppercase;
-      color: var(--text-muted);
+      color: var(--gl-update-label-color, var(--text-muted));
     }
 
     /* 4) Badge Ringkasan Total: icon bulat + value + persentase,
@@ -3523,6 +3530,45 @@
       closeGoLiveUpdateModal();
       closeMonitoringGoLiveDetail();
     }
+
+    // ══════════════════════════════════════════════════════════════
+    // SAMAKAN FONT form Update dengan modal "Detail Proyek" (poin
+    // improve UI lanjutan). Daripada menebak-nebak nilai font-size/
+    // font-weight/warna dari app.css (yang tidak ada di file ini),
+    // nilai itu diambil LANGSUNG dari elemen yang sudah pasti pakai
+    // gaya Detail Proyek (.detail-lbl & .detail-val -- dipakai juga
+    // oleh baris "ID IHLD"/"Nama Proyek" di form Update ini sendiri),
+    // lalu disalin lewat CSS variable ke field .gl-update-input /
+    // .gl-update-select / label field. Hasilnya DIJAMIN identik
+    // dengan Detail Proyek walau app.css berubah di kemudian hari.
+    // Dijalankan sekali saat skrip dimuat -- elemen modal (walau
+    // masih hidden lewat display:none) sudah ada di DOM di titik ini,
+    // dan font-size/warna tetap bisa dibaca dari elemen yang hidden.
+    // ══════════════════════════════════════════════════════════════
+    function golive_syncUpdateFormFontToDetail_() {
+      try {
+        const valRef = document.querySelector('#glUpdateModalOverlay .detail-val');
+        const lblRef = document.querySelector('#glUpdateModalOverlay .detail-lbl');
+        if (!valRef || !lblRef) return;
+
+        const root = document.documentElement.style;
+        const vCs = getComputedStyle(valRef);
+        const lCs = getComputedStyle(lblRef);
+
+        root.setProperty('--gl-update-input-font-family', vCs.fontFamily);
+        root.setProperty('--gl-update-input-font-size',   vCs.fontSize);
+        root.setProperty('--gl-update-input-font-weight', vCs.fontWeight);
+        root.setProperty('--gl-update-input-color',       vCs.color);
+
+        root.setProperty('--gl-update-label-font-family', lCs.fontFamily);
+        root.setProperty('--gl-update-label-font-size',   lCs.fontSize);
+        root.setProperty('--gl-update-label-font-weight', lCs.fontWeight);
+        root.setProperty('--gl-update-label-color',       lCs.color);
+      } catch (e) {
+        console.error('golive_syncUpdateFormFontToDetail_ ERROR: ' + e.toString());
+      }
+    }
+    golive_syncUpdateFormFontToDetail_();
 
     function showGoLiveUpdateMessage(msg, isError) {
       const el = document.getElementById('glu-message');
