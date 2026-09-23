@@ -285,6 +285,29 @@
       background-color: var(--color-brand-100);
       color: var(--color-brand-500);
     }
+    /* 4b) Dark mode utk lingkaran icon di atas -- sebelumnya tidak ada
+       override sama sekali, jadi warna pastel mode terang (gray-100/
+       warning-100/success-100/brand-100) tetap kepakai apa adanya di
+       dark mode. Background diganti tint tipis (color-mix 15-18% dari
+       warna aksennya di atas transparan) + warna icon jadi 1 step lebih
+       terang (400) supaya kontrasnya pas dengan card gelap, senada
+       dengan pola dark mode elemen lain (mis. .notif-icon.type-*). */
+    .golive-badge-icon:where([data-theme=dark],[data-theme=dark] *){
+      background-color: color-mix(in srgb, var(--color-gray-400) 15%, transparent);
+      color: var(--color-gray-300);
+    }
+    .golive-badge-item.badge-mitra .golive-badge-icon:where([data-theme=dark],[data-theme=dark] *){
+      background-color: color-mix(in srgb, var(--color-warning-500) 18%, transparent);
+      color: var(--color-warning-400);
+    }
+    .golive-badge-item.badge-sdi .golive-badge-icon:where([data-theme=dark],[data-theme=dark] *){
+      background-color: color-mix(in srgb, var(--color-success-500) 18%, transparent);
+      color: var(--color-success-400);
+    }
+    .golive-badge-item.badge-total .golive-badge-icon:where([data-theme=dark],[data-theme=dark] *){
+      background-color: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
+      color: var(--color-brand-400);
+    }
     .golive-badge-body{ min-width: 0; }
     .golive-badge-item .golive-badge-label{
       margin-bottom: 2px;
@@ -1074,7 +1097,7 @@
           <div class="detail-box golive-detail-modal-body" id="glDetailModalBody"></div>
           <div class="modal-footer">
             <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeMonitoringGoLiveDetail()">Tutup</button>
-            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update Go Live</button>
+            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update</button>
           </div>
         </div>
       </div>
