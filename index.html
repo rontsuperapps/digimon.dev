@@ -3441,16 +3441,21 @@
         .forEach(function(opt) { opt.remove(); });
 
       const saveBtn = document.getElementById('glu-save-btn');
-      saveBtn.disabled = true;
       saveBtn.textContent = 'Memuat data...';
+
+      // Selama data sedang dimuat dari sheet target, SEMUA input form
+      // (bukan cuma tombol Simpan) dikunci -- supaya user tidak bisa
+      // mengetik/menyimpan sebelum prefill selesai, atau sebelum
+      // ketahuan baris ID IHLD-nya benar-benar ada di sheet target.
+      golive_setUpdateFormDisabled_(true);
 
       document.getElementById('glUpdateModalOverlay').style.display = 'flex';
 
       callGAS('getGoLiveUpdateTargetData', [SESSION_TOKEN, row.idIhld])
         .then(function(res) {
-          saveBtn.disabled = false;
           saveBtn.textContent = 'Simpan Perubahan';
           if (!res || !res.success) {
+            golive_setUpdateFormDisabled_(false);
             showGoLiveUpdateMessage((res && res.message) || 'Gagal memuat data dari sheet target.', true);
             return;
           }
@@ -3461,12 +3466,48 @@
           document.getElementById('glu-nama-alpro').value      = res.namaAlpro     || '';
           document.getElementById('glu-tanggal-golive').value  = res.tanggalGoLive || '';
           document.getElementById('glu-id-sw').value           = res.idSw         || '';
+
+          // Baru dibuka kuncinya sesudah data benar-benar terisi.
+          golive_setUpdateFormDisabled_(false);
         })
         .catch(function(err) {
-          saveBtn.disabled = false;
           saveBtn.textContent = 'Simpan Perubahan';
-          showGoLiveUpdateMessage('Gagal memuat data: ' + (err && err.message ? err.message : err), true);
+          const msg = (err && err.message) ? err.message : String(err);
+
+          // ID IHLD tidak ditemukan (baik di sheet "B2C" maupun di sheet
+          // target -- lihat golive_locateUpdateTargetRow_ di code.gs,
+          // kedua pesan error-nya sama-sama mengandung "ID IHLD" dan
+          // "tidak ditemukan") -> tampilkan POP UP MODAL khusus, BUKAN
+          // pesan inline, karena form memang tidak bisa dipakai sama
+          // sekali (tidak ada baris target untuk diedit). Field TETAP
+          // dikunci -- baru terbuka lagi lain kali modal ini dibuka
+          // untuk ID IHLD yang lain.
+          if (msg.indexOf('ID IHLD') !== -1 && msg.toLowerCase().indexOf('tidak ditemukan') !== -1) {
+            showGoLiveResultModal(
+              false,
+              'ID IHLD tidak ditemukan silahkan kordinasi dengan tim konstruksi',
+              'ID IHLD Tidak Ditemukan'
+            );
+            return;
+          }
+
+          golive_setUpdateFormDisabled_(false);
+          showGoLiveUpdateMessage('Gagal memuat data: ' + msg, true);
         });
+    }
+
+    // Kunci/buka SEMUA field form Update (7 input/select + tombol
+    // Simpan) sekaligus -- dipakai openGoLiveUpdateModal() di atas
+    // selagi data prefill sedang dimuat dari sheet target.
+    function golive_setUpdateFormDisabled_(disabled) {
+      [
+        'glu-odp-real-8', 'glu-odp-real-16', 'glu-total-port-real',
+        'glu-status-golive', 'glu-nama-alpro', 'glu-tanggal-golive', 'glu-id-sw',
+        'glu-save-btn'
+      ].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+      });
     }
 
     function closeGoLiveUpdateModal() {
@@ -3500,22 +3541,26 @@
     // Dipanggil sesudah updateGoLiveTargetData() sukses ATAU gagal.
     // Tombol "OK" pada modal ini (closeGoLiveResultModal) yang benar-
     // benar menutup semua modal & mengembalikan user ke tabel data.
-    function showGoLiveResultModal(success, message) {
+    // customTitle (opsional) -- dipakai openGoLiveUpdateModal() untuk
+    // kasus "ID IHLD Tidak Ditemukan", supaya modal ini tetap bisa
+    // dipakai ulang untuk kasus lain di luar hasil simpan (judul
+    // default "Berhasil/Gagal Disimpan" tidak selalu pas).
+    function showGoLiveResultModal(success, message, customTitle) {
       const iconWrap = document.getElementById('glResultIconWrap');
       const icon     = document.getElementById('glResultIcon');
-      const title    = document.getElementById('glResultTitle');
+      const titleEl  = document.getElementById('glResultTitle');
       const msg      = document.getElementById('glResultMessage');
 
       if (success) {
         iconWrap.style.backgroundColor = 'color-mix(in srgb, var(--success-color) 15%, transparent)';
         icon.style.color   = 'var(--success-color)';
         icon.className     = 'fa-solid fa-circle-check';
-        title.textContent  = 'Berhasil Disimpan';
+        titleEl.textContent = customTitle || 'Berhasil Disimpan';
       } else {
         iconWrap.style.backgroundColor = 'color-mix(in srgb, var(--danger-color) 15%, transparent)';
         icon.style.color   = 'var(--danger-color)';
         icon.className     = 'fa-solid fa-circle-xmark';
-        title.textContent  = 'Gagal Disimpan';
+        titleEl.textContent = customTitle || 'Gagal Disimpan';
       }
       msg.textContent = message || (success ? 'Data berhasil diupdate.' : 'Data gagal disimpan.');
 
