@@ -1682,23 +1682,40 @@
       initDashboardOnReady_();
     }
 
-    // AUDIT PERFORMA (poin 2) — interval auto-refresh silent. Memanggil
-    // ulang fetchDashboardBootstrap() & fetchMonitoringGoLiveData() TANPA
-    // bypassCache (forceFresh=false), jadi request ini justru RINGAN kalau
-    // trigger cache-warmer di backend sudah terpasang (lihat
-    // installCacheWarmerTrigger_ & handleSheetEdit_ di code.gs) -- yang
-    // diambil cuma cache yang memang sudah hangat, bukan baca sheet ulang.
-    // Auto-refresh berhenti sejenak saat tab sedang tidak aktif (dokumen
-    // tersembunyi) supaya tidak buang-buang kuota/beban server percuma.
+    // FIX PERFORMA (poin 2): SEBELUMNYA fetchDashboardBootstrap() DAN
+    // fetchMonitoringGoLiveData() sama-sama di-refresh tiap tick (60
+    // detik) -- padahal fetchMonitoringGoLiveData() adalah request PALING
+    // BERAT (bisa ribuan baris x banyak kolom), sementara cache datanya
+    // di backend (MONITORING_DATA_CACHE_TTL_SEC di code.gs) cuma valid
+    // 180 detik. Artinya 2 dari 3 auto-refresh tabel detail tiap menit
+    // itu SIA-SIA: cuma download ulang + parse ulang + filter/render
+    // ulang JSON yang PERSIS SAMA dengan yang sudah ada di layar (karena
+    // cache backend belum sempat berubah), membebani jaringan & CPU
+    // browser tanpa menambah kebaruan data sama sekali. (Kalaupun sheet
+    // memang baru diedit, handleSheetEdit_ di code.gs sudah menulis
+    // ulang cache SAAT ITU JUGA -- jadi menunggu 1-2 tick tambahan di
+    // sini tidak membuat data yang tampil "kurang akurat", cache-nya
+    // sendiri sudah fresh dari detik pertama edit terjadi.)
+    // Sekarang: bootstrap (ringan, isinya badge/chart/summary yang paling
+    // sering dilihat) tetap refresh tiap tick; tabel detail (berat) cuma
+    // ikut refresh tiap kelipatan DETAIL_REFRESH_EVERY_N_TICKS tick --
+    // disamakan dengan TTL cache backend supaya tetap seakurat sebelumnya,
+    // hanya tanpa kerja berulang yang percuma.
     const DASHBOARD_AUTO_REFRESH_MS = 60000; // 60 detik
+    const DETAIL_REFRESH_EVERY_N_TICKS = 3;  // 60s x 3 = 180s ≈ TTL cache backend
     let dashboardAutoRefreshTimer_ = null;
+    let dashboardAutoRefreshTickCount_ = 0;
 
     function startDashboardAutoRefresh_() {
       if (dashboardAutoRefreshTimer_) return; // sudah jalan, jangan dobel
       dashboardAutoRefreshTimer_ = setInterval(function () {
         if (document.hidden) return; // tab tidak aktif -- lewati giliran ini
-        if (!isFetchingBootstrap && !isFetchingMonitoringGoLive) {
+        dashboardAutoRefreshTickCount_++;
+
+        if (!isFetchingBootstrap) {
           fetchDashboardBootstrap(false);
+        }
+        if (!isFetchingMonitoringGoLive && dashboardAutoRefreshTickCount_ % DETAIL_REFRESH_EVERY_N_TICKS === 0) {
           fetchMonitoringGoLiveData(false);
         }
       }, DASHBOARD_AUTO_REFRESH_MS);
