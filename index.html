@@ -194,13 +194,13 @@
     .golive-badge-item .golive-badge-label{
       margin-bottom: 2px;
     }
-    .golive-badge-item .golive-badge-value{
-      color: var(--color-gray-800);
-    }
     .golive-badge-pct{
       margin-top: 2px;
       font-size: 11px;
       color: var(--color-gray-400);
+    }
+    .golive-badge-pct:where([data-theme=dark],[data-theme=dark] *){
+      color: var(--color-gray-300);
     }
 
     /* 5) Legend chart Persentase MITRA/SDI: kolom value & persen rata
@@ -247,12 +247,18 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .golive-kendala-row-label:where([data-theme=dark],[data-theme=dark] *){
+      color: var(--color-gray-300);
+    }
     .golive-kendala-row-val{
       flex-shrink: 0;
       font-size: var(--text-theme-xs);
       font-weight: var(--font-weight-semibold);
       color: var(--color-gray-800);
       white-space: nowrap;
+    }
+    .golive-kendala-row-val:where([data-theme=dark],[data-theme=dark] *){
+      color: color-mix(in oklab, var(--color-white) 90%, transparent);
     }
     .golive-kendala-row-bar-track{
       height: 6px;
@@ -342,14 +348,12 @@
       flex: 1;
       min-width: 0;
       font-weight: var(--font-weight-medium);
-      color: var(--color-gray-700);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .golive-chart-legend-val{
       font-weight: var(--font-weight-semibold);
-      color: var(--color-gray-800);
       font-variant-numeric: tabular-nums;
     }
     .golive-chart-legend-pct{
@@ -357,10 +361,12 @@
       color: var(--color-gray-400);
       font-variant-numeric: tabular-nums;
     }
+    .golive-chart-legend-pct:where([data-theme=dark],[data-theme=dark] *){
+      color: var(--color-gray-300);
+    }
     .golive-donut-hole .dn-total{
       font-size: 15px;
       font-weight: var(--font-weight-bold);
-      color: var(--color-gray-800);
       line-height: 1.15;
     }
     .golive-donut-hole .dn-label{
@@ -371,6 +377,9 @@
       letter-spacing: .3px;
       line-height: 1.2;
       margin-top: 2px;
+    }
+    .golive-donut-hole .dn-label:where([data-theme=dark],[data-theme=dark] *){
+      color: var(--color-gray-300);
     }
   </style>
 </head>
