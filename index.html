@@ -550,6 +550,17 @@
     #glUpdateModalOverlay #glu-save-btn .fa-spinner{
       margin-right: calc(var(--spacing) * 1.5);
     }
+
+    /* 7) Samakan ukuran font tabel detail Go Live B2C: sebelumnya isi
+       (<td>) 12px sementara header (<th>) 10px, jadi terasa "beda
+       besar" antara header & isi. Sumbernya sudah diubah juga di
+       components.css (text-[12px] -> text-[10px]) supaya konsisten
+       kalau nanti di-build ulang lewat `npm run build:css` -- override
+       di sini SEKADAR supaya efeknya langsung kelihatan tanpa nunggu
+       assets/app.css (hasil compile Tailwind) di-build ulang. */
+    .data-table td{
+      font-size: 10px;
+    }
   </style>
 </head>
 <body data-theme="light">
