@@ -1029,7 +1029,7 @@
             <label for="glSearchInput">Pencarian</label>
             <div class="search-input-wrap">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="glSearchInput" class="search-input" placeholder="Cari District, STO, ID IHLD, Nama Proyek, Program..." oninput="applyMonitoringGoLiveSearchFilter()">
+              <input type="text" id="glSearchInput" class="search-input" placeholder="Cari District, STO, ID IHLD, Nama Proyek, Program..." oninput="glOnSearchInput_()">
               <button class="search-clear-btn" id="glSearchClearBtn" onclick="clearMonitoringGoLiveSearchFilter()" title="Hapus pencarian">
                 <i class="fa-solid fa-circle-xmark"></i>
               </button>
@@ -1097,7 +1097,7 @@
           <div class="detail-box golive-detail-modal-body" id="glDetailModalBody"></div>
           <div class="modal-footer">
             <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeMonitoringGoLiveDetail()">Tutup</button>
-            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update Go Live</button>
+            <button class="btn-modal btn-m-accent" onclick="openGoLiveUpdateModal()">Update</button>
           </div>
         </div>
       </div>
@@ -1305,6 +1305,15 @@
        ============================================================ */
     const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby6qUomlq-4uDMvCJyj2BCUR-Oope1oaCGXZgWydnWjv5FKb7qDEP3yutQ8rbAdZWu7rw/exec';
 
+    // AUDIT (poin 3, keandalan): dulu fetch() di callGAS() di bawah TIDAK
+    // punya batas waktu sama sekali -- kalau server GAS lambat/nge-hang
+    // (cold start, kuota, dsb.), UI bisa nyangkut nunggu tanpa batas
+    // tanpa ada cara pulih selain reload manual. 25 detik dipilih cukup
+    // longgar untuk skenario TERBERAT (Refresh Data paksa bypass cache,
+    // baca ulang seluruh sheet "B2C" dari nol), tapi tetap ada batas
+    // jelas untuk kasus server benar-benar hang.
+    const GAS_CALL_TIMEOUT_MS = 25000;
+
     // Token sesi dibaca dari localStorage (diisi login.html saat login
     // berhasil). Kalau tidak ada token sama sekali, user belum login --
     // tendang balik ke halaman login statis.
@@ -1388,20 +1397,39 @@
     async function callGAS(fn, args) {
       let res;
 
+      // AbortController: paksa batalkan request kalau server tidak
+      // merespons dalam GAS_CALL_TIMEOUT_MS (lihat catatan di deklarasi
+      // konstantanya di atas). Tanpa ini, fetch() bisa menggantung tanpa
+      // batas waktu.
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(function () { controller.abort(); }, GAS_CALL_TIMEOUT_MS);
+
       try {
         res = await fetch(GAS_EXEC_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ fn: fn, args: args || [], token: SESSION_TOKEN })
+          body: JSON.stringify({ fn: fn, args: args || [], token: SESSION_TOKEN }),
+          signal: controller.signal
         });
       } catch (networkErr) {
+        // AbortError = timeout kita sendiri yang memicu, BUKAN putus
+        // koneksi -- pesannya dibedakan supaya user tahu ini soal server
+        // yang lambat merespons, bukan soal jaringan mereka.
+        const isTimeout = networkErr && networkErr.name === 'AbortError';
+
         const cached = readPwaOfflineCache_(fn, args);
         if (cached) {
           updatePwaOfflineBanner(true, cached.ts);
           return cached.data;
         }
         updatePwaOfflineBanner(true);
+
+        if (isTimeout) {
+          throw new Error('Server tidak merespons dalam ' + (GAS_CALL_TIMEOUT_MS / 1000) + ' detik (kemungkinan server sedang lambat/cold start). Coba lagi sebentar lagi.');
+        }
         throw new Error('Tidak bisa terhubung ke server (periksa koneksi internet). ' + networkErr.message);
+      } finally {
+        clearTimeout(timeoutId);
       }
 
       if (!res.ok) {
@@ -1491,6 +1519,11 @@
     let monitoringGoLivePageSize    = 10;
     let isFetchingMonitoringGoLive  = false;
     let monitoringGoLiveLoadedOnce  = false;
+    // Ditandai oleh showGoLiveResultModal() setiap kali modal notif hasil
+    // (Berhasil/Gagal Disimpan) tampil, dibaca oleh closeGoLiveResultModal()
+    // untuk memutuskan perlu tidaknya paksa refresh tabel Go Live B2C --
+    // lihat komentar lengkap di showGoLiveResultModal().
+    let glLastResultWasSuccess_ = false;
     let isFetchingBootstrap         = false; // guard anti-tumpang-tindih fetchDashboardBootstrap
 
     let isFetchingGoLiveSummary     = false;
@@ -3265,6 +3298,28 @@
       return isNaN(dt.getTime()) ? null : dt;
     }
 
+    // AUDIT (poin 2, kecepatan): SEBELUMNYA oninput langsung memanggil
+    // applyMonitoringGoLiveSearchFilter() -- tiap 1 karakter diketik
+    // langsung menjalankan beberapa .filter() berantai (cek s.d. 20
+    // kolom teks per baris) + render ulang seluruh <tbody>. Untuk data
+    // ratusan/ribuan baris, ngetik cepat jadi berasa nyendat karena tiap
+    // keystroke motong proses keystroke sebelumnya yang belum selesai.
+    // Sekarang di-debounce 250ms: proses filter+render BERAT baru jalan
+    // 250ms setelah user BERHENTI mengetik, bukan di setiap huruf.
+    // Feedback visual tombol "X" (clear) SENGAJA TIDAK ikut didebounce
+    // (langsung update di sini juga) supaya tetap terasa responsif.
+    let glSearchDebounceTimer_ = null;
+    function glOnSearchInput_() {
+      const query = document.getElementById('glSearchInput').value.trim();
+      const clearBtn = document.getElementById('glSearchClearBtn');
+      if (clearBtn) clearBtn.classList.toggle('show', query.length > 0);
+
+      clearTimeout(glSearchDebounceTimer_);
+      glSearchDebounceTimer_ = setTimeout(function () {
+        applyMonitoringGoLiveSearchFilter(true);
+      }, 250);
+    }
+
     function applyMonitoringGoLiveSearchFilter(resetPage) {
       if (resetPage === undefined) resetPage = true;
       const query = document.getElementById('glSearchInput').value.trim().toLowerCase();
@@ -3384,6 +3439,10 @@
     }
 
     function clearMonitoringGoLiveSearchFilter() {
+      // Batalkan proses debounce yang mungkin masih menunggu (lihat
+      // glOnSearchInput_) -- klik tombol X ini aksi diskrit, harus
+      // langsung terasa instan, bukan ikut nunggu 250ms lagi.
+      clearTimeout(glSearchDebounceTimer_);
       const input = document.getElementById('glSearchInput');
       input.value = '';
       input.focus();
@@ -3393,6 +3452,7 @@
     // Reset SEMUA filter (11 dropdown + range tanggal + pencarian teks),
     // dipanggil dari tombol "Reset Filter".
     function resetMonitoringGoLiveFilters() {
+      clearTimeout(glSearchDebounceTimer_);
       MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
         const el = document.getElementById(f.id);
         if (el) el.value = '';
@@ -3695,7 +3755,20 @@
     // kasus "ID IHLD Tidak Ditemukan", supaya modal ini tetap bisa
     // dipakai ulang untuk kasus lain di luar hasil simpan (judul
     // default "Berhasil/Gagal Disimpan" tidak selalu pas).
+    // AUDIT (poin 1, akurasi): fungsi ini SEBELUMNYA cuma dipakai buat
+    // tampilan notif -- tidak ada yang mencatat apakah hasilnya sukses
+    // atau gagal setelah modal ini ditutup. Akibatnya "Simpan Perubahan"
+    // pada Update Data Go Live bisa sukses ke sheet TARGET, tapi tabel
+    // Go Live B2C di layar tetap menampilkan data LAMA -- baris baru
+    // ter-refresh sendiri lain kali auto-refresh (bisa sampai semenit)
+    // jalan, karena update itu masih harus lewat IMPORTRANGE ke sheet
+    // "B2C" + cache 180 detik. Sekarang glLastResultWasSuccess_ dicatat
+    // di sini, dan closeGoLiveResultModal() di bawah memaksa refresh
+    // (bypass cache) begitu user klik OK -- supaya jeda tampak sesingkat
+    // mungkin, bukan menunggu tick auto-refresh berikutnya.
     function showGoLiveResultModal(success, message, customTitle) {
+      glLastResultWasSuccess_ = !!success;
+
       const iconWrap = document.getElementById('glResultIconWrap');
       const icon     = document.getElementById('glResultIcon');
       const titleEl  = document.getElementById('glResultTitle');
@@ -3712,7 +3785,13 @@
         icon.className     = 'fa-solid fa-circle-xmark';
         titleEl.textContent = customTitle || 'Gagal Disimpan';
       }
-      msg.textContent = message || (success ? 'Data berhasil diupdate.' : 'Data gagal disimpan.');
+      let text = message || (success ? 'Data berhasil diupdate.' : 'Data gagal disimpan.');
+      // Set ekspektasi user: perubahan tidak instan muncul di tabel
+      // (lihat catatan panjang di atas fungsi ini soal alur IMPORTRANGE
+      // + cache), tapi closeGoLiveResultModal() sudah memaksa refresh
+      // begitu modal ini ditutup jadi jedanya seharusnya singkat.
+      if (success) text += ' Tabel akan diperbarui otomatis.';
+      msg.textContent = text;
 
       document.getElementById('glResultModalOverlay').style.display = 'flex';
     }
@@ -3724,6 +3803,15 @@
       document.getElementById('glResultModalOverlay').style.display = 'none';
       closeGoLiveUpdateModal();
       closeMonitoringGoLiveDetail();
+
+      // Cuma perlu paksa refresh kalau modal terakhir yang tampil
+      // memang notif SUKSES simpan (ada data yang berubah) -- bukan
+      // untuk kasus gagal/"ID IHLD tidak ditemukan", supaya tidak
+      // buang-buang 1 round-trip bypass-cache yang tidak perlu.
+      if (glLastResultWasSuccess_) {
+        glLastResultWasSuccess_ = false;
+        forceRefreshMonitoringGoLiveData();
+      }
     }
 
     // ══════════════════════════════════════════════════════════════
