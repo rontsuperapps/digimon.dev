@@ -562,6 +562,21 @@
       font-size: 10px;
     }
 
+    /* Sidebar: lebar saat terbuka dikecilkan 10% (248px -> 223px, drawer mobile 272px -> 245px) */
+    #appSidebar.pinned { width: 223px; }
+    @media (max-width: 767px) { #appSidebar.sidebar { width: 245px !important; } }
+    /* Footer sidebar: profil + logout */
+    .sidebar-footer { flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 12px; border-top: 1px solid var(--color-gray-200); }
+    [data-theme="dark"] .sidebar-footer { border-top-color: var(--color-gray-800); }
+    .sb-profile-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 6px 4px; }
+    .sb-profile-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.25; }
+    .sb-profile-text .profile-name { max-width: 130px; }
+    .sidebar-footer .sb-logout { color: var(--color-error-600); }
+    .sidebar-footer .sb-logout .icon-box-wrapper { color: var(--color-error-500); }
+    .sidebar-footer .sb-logout:hover { background: var(--color-error-50); }
+    [data-theme="dark"] .sidebar-footer .sb-logout { color: var(--color-error-400); }
+    [data-theme="dark"] .sidebar-footer .sb-logout:hover { background: rgba(240, 68, 56, 0.1); }
+
     /* ═════ MODE PROJECT (Project B2C / B2B) ═════ */
     #page-golive-b2c .gl-only-project { display: none; }
     #page-golive-b2c[data-view="project"] .gl-only-project { display: block; }
@@ -668,6 +683,23 @@
         </div>
       </div>
     </nav>
+
+    <!-- Profil & Logout (dipindah dari topbar) -->
+    <div class="sidebar-footer">
+      <div class="sb-profile-card" title="Akun yang sedang login">
+        <span class="profile-avatar" id="profileAvatarInitial">M</span>
+        <span class="menu-title-text sb-profile-text">
+          <span class="profile-name" id="profileNameText">Memuat...</span>
+          <span class="profile-role" id="profileRoleText">-</span>
+        </span>
+      </div>
+      <button type="button" class="nav-header-trigger" onclick="openProfileSettings()" title="Profil Saya">
+        <span class="nav-header-left"><span class="icon-box-wrapper"><i class="fa-solid fa-user"></i></span><span class="menu-title-text">Profil Saya</span></span>
+      </button>
+      <button type="button" class="nav-header-trigger sb-logout" onclick="handleLogout()" title="Logout">
+        <span class="nav-header-left"><span class="icon-box-wrapper"><i class="fa-solid fa-arrow-right-from-bracket"></i></span><span class="menu-title-text">Logout</span></span>
+      </button>
+    </div>
   </aside>
 
   <!-- ══════════════ KONTEN UTAMA ══════════════ -->
@@ -704,29 +736,6 @@
           </div>
         </div>
 
-        <!-- Profil -->
-        <div class="topbar-popover-wrap" id="profileWrap">
-          <button class="btn-profile-trigger" id="profileBtn" onclick="toggleProfilePanel(event)">
-            <span class="profile-avatar" id="profileAvatarInitial">M</span>
-            <span class="profile-name-block">
-              <span class="profile-name" id="profileNameText">Memuat...</span>
-              <span class="profile-role" id="profileRoleText">-</span>
-            </span>
-            <i class="fa-solid fa-chevron-right profile-caret"></i>
-          </button>
-          <div class="topbar-popover profile-popover" id="profilePanel">
-            <div class="profile-popover-header">
-              <span class="profile-avatar profile-avatar-lg" id="profileAvatarInitialLg">M</span>
-              <div class="min-w-0">
-                <div class="profile-name" id="profileNameTextLg">Memuat...</div>
-                <div class="profile-email" id="profileEmailText">-</div>
-              </div>
-            </div>
-            <div class="popover-divider"></div>
-            <button class="popover-item" onclick="openProfileSettings()"><i class="fa-solid fa-user"></i> Profil Saya</button>
-            <button class="popover-item logout" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
-          </div>
-        </div>
       </div>
     </header>
 
@@ -1890,13 +1899,13 @@
     // Refresh Data. Klik badge/bar -> filter tabel detail.
     // ═════════════════════════════════════════════════════════════
     const PJ_STATUSES = [
-      { key: 'PREPARING',      icon: 'fa-pen-to-square',        color: '#98A2B3', fg: '#101828' },
+      { key: 'PREPARING',      icon: 'fa-pen-to-square',        color: '#98A2B3', fg: '#fff' },
       { key: 'DROP',           icon: 'fa-triangle-exclamation', color: '#F04438', fg: '#fff' },
       { key: 'HOLD',           icon: 'fa-arrows-rotate',        color: '#F79009', fg: '#fff' },
       { key: 'PERIZINAN',      icon: 'fa-clipboard-check',      color: '#FB6514', fg: '#fff' },
       { key: 'MATDEL',         icon: 'fa-layer-group',          color: '#7A5AF8', fg: '#fff' },
       { key: 'INSTALASI',      icon: 'fa-plug-circle-check',    color: '#0BA5EC', fg: '#fff' },
-      { key: 'FI-OGP GO LIVE', icon: 'fa-tower-broadcast',      color: '#32D583', fg: '#101828' },
+      { key: 'FI-OGP GO LIVE', icon: 'fa-tower-broadcast',      color: '#32D583', fg: '#fff' },
       { key: 'GO LIVE',        icon: 'fa-circle-check',         color: '#039855', fg: '#fff' }
     ];
     // TOTAL ORDER = #2C3979 (var(--pv-total) = brand-500; ikut terang di dark mode)
@@ -2546,12 +2555,7 @@
       // initDashboardOnReady_. getCurrentUserInfo() masih dipertahankan
       // di bawah untuk dipakai ulang manual kalau perlu (mis. debugging).
 
-      document.addEventListener('click', function(e) {
-        const wrap = document.getElementById('profileWrap');
-        if (wrap && !wrap.contains(e.target)) {
-          document.getElementById('profilePanel').classList.remove('show');
-        }
-      });
+      // Profil kini ada di sidebar (tanpa popover), jadi tidak ada panel yang perlu ditutup.
     }
 
     function getCurrentUserInfo(callback) {
@@ -2575,22 +2579,16 @@
       const email = (info && info.email) ? info.email : '';
       const initial = name.trim().charAt(0).toUpperCase() || 'U';
 
-      document.getElementById('profileNameText').textContent   = name;
-      document.getElementById('profileRoleText').textContent   = role;
-      document.getElementById('profileNameTextLg').textContent = name;
-      document.getElementById('profileEmailText').textContent  = email || '-';
-      document.getElementById('profileAvatarInitial').textContent   = initial;
-      document.getElementById('profileAvatarInitialLg').textContent = initial;
-    }
-
-    function toggleProfilePanel(e) {
-      e.stopPropagation();
-      document.getElementById('notifPanel').classList.remove('show');
-      document.getElementById('profilePanel').classList.toggle('show');
+      const nameEl = document.getElementById('profileNameText');
+      const roleEl = document.getElementById('profileRoleText');
+      const avEl   = document.getElementById('profileAvatarInitial');
+      if (nameEl) { nameEl.textContent = name; nameEl.title = email ? name + ' — ' + email : name; }
+      if (roleEl) roleEl.textContent = role;
+      if (avEl)   avEl.textContent   = initial;
     }
 
     function openProfileSettings() {
-      document.getElementById('profilePanel').classList.remove('show');
+      toggleMobileSidebar(false);
       document.getElementById('profileInfoModalOverlay').style.display = 'flex';
       document.getElementById('prf-password-new').value = '';
       document.getElementById('prf-password-confirm').value = '';
@@ -2748,7 +2746,7 @@
     }, true);
 
     function handleLogout() {
-      document.getElementById('profilePanel').classList.remove('show');
+      toggleMobileSidebar(false);
       document.getElementById('logoutConfirmOverlay').style.display = 'flex';
     }
 
@@ -2837,7 +2835,6 @@
 
     function toggleNotifPanel(e) {
       e.stopPropagation();
-      document.getElementById('profilePanel').classList.remove('show');
       document.getElementById('notifPanel').classList.toggle('show');
     }
 
