@@ -568,14 +568,69 @@
     /* Footer sidebar: profil + logout */
     .sidebar-footer { flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 12px; border-top: 1px solid var(--color-gray-200); }
     [data-theme="dark"] .sidebar-footer { border-top-color: var(--color-gray-800); }
-    .sb-profile-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 6px 4px; }
-    .sb-profile-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.25; }
-    .sb-profile-text .profile-name { max-width: 130px; }
     .sidebar-footer .sb-logout { color: var(--color-error-600); }
     .sidebar-footer .sb-logout .icon-box-wrapper { color: var(--color-error-500); }
     .sidebar-footer .sb-logout:hover { background: var(--color-error-50); }
     [data-theme="dark"] .sidebar-footer .sb-logout { color: var(--color-error-400); }
     [data-theme="dark"] .sidebar-footer .sb-logout:hover { background: rgba(240, 68, 56, 0.1); }
+
+    /* Info user di atas menu sidebar */
+    .sb-user { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 18px; text-align: left; border-bottom: 1px solid var(--color-gray-200); transition: background-color .15s; }
+    .sb-user:hover { background: var(--color-gray-50); }
+    [data-theme="dark"] .sb-user { border-bottom-color: var(--color-gray-800); }
+    [data-theme="dark"] .sb-user:hover { background: rgba(255, 255, 255, 0.05); }
+    .sb-profile-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.25; }
+    .sb-profile-text .profile-name { max-width: 130px; }
+    .sidebar-footer .nav-header-trigger.active { background: var(--color-brand-50); color: var(--color-brand-500); }
+    .sidebar-footer .nav-header-trigger.active .icon-box-wrapper { color: var(--color-brand-500); }
+    [data-theme="dark"] .sidebar-footer .nav-header-trigger.active { background: rgba(78, 118, 199, 0.14); color: var(--color-brand-400); }
+    [data-theme="dark"] .sidebar-footer .nav-header-trigger.active .icon-box-wrapper { color: var(--color-brand-400); }
+
+    /* ═════ HALAMAN PROFIL SAYA (gaya TailAdmin, token tema Tailwind) ═════ */
+    #page-profile { max-width: 1040px; width: 100%; margin: 0 auto; }
+    .pf-hero { display: flex; align-items: center; gap: 20px; padding: 20px !important; }
+    .pf-avatar { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 9999px; background: var(--color-brand-500); color: #fff; font-size: 30px; font-weight: 600; box-shadow: var(--shadow-theme-sm); }
+    .pf-hero-text { min-width: 0; }
+    .pf-hero-name { font-size: 20px; line-height: 28px; font-weight: 600; color: var(--color-gray-800); overflow-wrap: anywhere; }
+    .pf-hero-email { font-size: 14px; color: var(--color-gray-500); overflow-wrap: anywhere; }
+    .pf-hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pf-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-size: 12px; font-weight: 500; line-height: 18px; text-transform: capitalize; }
+    .pf-badge-brand { background: var(--color-brand-50); color: var(--color-brand-500); }
+    .pf-badge-gray { background: var(--color-gray-100); color: var(--color-gray-700); }
+    .pf-badge-success { background: var(--color-success-50); color: var(--color-success-700); }
+    .pf-badge-error { background: var(--color-error-50); color: var(--color-error-700); }
+    .pf-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    @media (min-width: 1024px) { .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; } }
+    .pf-grid .golive-summary-card { padding: 20px !important; }
+    .pf-title { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--color-gray-800); }
+    .pf-title i { color: var(--color-brand-500); }
+    .pf-desc { margin: 2px 0 16px; font-size: 13px; color: var(--color-gray-500); }
+    .pf-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; }
+    .pf-info dt { font-size: 12px; color: var(--color-gray-500); }
+    .pf-info dd { margin-top: 2px; font-size: 14px; font-weight: 500; color: var(--color-gray-800); overflow-wrap: anywhere; }
+    .pf-field { margin-bottom: 14px; }
+    .pf-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: var(--color-gray-700); }
+    .pf-pw { position: relative; }
+    .pf-input { display: block; width: 100%; height: 44px; padding: 0 44px 0 14px; border: 1px solid var(--color-gray-300); border-radius: 8px; background: transparent; color: var(--color-gray-800); font-size: 14px; box-shadow: var(--shadow-theme-xs); outline: none; transition: border-color .15s, box-shadow .15s; }
+    .pf-input::placeholder { color: var(--color-gray-400); }
+    .pf-input:focus { border-color: var(--color-brand-300); box-shadow: var(--shadow-focus-ring); }
+    .pf-input[readonly] { background: var(--color-gray-50); }
+    .pf-eye { position: absolute; top: 0; right: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--color-gray-500); }
+    .pf-eye:hover { color: var(--color-gray-700); }
+    .pf-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+    .pf-btn { height: 44px; padding: 0 20px; border-radius: 8px; background: var(--color-brand-500); color: #fff; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-theme-xs); transition: background-color .15s; }
+    .pf-btn:hover { background: var(--color-brand-600); }
+    .pf-btn:disabled { opacity: .6; cursor: not-allowed; }
+    @media (max-width: 479px) { .pf-hero { flex-direction: column; text-align: center; } .pf-hero-badges { justify-content: center; } .pf-info { grid-template-columns: minmax(0, 1fr); } .pf-btn { width: 100%; } }
+    [data-theme="dark"] .pf-hero-name, [data-theme="dark"] .pf-title, [data-theme="dark"] .pf-info dd { color: rgba(255, 255, 255, 0.9); }
+    [data-theme="dark"] .pf-label { color: var(--color-gray-300); }
+    [data-theme="dark"] .pf-badge-brand { background: rgba(78, 118, 199, 0.16); color: var(--color-brand-300); }
+    [data-theme="dark"] .pf-badge-gray { background: rgba(255, 255, 255, 0.06); color: var(--color-gray-300); }
+    [data-theme="dark"] .pf-badge-success { background: rgba(18, 183, 106, 0.14); color: var(--color-success-400); }
+    [data-theme="dark"] .pf-badge-error { background: rgba(240, 68, 56, 0.14); color: var(--color-error-400); }
+    [data-theme="dark"] .pf-input { border-color: var(--color-gray-700); color: rgba(255, 255, 255, 0.9); }
+    [data-theme="dark"] .pf-input[readonly] { background: rgba(255, 255, 255, 0.03); }
+    [data-theme="dark"] .pf-title i { color: var(--color-brand-400); }
 
     /* ═════ MODE PROJECT (Project B2C / B2B) ═════ */
     #page-golive-b2c .gl-only-project { display: none; }
@@ -638,6 +693,15 @@
       </div>
     </div>
 
+    <!-- Info user login: di antara logo dan menu -->
+    <button type="button" class="sb-user" id="sbUserCard" onclick="switchPage('profile')" title="Profil Saya">
+      <span class="profile-avatar" id="profileAvatarInitial">M</span>
+      <span class="menu-title-text sb-profile-text">
+        <span class="profile-name" id="profileNameText">Memuat...</span>
+        <span class="profile-role" id="profileRoleText">-</span>
+      </span>
+    </button>
+
     <div class="sidebar-nav-title">Menu</div>
     <nav class="menu-container">
       <div class="menu-item-group open">
@@ -686,14 +750,7 @@
 
     <!-- Profil & Logout (dipindah dari topbar) -->
     <div class="sidebar-footer">
-      <div class="sb-profile-card" title="Akun yang sedang login">
-        <span class="profile-avatar" id="profileAvatarInitial">M</span>
-        <span class="menu-title-text sb-profile-text">
-          <span class="profile-name" id="profileNameText">Memuat...</span>
-          <span class="profile-role" id="profileRoleText">-</span>
-        </span>
-      </div>
-      <button type="button" class="nav-header-trigger" onclick="openProfileSettings()" title="Profil Saya">
+      <button type="button" class="nav-header-trigger" id="nav-profile" onclick="switchPage('profile')" title="Profil Saya">
         <span class="nav-header-left"><span class="icon-box-wrapper"><i class="fa-solid fa-user"></i></span><span class="menu-title-text">Profil Saya</span></span>
       </button>
       <button type="button" class="nav-header-trigger sb-logout" onclick="handleLogout()" title="Logout">
@@ -1317,6 +1374,64 @@
       </div>
     </div>
 
+    <!-- ═════════ HALAMAN: PROFIL SAYA ═════════ -->
+    <div class="page-section" id="page-profile">
+      <section class="golive-summary-card pf-hero">
+        <span class="pf-avatar" id="pfHeroAvatar">M</span>
+        <div class="pf-hero-text">
+          <h2 class="pf-hero-name" id="pfHeroName">Memuat...</h2>
+          <div class="pf-hero-email" id="pfHeroEmail">-</div>
+          <div class="pf-hero-badges">
+            <span class="pf-badge pf-badge-brand" id="pfHeroRole">-</span>
+            <span class="pf-badge pf-badge-gray" id="pfHeroStatus">-</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="pf-grid">
+        <section class="golive-summary-card">
+          <h3 class="pf-title"><i class="fa-solid fa-user"></i> Informasi Akun</h3>
+          <p class="pf-desc">Data akun login Anda pada sistem DIGIMON.</p>
+          <dl class="pf-info">
+            <div><dt>Nama</dt><dd id="pfName">-</dd></div>
+            <div><dt>Email</dt><dd id="pfEmail">-</dd></div>
+            <div><dt>Username</dt><dd id="prf-username">-</dd></div>
+            <div><dt>Level Access</dt><dd id="prf-access">-</dd></div>
+            <div><dt>Status</dt><dd id="prf-status">-</dd></div>
+          </dl>
+        </section>
+
+        <section class="golive-summary-card">
+          <h3 class="pf-title"><i class="fa-solid fa-lock"></i> Ubah Password</h3>
+          <p class="pf-desc">Kosongkan password baru bila tidak ingin mengganti password.</p>
+          <div class="pf-field">
+            <label class="pf-label" for="prf-password-current">Password saat ini</label>
+            <div class="pf-pw">
+              <input type="password" id="prf-password-current" class="pf-input" readonly>
+              <button type="button" class="pf-eye" onclick="togglePasswordVisibility('prf-password-current', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="prf-password-new">Password baru</label>
+            <div class="pf-pw">
+              <input type="password" id="prf-password-new" class="pf-input" placeholder="Minimal 4 karakter" autocomplete="new-password">
+              <button type="button" class="pf-eye" onclick="togglePasswordVisibility('prf-password-new', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="pf-field">
+            <label class="pf-label" for="prf-password-confirm">Konfirmasi password baru</label>
+            <div class="pf-pw">
+              <input type="password" id="prf-password-confirm" class="pf-input" placeholder="Ulangi password baru" autocomplete="new-password">
+              <button type="button" class="pf-eye" onclick="togglePasswordVisibility('prf-password-confirm', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="pf-actions">
+            <button type="button" class="pf-btn" id="prf-save-btn" onclick="submitPasswordChange()">Simpan Password</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
     <!-- ═════════ HALAMAN: COMING SOON (dipakai ulang oleh Survey DSI, Go Live B2B, Monitoring ABD) ═════════ -->
     <div class="page-section" id="page-coming-soon">
       <div class="coming-soon-wrap">
@@ -1329,46 +1444,6 @@
       </div><!-- /.content-inner -->
     </main>
   </div><!-- /.main-content -->
-
-  <!-- ── MODAL: PROFIL SAYA ── -->
-  <div id="profileInfoModalOverlay" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2><i class="fa-solid fa-user"></i> Profil Saya</h2>
-        <p>Informasi akun login Anda pada sistem DIGIMON.</p>
-      </div>
-      <div class="detail-box">
-        <div class="detail-row"><span class="detail-lbl">Username</span><span class="detail-val" id="prf-username">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Lavel Access</span><span class="detail-val" id="prf-access">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Status</span><span class="detail-val" id="prf-status">-</span></div>
-      </div>
-      <div class="profile-modal-field">
-        <label class="profile-modal-label">Password saat ini</label>
-        <div class="pw-field-wrap">
-          <input type="password" id="prf-password-current" class="form-select" readonly>
-          <button type="button" class="btn-eye-toggle" onclick="togglePasswordVisibility('prf-password-current', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
-        </div>
-      </div>
-      <div class="profile-modal-field">
-        <label class="profile-modal-label">Password baru</label>
-        <div class="pw-field-wrap">
-          <input type="password" id="prf-password-new" class="form-select" placeholder="Kosongkan jika tidak ingin ganti password">
-          <button type="button" class="btn-eye-toggle" onclick="togglePasswordVisibility('prf-password-new', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
-        </div>
-      </div>
-      <div class="profile-modal-field">
-        <label class="profile-modal-label">Konfirmasi password baru</label>
-        <div class="pw-field-wrap">
-          <input type="password" id="prf-password-confirm" class="form-select" placeholder="Ulangi password baru">
-          <button type="button" class="btn-eye-toggle" onclick="togglePasswordVisibility('prf-password-confirm', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-modal btn-m-cancel" onclick="closeProfileInfoModal()">Tutup</button>
-        <button class="btn-modal btn-m-accent" id="prf-save-btn" onclick="submitPasswordChange()">Simpan Password</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── KONFIRMASI LOGOUT ── -->
   <div id="logoutConfirmOverlay" class="modal-overlay">
@@ -2585,19 +2660,22 @@
       if (nameEl) { nameEl.textContent = name; nameEl.title = email ? name + ' — ' + email : name; }
       if (roleEl) roleEl.textContent = role;
       if (avEl)   avEl.textContent   = initial;
+      const set = function (id, v) { const el = document.getElementById(id); if (el) el.textContent = v; };
+      set('pfHeroAvatar', initial); set('pfHeroName', name); set('pfHeroEmail', email || '-');
+      set('pfHeroRole', role); set('pfName', name); set('pfEmail', email || '-');
     }
 
-    function openProfileSettings() {
-      toggleMobileSidebar(false);
-      document.getElementById('profileInfoModalOverlay').style.display = 'flex';
-      document.getElementById('prf-password-new').value = '';
-      document.getElementById('prf-password-confirm').value = '';
-      loadMyProfile();
+    function pfSetStatusBadge_(status) {
+      const el = document.getElementById('pfHeroStatus');
+      if (!el) return;
+      const st = String(status || '').trim();
+      const ok = /^(aktif|active)$/i.test(st), bad = /(nonaktif|non-aktif|inactive|blokir|block|suspend)/i.test(st);
+      el.textContent = st || '-';
+      el.className = 'pf-badge ' + (ok ? 'pf-badge-success' : bad ? 'pf-badge-error' : 'pf-badge-gray');
     }
 
-    function closeProfileInfoModal() {
-      document.getElementById('profileInfoModalOverlay').style.display = 'none';
-    }
+    // Profil Saya sekarang halaman sendiri (page-profile), bukan pop up.
+    function openProfileSettings() { switchPage('profile'); }
 
     function loadMyProfile() {
       document.getElementById('prf-username').textContent = 'Memuat...';
@@ -2616,6 +2694,7 @@
           document.getElementById('prf-access').textContent   = res.accessLevel || '-';
           document.getElementById('prf-status').textContent   = res.status      || '-';
           document.getElementById('prf-password-current').value = res.password  || '';
+          pfSetStatusBadge_(res.status);
         })
         .withFailureHandler(function(err) {
           document.getElementById('prf-username').textContent = '-';
@@ -2907,6 +2986,7 @@
 
     function syncSidebarActiveState(navId) {
       document.querySelectorAll('.sub-nav-item').forEach(function(el) { el.classList.remove('active'); });
+      const pfNav = document.getElementById('nav-profile'); if (pfNav) pfNav.classList.remove('active');
       document.querySelectorAll('.menu-item-group').forEach(function(el) { el.classList.remove('open'); });
 
       var link = document.getElementById(navId);
@@ -2960,6 +3040,16 @@
         title: 'Dashboard B2B — Project B2B',
         subtitle: 'Progres New Status Project B2B'
       },
+      'profile': {
+        navId: 'nav-profile',
+        customPage: 'page-profile',
+        title: 'Profil Saya',
+        subtitle: 'Informasi akun dan keamanan',
+        onEnter: function () {
+          ['prf-password-new', 'prf-password-confirm'].forEach(function (id) { const el = document.getElementById(id); if (el) el.value = ''; });
+          loadMyProfile();
+        }
+      },
       'abd-dashboard': {
         navId: 'nav-abd-dashboard',
         title: 'Monitoring ABD — Dashboard',
@@ -2989,13 +3079,16 @@
       document.getElementById('pageSubtitle').innerText = meta.subtitle;
 
       const refreshBtn = document.querySelector('.btn-refresh');
-      if (refreshBtn) refreshBtn.style.display = meta.comingSoon ? 'none' : '';
+      if (refreshBtn) refreshBtn.style.display = (meta.comingSoon || meta.customPage) ? 'none' : '';
 
       if (meta.comingSoon) {
         document.getElementById('comingSoonTitle').innerText = meta.title;
         document.getElementById('comingSoonDesc').innerText  =
           'Fitur "' + meta.title + '" sedang dalam pengembangan dan akan segera hadir.';
         document.getElementById('page-coming-soon').classList.add('active-page');
+      } else if (meta.customPage) {
+        document.getElementById(meta.customPage).classList.add('active-page');
+        if (meta.onEnter) meta.onEnter();
       } else {
         // Halaman Go Live B2C & B2B memakai section DOM yang sama
         // (#page-golive-b2c). Kalau segmen berganti, tampilan di-reset
@@ -3116,7 +3209,7 @@
     }
 
     function forceRefreshData() {
-      if (!PAGE_META[currentActivePage] || PAGE_META[currentActivePage].comingSoon) return; // tombol disembunyikan utk halaman Coming Soon, ini jaga-jaga saja
+      if (!PAGE_META[currentActivePage] || PAGE_META[currentActivePage].comingSoon || PAGE_META[currentActivePage].customPage) return; // tombol disembunyikan utk halaman Coming Soon, ini jaga-jaga saja
       forceRefreshMonitoringGoLiveData();
     }
 
