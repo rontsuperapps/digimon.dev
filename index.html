@@ -566,12 +566,17 @@
     #page-golive-b2c .gl-only-project { display: none; }
     #page-golive-b2c[data-view="project"] .gl-only-project { display: block; }
     #page-golive-b2c[data-view="project"] .gl-only-golive { display: none !important; }
-    #page-golive-b2c .golive-summary-card + .golive-summary-card { margin-top: 0.75rem; }
-    .pj-badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @media (min-width: 640px)  { .pj-badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    @media (min-width: 1024px) { .pj-badge-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
     .golive-badge-item.pj-accent::before { background: var(--pj-c); }
     .golive-badge-item.pj-accent .golive-badge-icon { color: var(--pj-c); }
+    /* Badge New Status: SELALU 1 baris (geser horizontal bila layar sempit) */
+    #pj-badge-grid { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    #pj-badge-grid .golive-badge-item { flex: 1 0 118px; min-width: 118px; }
+    #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    @media (min-width: 1024px) { #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+    #page-golive-b2c[data-view="project"] #pj-rekap-container.gl-only-project { display: contents; }
+    .pj-donut-body { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; min-height: 250px; }
+    .pj-donut-body .golive-chart-legend-item[data-pj-program] { cursor: pointer; }
+    .pj-donut-body .golive-chart-legend-item[data-pj-program]:hover .golive-chart-legend-name { text-decoration: underline; }
     .pj-note { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
     .pj-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 250px; padding: 8px 4px 0; overflow-x: auto; border-bottom: 1px solid var(--pv-line); }
     .pj-bar-col { flex: 1 0 78px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; }
@@ -802,12 +807,22 @@
         <div class="golive-badge-grid pj-badge-grid" id="pj-badge-grid"></div>
         <div class="pj-note" id="pj-note"></div>
       </section>
-      <section class="golive-summary-card gl-only-project">
-        <div class="golive-summary-head">
-          <div class="golive-summary-title"><i class="fa-solid fa-chart-bar"></i> <span id="pj-title-chart">Total LOP per New Status</span></div>
-        </div>
-        <div class="pj-chart-wrap" id="pj-chart-body"></div>
-      </section>
+      <div class="pj-chart-row gl-only-project">
+        <section class="golive-summary-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-bar"></i> <span id="pj-title-chart">Total LOP per New Status</span></div>
+          </div>
+          <div class="pj-chart-wrap" id="pj-chart-body"></div>
+        </section>
+        <section class="golive-summary-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> <span id="pj-title-program">Persentase Program (LOP)</span></div>
+          </div>
+          <div class="pj-donut-body" id="pj-program-body"></div>
+        </section>
+      </div>
+      <!-- Rekap Project (dibangun dinamis oleh renderProjectRekap_ sesuai segmen) -->
+      <div class="gl-only-project" id="pj-rekap-container"></div>
 
       <!-- 2. Need Go Live IHLD (tabel), donut MITRA, donut SDI, run rate 7 hari -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 gl-only-golive">
@@ -867,7 +882,7 @@
       </div>
 
       <!-- 3–5. Rekap Go Live, PT2, PT3 (tab District / Sub District) -->
-      <section class="golive-summary-card">
+      <section class="golive-summary-card gl-only-golive">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap Go Live</div>
         </div>
@@ -898,7 +913,7 @@
           </div>
         </div>
       </section>
-      <section class="golive-summary-card">
+      <section class="golive-summary-card gl-only-golive">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap PT2 Go Live</div>
         </div>
@@ -929,7 +944,7 @@
           </div>
         </div>
       </section>
-      <section class="golive-summary-card">
+      <section class="golive-summary-card gl-only-golive">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap PT3 Go Live</div>
         </div>
@@ -1715,6 +1730,8 @@
     let glQuickNewStatusGoLive_ = false;
     // Mode Project: klik badge/bar New Status -> filter exact (mis. 'HOLD').
     let glQuickNewStatusValue_ = '';
+    // Mode Project: klik donut/sel rekap -> filter Program (key kanonik: JPP/PT2/HEM/OLO/CNOP).
+    let glQuickProgramKey_ = '';
 
     // Klik "Total Order" di kartu "Need Go Live IHLD" -> filter Status
     // Task = "NEED GO LIVE IHLD" via klasifikasi (sama alasannya dengan
@@ -1799,7 +1816,7 @@
         });
         document.getElementById('glSearchInput').value = '';
         glQuickBucketFilter_    = '';
-        glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
+        glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
         glQuickStatusTaskNeedIhld_ = false;
 
         const dateFromEl = document.getElementById('glFilterTanggalFrom');
@@ -1863,7 +1880,13 @@
     ];
     const PJ_BAR_MAX_PX = 160;
 
+    function pjIsProjectView_() {
+      const el = document.getElementById('page-golive-b2c');
+      return !!el && el.getAttribute('data-view') === 'project';
+    }
+
     function renderProjectStatus_(errMsg) {
+      if (!pjIsProjectView_()) return;
       const grid = document.getElementById('pj-badge-grid');
       const chart = document.getElementById('pj-chart-body');
       if (!grid || !chart) return;
@@ -1878,6 +1901,8 @@
       if (errMsg) {
         const msg = '<div class="golive-chart-empty" style="color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat data: ' + escapeHtml(errMsg) + '</div>';
         grid.innerHTML = ''; chart.innerHTML = msg; if (note) note.textContent = '';
+        const pb = document.getElementById('pj-program-body'); if (pb) pb.innerHTML = msg;
+        const rc = document.getElementById('pj-rekap-container'); if (rc) rc.innerHTML = '<section class="golive-summary-card">' + msg + '</section>';
         return;
       }
 
@@ -1914,9 +1939,14 @@
       }
 
       if (!loaded) {
-        chart.innerHTML = '<div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data ' + glSegment_ + '...</div>';
+        const ld = '<div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data ' + glSegment_ + '...</div>';
+        chart.innerHTML = ld;
+        const pb2 = document.getElementById('pj-program-body'); if (pb2) pb2.innerHTML = ld;
+        const rc2 = document.getElementById('pj-rekap-container'); if (rc2) rc2.innerHTML = '<section class="golive-summary-card">' + ld + '</section>';
         return;
       }
+      renderProjectProgramDonut_(rows);
+      renderProjectRekap_(rows);
       const max = Math.max.apply(null, PJ_STATUSES.map(function (s) { return counts[s.key]; }).concat([1]));
       chart.innerHTML = PJ_STATUSES.map(function (s) {
         const h = counts[s.key] > 0 ? Math.max(3, Math.round(counts[s.key] / max * PJ_BAR_MAX_PX)) : 0;
@@ -1926,6 +1956,251 @@
           + '<div class="pj-bar-lbl">' + s.key + '</div></div>';
       }).join('');
     }
+
+
+    // ── Program (kolom M) & New Status (kolom U) untuk mode Project ──
+    // Alias dinormalisasi (uppercase, spasi rapi) supaya tahan variasi penulisan di sheet.
+    const PJ_PROGRAMS = {
+      B2C: [
+        { key: 'JPP', label: 'JPP', color: '#2C3979', aliases: ['JPP'] },
+        { key: 'PT2', label: 'PT2', color: '#0BA5EC', aliases: ['PT2'] }
+      ],
+      B2B: [
+        { key: 'HEM',  label: 'HEM',  color: '#2C3979', aliases: ['HEM'] },
+        { key: 'OLO',  label: 'OLO',  color: '#F79009', aliases: ['OLO'] },
+        { key: 'CNOP', label: 'NODE-B (CNOP)', color: '#12B76A', aliases: ['NODE-B', 'NODE B', 'NODEB', 'CNOP', 'NODE-B (CNOP)', 'NODE-B(CNOP)'] }
+      ]
+    };
+
+    function pjPrograms_() { return PJ_PROGRAMS[glSegment_] || []; }
+    function pjProgramKey_(raw) {
+      const n = golive_normJs_(raw);
+      const list = pjPrograms_();
+      for (let i = 0; i < list.length; i++) if (list[i].aliases.indexOf(n) !== -1) return list[i].key;
+      return '';
+    }
+    function pjProgramLabel_(key) {
+      const list = pjPrograms_();
+      for (let i = 0; i < list.length; i++) if (list[i].key === key) return list[i].label;
+      return key;
+    }
+    function pjStatusKey_(raw) {
+      const n = golive_normJs_(raw);
+      for (let i = 0; i < PJ_STATUSES.length; i++) if (PJ_STATUSES[i].key === n) return n;
+      return '';
+    }
+    // Di mode Project, opsi dropdown New Status & Program = key kanonik, jadi cocokkan lewat klasifikasi.
+    function pjFieldMatch_(row, f) {
+      if (pjIsProjectView_()) {
+        if (f.key === 'newStatus') return pjStatusKey_(row.newStatus) === f.value;
+        if (f.key === 'program')   return pjProgramKey_(row.program) === f.value;
+      }
+      return String(row[f.key] || '').trim() === f.value;
+    }
+    // Isi ulang semua dropdown seperti biasa, lalu (mode Project) batasi New Status & Program.
+    function pjSyncFilterOptions_() {
+      populateMonitoringGoLiveFilterOptions_(activeMonitoringGoLiveRows);
+      if (!pjIsProjectView_()) return;
+      const fill = function (id, items) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">Semua</option>' + items.map(function (it) {
+          return '<option value="' + escapeHtml(it.key) + '">' + escapeHtml(it.label) + '</option>';
+        }).join('');
+        if (items.some(function (it) { return it.key === prev; })) sel.value = prev;
+      };
+      fill('glFilterNewStatus', PJ_STATUSES.map(function (s) { return { key: s.key, label: s.key }; }));
+      fill('glFilterProgram', pjPrograms_());
+    }
+
+    function pjToNum_(v) {
+      if (typeof v === 'number') return isFinite(v) ? v : 0;
+      let s = String(v == null ? '' : v).trim();
+      if (!s) return 0;
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+      else s = s.replace(/,/g, '');
+      const n = parseFloat(s);
+      return isFinite(n) ? n : 0;
+    }
+
+    // ── Donut Program ──
+    function renderProjectProgramDonut_(rows) {
+      const body = document.getElementById('pj-program-body');
+      const t = document.getElementById('pj-title-program');
+      if (!body) return;
+      const list = pjPrograms_();
+      if (t) t.textContent = 'Persentase Program Project ' + glSegment_ + ' (LOP)';
+      const counts = {};
+      list.forEach(function (p) { counts[p.key] = 0; });
+      let other = 0;
+      rows.forEach(function (r) {
+        const k = pjProgramKey_(r.program);
+        if (k) counts[k]++; else other++;
+      });
+      const total = list.reduce(function (a, p) { return a + counts[p.key]; }, 0);
+      if (total === 0) {
+        body.innerHTML = '<div class="golive-chart-empty"><i class="fa-solid fa-chart-pie"></i>Belum ada data Program ' + list.map(function (p) { return escapeHtml(p.label); }).join(' / ') + '</div>';
+        return;
+      }
+      let cursor = 0; const parts = []; const legend = [];
+      list.forEach(function (p) {
+        const v = counts[p.key];
+        const pct = (v / total) * 100, deg = (v / total) * 360;
+        if (v > 0) parts.push(p.color + ' ' + cursor.toFixed(2) + 'deg ' + (cursor + deg).toFixed(2) + 'deg');
+        cursor += deg;
+        legend.push('<div class="golive-chart-legend-item" role="button" tabindex="0" data-pj-program="' + p.key + '" title="Klik untuk filter tabel Data Go Live">'
+          + '<span class="golive-chart-legend-swatch" style="background:' + p.color + ';"></span>'
+          + '<span class="golive-chart-legend-name">' + escapeHtml(p.label) + '</span>'
+          + '<span class="golive-chart-legend-val">' + formatNum_(v) + '</span>'
+          + '<span class="golive-chart-legend-pct">' + goLiveChartPctLabel_(v, pct) + '</span></div>');
+      });
+      body.innerHTML = '<div class="golive-donut-wrap"><div class="golive-donut" style="background:conic-gradient(' + parts.join(', ') + ');"></div>'
+        + '<div class="golive-donut-hole"><div class="dn-total">' + formatNum_(total) + '</div><div class="dn-label">LOP</div></div></div>'
+        + '<div class="golive-chart-legend">' + legend.join('')
+        + (other > 0 ? '<div class="pj-note">' + formatNum_(other) + ' LOP dengan Program lain tidak ikut donut.</div>' : '') + '</div>';
+    }
+
+    // ── Rekap Project (District / Sub District x New Status; LOP, ODP, PORT) ──
+    function pjAggregate_(rows, field) {
+      const map = {}; const grand = { total: { lop: 0, odp: 0, port: 0 }, st: {} };
+      const blank = function () { return { lop: 0, odp: 0, port: 0 }; };
+      PJ_STATUSES.forEach(function (s) { grand.st[s.key] = blank(); });
+      rows.forEach(function (r) {
+        const label = String(r[field] || '').trim() || '(KOSONG)';
+        if (!map[label]) { map[label] = { label: label, total: blank(), st: {} }; PJ_STATUSES.forEach(function (s) { map[label].st[s.key] = blank(); }); }
+        const odp = pjToNum_(r.totalOdp), port = pjToNum_(r.totalPort);
+        const sk = pjStatusKey_(r.newStatus);
+        [map[label], grand].forEach(function (t) {
+          t.total.lop++; t.total.odp += odp; t.total.port += port;
+          if (sk) { t.st[sk].lop++; t.st[sk].odp += odp; t.st[sk].port += port; }
+        });
+      });
+      const list = Object.keys(map).sort(function (a, b) { return a.localeCompare(b); }).map(function (k) { return map[k]; });
+      return { rows: list, grand: grand };
+    }
+
+    function pjCells_(m, group, divider, hit, ctx) {
+      const cls = 'num-cell cell-' + group + (hit && m.lop !== 0 ? ' cell-hit' : '') + ' cell-lop-click';
+      const attrs = ' data-pj-cell="1" data-label-type="' + ctx.type + '" data-label="' + escapeHtml(ctx.label) + '" data-program="' + ctx.program + '" data-status="' + ctx.status + '" title="Klik untuk lihat detail datanya di tabel Data Go Live"';
+      return '<td class="' + cls + '"' + attrs + '>' + formatNum_(m.lop) + '</td>'
+        + '<td class="' + cls + '"' + attrs + '>' + formatNum_(m.odp) + '</td>'
+        + '<td class="' + cls + (divider ? ' group-divider' : '') + '"' + attrs + '>' + formatNum_(m.port) + '</td>';
+    }
+
+    function pjRowHtml_(r, isGrand, type, program) {
+      const label = isGrand ? '' : (r.label === '(KOSONG)' ? '' : r.label);
+      let h = '<tr' + (isGrand ? ' class="pivot-total-row"' : '') + '><td class="label-cell">' + escapeHtml(isGrand ? 'GRAND TOTAL' : r.label) + '</td>';
+      h += pjCells_(r.total, 'total', true, false, { type: type, label: label, program: program, status: '' });
+      PJ_STATUSES.forEach(function (s, i) {
+        h += pjCells_(r.st[s.key], i < 6 ? 'mitra' : 'sdi', i === 5, !isGrand, { type: type, label: label, program: program, status: s.key });
+      });
+      return h + '</tr>';
+    }
+
+    function pjTableHtml_(tableId, head, data, type, program) {
+      const N = 28;
+      let th = '<thead><tr class="pivot-hdr-r1"><th rowspan="3" class="hdr-navy">' + head + '</th>'
+        + '<th rowspan="2" colspan="3" class="hdr-band hdr-band-total group-divider">TOTAL ORDER</th>'
+        + '<th colspan="18" class="hdr-band hdr-band-mitra group-divider">PROGRES PROJECT</th>'
+        + '<th colspan="6" class="hdr-band hdr-band-sdi">GO LIVE</th></tr><tr class="pivot-hdr-r2">';
+      PJ_STATUSES.forEach(function (s, i) {
+        th += '<th colspan="3" class="' + (i < 6 ? 'hdr-sub-mitra' : 'hdr-sub-sdi') + (i === 5 ? ' group-divider' : '') + '">' + s.key + '</th>';
+      });
+      th += '</tr><tr class="pivot-hdr-r3"><th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>';
+      PJ_STATUSES.forEach(function (s, i) {
+        const c = i < 6 ? 'hdr-leaf-mitra' : 'hdr-leaf-sdi';
+        th += '<th class="' + c + '">LOP</th><th class="' + c + '">ODP</th><th class="' + c + (i === 5 ? ' group-divider' : '') + '">PORT</th>';
+      });
+      th += '</tr></thead>';
+      const body = data.rows.length
+        ? data.rows.map(function (r) { return pjRowHtml_(r, false, type, program); }).join('') + pjRowHtml_(data.grand, true, type, program)
+        : '<tr><td colspan="' + N + '" class="golive-summary-empty"><i class="fa-solid fa-inbox"></i>Tidak ada data.</td></tr>';
+      return '<div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>'
+        + '<div class="pivot-table-wrap pivot-table-wrap-full"><table class="pivot-grouped-table pj-rekap-table" id="' + tableId + '">' + th + '<tbody>' + body + '</tbody></table></div>';
+    }
+
+    function renderProjectRekap_(rows) {
+      const box = document.getElementById('pj-rekap-container');
+      if (!box) return;
+      // Ingat tab (District/Sub District) yang sedang aktif per kartu.
+      const activeTabs = {};
+      box.querySelectorAll('.golive-tab-panel.active').forEach(function (p) { activeTabs[p.getAttribute('data-group')] = p.getAttribute('data-tab'); });
+
+      const cards = [{ title: 'Rekap Project ' + glSegment_, program: '', rows: rows }].concat(
+        pjPrograms_().map(function (p) {
+          return { title: 'Rekap Project ' + (p.key === 'CNOP' ? 'CNOP' : p.label), program: p.key,
+                   rows: rows.filter(function (r) { return pjProgramKey_(r.program) === p.key; }) };
+        })
+      );
+      box.innerHTML = cards.map(function (c, i) {
+        const g = 'pj-' + i;
+        const dist = pjAggregate_(c.rows, 'district'), sub = pjAggregate_(c.rows, 'subDistrict');
+        return '<section class="golive-summary-card">'
+          + '<div class="golive-summary-head"><div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> ' + escapeHtml(c.title) + '</div></div>'
+          + '<div class="golive-tabs" role="tablist" aria-label="' + escapeHtml(c.title) + '">'
+          + '<button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" data-pj-tab="' + g + '|district" onclick="switchGoLiveTab(\'' + g + '\', \'district\', this)"><i class="fa-solid fa-location-dot"></i> District</button>'
+          + '<button type="button" class="golive-tab-btn" role="tab" aria-selected="false" data-pj-tab="' + g + '|subdistrict" onclick="switchGoLiveTab(\'' + g + '\', \'subdistrict\', this)"><i class="fa-solid fa-location-dot"></i> Sub District</button></div>'
+          + '<div class="golive-tab-panel active" data-group="' + g + '" data-tab="district" role="tabpanel">' + pjTableHtml_('pjTable-' + i + '-district', 'DISTRICT', dist, 'district', c.program) + '</div>'
+          + '<div class="golive-tab-panel" data-group="' + g + '" data-tab="subdistrict" role="tabpanel">' + pjTableHtml_('pjTable-' + i + '-subdistrict', 'SUB DISTRICT', sub, 'subDistrict', c.program) + '</div>'
+          + '</section>';
+      }).join('');
+
+      Object.keys(activeTabs).forEach(function (g) {
+        if (activeTabs[g] !== 'district') {
+          const btn = box.querySelector('[data-pj-tab="' + g + '|' + activeTabs[g] + '"]');
+          if (btn) switchGoLiveTab(g, activeTabs[g], btn);
+        }
+      });
+      syncAllPivotStickyHeaders_();
+    }
+
+    function clearGoLiveQuickProgram_() {
+      glQuickProgramKey_ = '';
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
+    function pjResetAllFilters_() {
+      MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
+        const el = document.getElementById(f.id);
+        if (el) el.value = '';
+      });
+      ['glFilterTanggalFrom', 'glFilterTanggalTo', 'glSearchInput'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      clearTimeout(glSearchDebounceTimer_);
+      glQuickBucketFilter_ = ''; glQuickNewStatusGoLive_ = false; glQuickStatusTaskNeedIhld_ = false;
+      glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
+    }
+    function pjShowFilteredTable_() {
+      applyMonitoringGoLiveSearchFilter(true);
+      const bar = document.getElementById('glFilterBar');
+      if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Klik sel rekap Project / legend donut Program -> filter tabel detail.
+    document.addEventListener('click', function (e) {
+      const cell = e.target.closest('[data-pj-cell="1"]');
+      const leg = !cell ? e.target.closest('[data-pj-program]') : null;
+      if (!cell && !leg) return;
+      pjResetAllFilters_();
+      if (cell) {
+        const label = cell.getAttribute('data-label') || '';
+        const sel = document.getElementById(cell.getAttribute('data-label-type') === 'subDistrict' ? 'glFilterSubDistrict' : 'glFilterDistrict');
+        if (label && sel && Array.from(sel.options).some(function (o) { return o.value === label; })) sel.value = label;
+        glQuickProgramKey_ = cell.getAttribute('data-program') || '';
+        glQuickNewStatusValue_ = cell.getAttribute('data-status') || '';
+      } else {
+        glQuickProgramKey_ = leg.getAttribute('data-pj-program') || '';
+      }
+      pjShowFilteredTable_();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = e.target.closest && e.target.closest('[data-pj-program]');
+      if (el) { e.preventDefault(); pjResetAllFilters_(); glQuickProgramKey_ = el.getAttribute('data-pj-program'); pjShowFilteredTable_(); }
+    });
 
     function clearGoLiveQuickStatusValue_() {
       glQuickNewStatusValue_ = '';
@@ -1968,7 +2243,7 @@
     }
 
     function clearGoLiveQuickNewStatusFilter_() {
-      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
       applyMonitoringGoLiveSearchFilter(true);
     }
 
@@ -2669,8 +2944,9 @@
         const newView = meta.view || 'golive';
         if (glPageEl.getAttribute('data-view') !== newView) {
           glPageEl.setAttribute('data-view', newView);
-          // Filter cepat New Status milik mode Project tidak dibawa ke mode Go Live (dan sebaliknya).
-          if (glQuickNewStatusValue_) { glQuickNewStatusValue_ = ''; applyMonitoringGoLiveSearchFilter(true); }
+          // Filter cepat & opsi dropdown milik satu mode tidak dibawa ke mode lain.
+          glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
+          if (monitoringGoLiveLoadedOnce) { pjSyncFilterOptions_(); applyMonitoringGoLiveSearchFilter(true); }
         }
         renderProjectStatus_();
         const segmentChanged = setGoLiveSegment_(meta.segment || 'B2C');
@@ -2723,7 +2999,7 @@
       golive_currentDetailRow_ = null;
       currentMonitoringGoLivePage = 1;
       glQuickBucketFilter_ = '';
-      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
       glQuickStatusTaskNeedIhld_ = false;
 
       // Filter tabel detail: kosongkan nilai & opsi (opsi diisi ulang
@@ -3477,6 +3753,7 @@
       requestAnimationFrame(function () {
         syncPivotStickyHeaderOffsets_('glSummaryDistrictTable');
         syncPivotStickyHeaderOffsets_('glSummarySubDistrictTable');
+        document.querySelectorAll('.pj-rekap-table').forEach(function (t) { syncPivotStickyHeaderOffsets_(t.id); });
       });
     }
 
@@ -3623,7 +3900,7 @@
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i><span class="hidden sm:inline">Refresh Data</span>`;
 
           activeMonitoringGoLiveRows = (response && response.data) || [];
-          populateMonitoringGoLiveFilterOptions_(activeMonitoringGoLiveRows);
+          pjSyncFilterOptions_();
           applyMonitoringGoLiveSearchFilter(false);
           renderProjectStatus_();
         })
@@ -3757,15 +4034,13 @@
       // sel tabel Perolehan Harian (lihat initGoLiveSummaryDrilldown_())
       // -- bukan dropdown biasa, jadi dihitung terpisah dari fieldFilters.
       const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
-        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusValue_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0) + (glQuickStatusTaskNeedIhld_ ? 1 : 0);
+        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusValue_ ? 1 : 0) + (glQuickProgramKey_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0) + (glQuickStatusTaskNeedIhld_ ? 1 : 0);
 
       let filtered = activeMonitoringGoLiveRows;
 
       if (fieldFilters.length) {
         filtered = filtered.filter(function (row) {
-          return fieldFilters.every(function (f) {
-            return String(row[f.key] || '').trim() === f.value;
-          });
+          return fieldFilters.every(function (f) { return pjFieldMatch_(row, f); });
         });
       }
 
@@ -3781,6 +4056,10 @@
           return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_
               && GOLIVE_SUMMARY_STATUSES_JS_.indexOf(golive_normJs_(row.newStatus)) !== -1;
         });
+      }
+
+      if (glQuickProgramKey_) {
+        filtered = filtered.filter(function (row) { return pjProgramKey_(row.program) === glQuickProgramKey_; });
       }
 
       if (glQuickNewStatusValue_) {
@@ -3840,10 +4119,13 @@
           const statusValChip = glQuickNewStatusValue_
             ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickStatusValue_()">New Status: ' + escapeHtml(glQuickNewStatusValue_) + ' <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
+          const programChip = glQuickProgramKey_
+            ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickProgram_()">Program: ' + escapeHtml(pjProgramLabel_(glQuickProgramKey_)) + ' <i class="fa-solid fa-circle-xmark"></i></button>'
+            : '';
           const needIhldChip = glQuickStatusTaskNeedIhld_
             ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNeedIhldFilter_()">Status Task: Need Go Live IHLD <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
-          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + statusValChip + newStatusChip + needIhldChip;
+          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + programChip + statusValChip + newStatusChip + needIhldChip;
           hintEl.classList.add('show');
         } else {
           hintEl.classList.remove('show');
@@ -3885,7 +4167,7 @@
       if (dateToEl)   dateToEl.value   = '';
       document.getElementById('glSearchInput').value = '';
       glQuickBucketFilter_    = '';
-      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = ''; glQuickProgramKey_ = '';
       glQuickStatusTaskNeedIhld_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
