@@ -572,7 +572,10 @@
     #pj-badge-grid { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
     #pj-badge-grid .golive-badge-item { flex: 1 0 118px; min-width: 118px; }
     #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-    @media (min-width: 1024px) { #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+    @media (min-width: 640px) { #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project > :first-child { grid-column: 1 / -1; } }
+    @media (min-width: 1280px) { #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); }
+      #page-golive-b2c[data-view="project"] .pj-chart-row.gl-only-project > :first-child { grid-column: auto; } }
     #page-golive-b2c[data-view="project"] #pj-rekap-container.gl-only-project { display: contents; }
     .pj-donut-body { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; min-height: 250px; }
     .pj-donut-body .golive-chart-legend-item[data-pj-program] { cursor: pointer; }
@@ -830,6 +833,12 @@
             <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> <span id="pj-title-program">Persentase Program (LOP)</span></div>
           </div>
           <div class="pj-donut-body" id="pj-program-body"></div>
+        </section>
+        <section class="golive-summary-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> <span id="pj-title-design">Persentase Tipe Design (LOP)</span></div>
+          </div>
+          <div class="pj-donut-body" id="pj-design-body"></div>
         </section>
       </div>
       <!-- Rekap Project (dibangun dinamis oleh renderProjectRekap_ sesuai segmen) -->
@@ -1915,6 +1924,7 @@
         const msg = '<div class="golive-chart-empty" style="color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat data: ' + escapeHtml(errMsg) + '</div>';
         grid.innerHTML = ''; chart.innerHTML = msg; if (note) note.textContent = '';
         const pb = document.getElementById('pj-program-body'); if (pb) pb.innerHTML = msg;
+        const pd = document.getElementById('pj-design-body'); if (pd) pd.innerHTML = msg;
         const rc = document.getElementById('pj-rekap-container'); if (rc) rc.innerHTML = '<section class="golive-summary-card">' + msg + '</section>';
         return;
       }
@@ -1955,10 +1965,12 @@
         const ld = '<div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data ' + glSegment_ + '...</div>';
         chart.innerHTML = ld;
         const pb2 = document.getElementById('pj-program-body'); if (pb2) pb2.innerHTML = ld;
+        const pd2 = document.getElementById('pj-design-body'); if (pd2) pd2.innerHTML = ld;
         const rc2 = document.getElementById('pj-rekap-container'); if (rc2) rc2.innerHTML = '<section class="golive-summary-card">' + ld + '</section>';
         return;
       }
       renderProjectProgramDonut_(rows);
+      renderProjectDesignDonut_(rows);
       renderProjectRekap_(rows);
       const max = Math.max.apply(null, PJ_STATUSES.map(function (s) { return counts[s.key]; }).concat([1]));
       chart.innerHTML = PJ_STATUSES.map(function (s) {
@@ -2007,6 +2019,7 @@
       if (pjIsProjectView_()) {
         if (f.key === 'newStatus') return pjStatusKey_(row.newStatus) === f.value;
         if (f.key === 'program')   return pjProgramKey_(row.program) === f.value;
+        if (f.key === 'tipeDesign') return pjDesignKey_(row.tipeDesign) === f.value;
       }
       return String(row[f.key] || '').trim() === f.value;
     }
@@ -2025,6 +2038,7 @@
       };
       fill('glFilterNewStatus', PJ_STATUSES.map(function (s) { return { key: s.key, label: s.key }; }));
       fill('glFilterProgram', pjPrograms_());
+      fill('glFilterTipeDesign', PJ_DESIGNS);
     }
 
     function pjToNum_(v) {
@@ -2037,41 +2051,60 @@
       return isFinite(n) ? n : 0;
     }
 
-    // ── Donut Program ──
-    function renderProjectProgramDonut_(rows) {
-      const body = document.getElementById('pj-program-body');
-      const t = document.getElementById('pj-title-program');
-      if (!body) return;
-      const list = pjPrograms_();
-      if (t) t.textContent = 'Persentase Program Project ' + glSegment_ + ' (LOP)';
+    // Tipe Design (kolom K): PT1..PT4, tahan variasi "PT 1" / "pt-1".
+    const PJ_DESIGNS = [
+      { key: 'PT1', label: 'PT1', color: '#2C3979' },
+      { key: 'PT2', label: 'PT2', color: '#0BA5EC' },
+      { key: 'PT3', label: 'PT3', color: '#7A5AF8' },
+      { key: 'PT4', label: 'PT4', color: '#FB6514' }
+    ];
+    function pjDesignKey_(raw) {
+      const m = /^PT\s*-?\s*([1-4])$/.exec(golive_normJs_(raw));
+      return m ? 'PT' + m[1] : '';
+    }
+
+    // ── Donut generik: dipakai Program (kolom M) dan Tipe Design (kolom K) ──
+    function pjDonutHtml_(rows, items, keyFn, attr, label) {
       const counts = {};
-      list.forEach(function (p) { counts[p.key] = 0; });
+      items.forEach(function (p) { counts[p.key] = 0; });
       let other = 0;
       rows.forEach(function (r) {
-        const k = pjProgramKey_(r.program);
+        const k = keyFn(r);
         if (k) counts[k]++; else other++;
       });
-      const total = list.reduce(function (a, p) { return a + counts[p.key]; }, 0);
+      const total = items.reduce(function (a, p) { return a + counts[p.key]; }, 0);
       if (total === 0) {
-        body.innerHTML = '<div class="golive-chart-empty"><i class="fa-solid fa-chart-pie"></i>Belum ada data Program ' + list.map(function (p) { return escapeHtml(p.label); }).join(' / ') + '</div>';
-        return;
+        return '<div class="golive-chart-empty"><i class="fa-solid fa-chart-pie"></i>Belum ada data ' + label + ' ' + items.map(function (p) { return escapeHtml(p.label); }).join(' / ') + '</div>';
       }
       let cursor = 0; const parts = []; const legend = [];
-      list.forEach(function (p) {
+      items.forEach(function (p) {
         const v = counts[p.key];
         const pct = (v / total) * 100, deg = (v / total) * 360;
         if (v > 0) parts.push(p.color + ' ' + cursor.toFixed(2) + 'deg ' + (cursor + deg).toFixed(2) + 'deg');
         cursor += deg;
-        legend.push('<div class="golive-chart-legend-item" role="button" tabindex="0" data-pj-program="' + p.key + '" title="Klik untuk filter tabel Data Go Live">'
+        legend.push('<div class="golive-chart-legend-item" role="button" tabindex="0" ' + attr + '="' + p.key + '" title="Klik untuk filter tabel Data Go Live">'
           + '<span class="golive-chart-legend-swatch" style="background:' + p.color + ';"></span>'
           + '<span class="golive-chart-legend-name">' + escapeHtml(p.label) + '</span>'
           + '<span class="golive-chart-legend-val">' + formatNum_(v) + '</span>'
           + '<span class="golive-chart-legend-pct">' + goLiveChartPctLabel_(v, pct) + '</span></div>');
       });
-      body.innerHTML = '<div class="golive-donut-wrap"><div class="golive-donut" style="background:conic-gradient(' + parts.join(', ') + ');"></div>'
+      return '<div class="golive-donut-wrap"><div class="golive-donut" style="background:conic-gradient(' + parts.join(', ') + ');"></div>'
         + '<div class="golive-donut-hole"><div class="dn-total">' + formatNum_(total) + '</div><div class="dn-label">LOP</div></div></div>'
         + '<div class="golive-chart-legend">' + legend.join('')
-        + (other > 0 ? '<div class="pj-note">' + formatNum_(other) + ' LOP dengan Program lain tidak ikut donut.</div>' : '') + '</div>';
+        + (other > 0 ? '<div class="pj-note">' + formatNum_(other) + ' LOP dengan ' + label + ' lain/kosong tidak ikut donut.</div>' : '') + '</div>';
+    }
+
+    function renderProjectProgramDonut_(rows) {
+      const body = document.getElementById('pj-program-body');
+      const t = document.getElementById('pj-title-program');
+      if (t) t.textContent = 'Persentase Program Project ' + glSegment_ + ' (LOP)';
+      if (body) body.innerHTML = pjDonutHtml_(rows, pjPrograms_(), function (r) { return pjProgramKey_(r.program); }, 'data-pj-program', 'Program');
+    }
+    function renderProjectDesignDonut_(rows) {
+      const body = document.getElementById('pj-design-body');
+      const t = document.getElementById('pj-title-design');
+      if (t) t.textContent = 'Persentase Tipe Design Project ' + glSegment_ + ' (LOP)';
+      if (body) body.innerHTML = pjDonutHtml_(rows, PJ_DESIGNS, function (r) { return pjDesignKey_(r.tipeDesign); }, 'data-pj-design', 'Tipe Design');
     }
 
     // ── Rekap Project (District / Sub District x New Status; LOP, ODP, PORT) ──
@@ -2169,6 +2202,22 @@
       });
       syncAllPivotStickyHeaders_();
     }
+
+    function pjFilterByDesign_(key) {
+      pjResetAllFilters_();
+      const sel = document.getElementById('glFilterTipeDesign');
+      if (sel && Array.from(sel.options).some(function (o) { return o.value === key; })) sel.value = key;
+      pjShowFilteredTable_();
+    }
+    document.addEventListener('click', function (e) {
+      const el = e.target.closest('[data-pj-design]');
+      if (el) pjFilterByDesign_(el.getAttribute('data-pj-design'));
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = e.target.closest && e.target.closest('[data-pj-design]');
+      if (el) { e.preventDefault(); pjFilterByDesign_(el.getAttribute('data-pj-design')); }
+    });
 
     function clearGoLiveQuickProgram_() {
       glQuickProgramKey_ = '';
