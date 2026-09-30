@@ -561,6 +561,24 @@
     .data-table td{
       font-size: 10px;
     }
+
+    /* ═════ MODE PROJECT (Project B2C / B2B) ═════ */
+    #page-golive-b2c .gl-only-project { display: none; }
+    #page-golive-b2c[data-view="project"] .gl-only-project { display: block; }
+    #page-golive-b2c[data-view="project"] .gl-only-golive { display: none !important; }
+    #page-golive-b2c .golive-summary-card + .golive-summary-card { margin-top: 0.75rem; }
+    .pj-badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (min-width: 640px)  { .pj-badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .pj-badge-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+    .golive-badge-item.pj-accent::before { background: var(--pj-c); }
+    .golive-badge-item.pj-accent .golive-badge-icon { color: var(--pj-c); }
+    .pj-note { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+    .pj-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 250px; padding: 8px 4px 0; overflow-x: auto; border-bottom: 1px solid var(--pv-line); }
+    .pj-bar-col { flex: 1 0 78px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; }
+    .pj-bar-val { font-size: 12px; font-weight: 600; color: var(--pv-label-fg); margin-bottom: 4px; }
+    .pj-bar { width: min(48px, 70%); min-height: 2px; border-radius: 6px 6px 0 0; background: var(--pj-c); transition: height .35s ease, opacity .15s; }
+    .pj-bar-col:hover .pj-bar, .pj-bar-col:focus-visible .pj-bar { opacity: .75; }
+    .pj-bar-lbl { min-height: 30px; margin: 6px 0 4px; font-size: 11px; line-height: 14px; text-align: center; color: var(--text-muted); }
   </style>
 </head>
 <body data-theme="light">
@@ -597,6 +615,7 @@
         </button>
         <div class="submenu-list">
           <a class="sub-nav-item active" id="nav-golive-b2c" onclick="switchPage('golive-b2c')"><span class="nav-icon-bullet"></span> Go Live B2C</a>
+          <a class="sub-nav-item" id="nav-project-b2c" onclick="switchPage('project-b2c')"><span class="nav-icon-bullet"></span> Project B2C</a>
           <a class="sub-nav-item" id="nav-survey-dsi" onclick="switchPage('survey-dsi')"><span class="nav-icon-bullet"></span> Survey DSI</a>
         </div>
       </div>
@@ -611,6 +630,7 @@
         </button>
         <div class="submenu-list">
           <a class="sub-nav-item" id="nav-golive-b2b" onclick="switchPage('golive-b2b')"><span class="nav-icon-bullet"></span> Go Live B2B</a>
+          <a class="sub-nav-item" id="nav-project-b2b" onclick="switchPage('project-b2b')"><span class="nav-icon-bullet"></span> Project B2B</a>
         </div>
       </div>
 
@@ -694,10 +714,10 @@
       <div class="content-inner">
 
     <!-- ═════════ HALAMAN: GO LIVE B2C ═════════ -->
-    <div class="page-section active-page" id="page-golive-b2c">
+    <div class="page-section active-page" id="page-golive-b2c" data-view="golive">
 
       <!-- 1. Ringkasan total (badge per bucket) — diisi renderGoLiveBadgeTotals_() -->
-      <section class="golive-summary-card">
+      <section class="golive-summary-card gl-only-golive">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Total Go Live (LOP)</div>
           <button type="button" class="btn-audit-duplicate" onclick="openGoLiveDuplicateAudit()" title="Cek ID IHLD duplikat & baris tanpa District/Sub District yang bisa bikin badge Total Order tidak sinkron">
@@ -772,8 +792,25 @@
         </div>
       </section>
 
+      <!-- ═════ MODE PROJECT (menu Project B2C / B2B): badge & chart New Status ═════
+           Hanya tampil saat #page-golive-b2c[data-view="project"]. Diisi renderProjectStatus_()
+           dari activeMonitoringGoLiveRows (kolom NEW STATUS) -- tanpa request tambahan. -->
+      <section class="golive-summary-card gl-only-project">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> <span id="pj-title-badge">Ringkasan New Status Project (LOP)</span></div>
+        </div>
+        <div class="golive-badge-grid pj-badge-grid" id="pj-badge-grid"></div>
+        <div class="pj-note" id="pj-note"></div>
+      </section>
+      <section class="golive-summary-card gl-only-project">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-chart-bar"></i> <span id="pj-title-chart">Total LOP per New Status</span></div>
+        </div>
+        <div class="pj-chart-wrap" id="pj-chart-body"></div>
+      </section>
+
       <!-- 2. Need Go Live IHLD (tabel), donut MITRA, donut SDI, run rate 7 hari -->
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 gl-only-golive">
         <section class="golive-chart-card">
           <div class="golive-summary-head">
             <div class="golive-summary-title"><i class="fa-solid fa-triangle-exclamation"></i> Need Go Live IHLD</div>
@@ -925,7 +962,7 @@
       </section>
 
       <!-- 6. Perolehan Go Live Harian (PORT) -->
-      <section class="golive-summary-card">
+      <section class="golive-summary-card gl-only-golive">
         <div class="golive-summary-head">
           <div class="golive-summary-title"><i class="fa-solid fa-calendar-days"></i> Perolehan Go Live Harian (PORT)</div>
         </div>
@@ -1676,6 +1713,8 @@
     // supaya tidak rapuh terhadap variasi huruf besar/kecil di data), sama
     // seperti alasan glQuickBucketFilter_ di atas.
     let glQuickNewStatusGoLive_ = false;
+    // Mode Project: klik badge/bar New Status -> filter exact (mis. 'HOLD').
+    let glQuickNewStatusValue_ = '';
 
     // Klik "Total Order" di kartu "Need Go Live IHLD" -> filter Status
     // Task = "NEED GO LIVE IHLD" via klasifikasi (sama alasannya dengan
@@ -1760,7 +1799,7 @@
         });
         document.getElementById('glSearchInput').value = '';
         glQuickBucketFilter_    = '';
-        glQuickNewStatusGoLive_ = false;
+        glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
         glQuickStatusTaskNeedIhld_ = false;
 
         const dateFromEl = document.getElementById('glFilterTanggalFrom');
@@ -1804,13 +1843,132 @@
       });
     }
 
+
+    // ═════════════════════════════════════════════════════════════
+    // MODE PROJECT (menu Project B2C / Project B2B)
+    // Badge + chart balok New Status dihitung client-side dari
+    // activeMonitoringGoLiveRows (field newStatus = kolom NEW STATUS
+    // tabel detail), jadi otomatis ikut segmen B2C/B2B aktif dan ikut
+    // Refresh Data. Klik badge/bar -> filter tabel detail.
+    // ═════════════════════════════════════════════════════════════
+    const PJ_STATUSES = [
+      { key: 'PREPARING',      icon: 'fa-pen-to-square',        color: 'var(--color-gray-400)' },
+      { key: 'DROP',           icon: 'fa-triangle-exclamation', color: 'var(--color-error-500)' },
+      { key: 'HOLD',           icon: 'fa-arrows-rotate',        color: 'var(--color-warning-500)' },
+      { key: 'PERIZINAN',      icon: 'fa-clipboard-check',      color: 'var(--color-orange-500)' },
+      { key: 'MATDEL',         icon: 'fa-layer-group',          color: 'var(--color-theme-purple-500)' },
+      { key: 'INSTALASI',      icon: 'fa-plug-circle-check',    color: 'var(--color-blue-light-500)' },
+      { key: 'FI-OGP GO LIVE', icon: 'fa-tower-broadcast',      color: 'var(--color-success-400)' },
+      { key: 'GO LIVE',        icon: 'fa-circle-check',         color: 'var(--color-success-600)' }
+    ];
+    const PJ_BAR_MAX_PX = 160;
+
+    function renderProjectStatus_(errMsg) {
+      const grid = document.getElementById('pj-badge-grid');
+      const chart = document.getElementById('pj-chart-body');
+      if (!grid || !chart) return;
+
+      const seg = 'Project ' + glSegment_;
+      const t1 = document.getElementById('pj-title-badge');
+      const t2 = document.getElementById('pj-title-chart');
+      if (t1) t1.textContent = 'Ringkasan New Status ' + seg + ' (LOP)';
+      if (t2) t2.textContent = 'Total LOP per New Status — ' + seg;
+      const note = document.getElementById('pj-note');
+
+      if (errMsg) {
+        const msg = '<div class="golive-chart-empty" style="color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat data: ' + escapeHtml(errMsg) + '</div>';
+        grid.innerHTML = ''; chart.innerHTML = msg; if (note) note.textContent = '';
+        return;
+      }
+
+      const loaded = monitoringGoLiveLoadedOnce;
+      const rows = loaded ? (activeMonitoringGoLiveRows || []) : [];
+      const counts = {};
+      PJ_STATUSES.forEach(function (s) { counts[s.key] = 0; });
+      let known = 0;
+      rows.forEach(function (r) {
+        const k = golive_normJs_(r.newStatus);
+        if (Object.prototype.hasOwnProperty.call(counts, k)) { counts[k]++; known++; }
+      });
+      const total = rows.length;
+      const fmt = function (n) { return loaded ? formatNum_(n) : '-'; };
+
+      grid.innerHTML = PJ_STATUSES.map(function (s) {
+        const pct = total > 0 ? Math.round((counts[s.key] / total) * 100) : 0;
+        return '<div class="golive-badge-item pj-accent badge-lop-click" role="button" tabindex="0" data-pj-status="' + s.key + '" style="--pj-c:' + s.color + ';" title="Klik untuk lihat datanya di tabel Data Go Live">'
+          + '<div class="golive-badge-icon"><i class="fa-solid ' + s.icon + '"></i></div>'
+          + '<div class="golive-badge-body"><div class="golive-badge-label">' + s.key + '</div>'
+          + '<div class="golive-badge-value">' + fmt(counts[s.key]) + '</div>'
+          + '<div class="golive-badge-pct">' + (loaded ? pct + '%' : '-') + '</div></div></div>';
+      }).join('') +
+        '<div class="golive-badge-item badge-total badge-lop-click" role="button" tabindex="0" data-pj-status="" title="Klik untuk lihat semua data di tabel Data Go Live">'
+        + '<div class="golive-badge-icon"><i class="fa-solid fa-chart-simple"></i></div>'
+        + '<div class="golive-badge-body"><div class="golive-badge-label">TOTAL ORDER</div>'
+        + '<div class="golive-badge-value">' + fmt(total) + '</div>'
+        + '<div class="golive-badge-pct">' + (loaded ? '100%' : '-') + '</div></div></div>';
+
+      if (note) {
+        note.textContent = (loaded && total - known > 0)
+          ? formatNum_(total - known) + ' LOP memiliki New Status kosong/di luar 8 status di atas (tetap dihitung di Total Order).'
+          : '';
+      }
+
+      if (!loaded) {
+        chart.innerHTML = '<div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data ' + glSegment_ + '...</div>';
+        return;
+      }
+      const max = Math.max.apply(null, PJ_STATUSES.map(function (s) { return counts[s.key]; }).concat([1]));
+      chart.innerHTML = PJ_STATUSES.map(function (s) {
+        const h = counts[s.key] > 0 ? Math.max(3, Math.round(counts[s.key] / max * PJ_BAR_MAX_PX)) : 0;
+        return '<div class="pj-bar-col" role="button" tabindex="0" data-pj-status="' + s.key + '" style="--pj-c:' + s.color + ';" title="' + s.key + ': ' + formatNum_(counts[s.key]) + ' LOP">'
+          + '<div class="pj-bar-val">' + formatNum_(counts[s.key]) + '</div>'
+          + '<div class="pj-bar" style="height:' + h + 'px;"></div>'
+          + '<div class="pj-bar-lbl">' + s.key + '</div></div>';
+      }).join('');
+    }
+
+    function clearGoLiveQuickStatusValue_() {
+      glQuickNewStatusValue_ = '';
+      applyMonitoringGoLiveSearchFilter(true);
+    }
+
+    // Klik badge/bar: mulai dari filter bersih, lalu terapkan New Status.
+    function pjApplyStatusFilter_(value) {
+      MONITORING_GOLIVE_FILTER_FIELDS.forEach(function (f) {
+        const el = document.getElementById(f.id);
+        if (el) el.value = '';
+      });
+      ['glFilterTanggalFrom', 'glFilterTanggalTo', 'glSearchInput'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      clearTimeout(glSearchDebounceTimer_);
+      glQuickBucketFilter_ = '';
+      glQuickNewStatusGoLive_ = false;
+      glQuickStatusTaskNeedIhld_ = false;
+      glQuickNewStatusValue_ = value || '';
+      applyMonitoringGoLiveSearchFilter(true);
+      const bar = document.getElementById('glFilterBar');
+      if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('click', function (e) {
+      const el = e.target.closest('[data-pj-status]');
+      if (el) pjApplyStatusFilter_(el.getAttribute('data-pj-status'));
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = e.target.closest && e.target.closest('[data-pj-status]');
+      if (el) { e.preventDefault(); pjApplyStatusFilter_(el.getAttribute('data-pj-status')); }
+    });
+
     function clearGoLiveQuickBucketFilter_() {
       glQuickBucketFilter_ = '';
       applyMonitoringGoLiveSearchFilter(true);
     }
 
     function clearGoLiveQuickNewStatusFilter_() {
-      glQuickNewStatusGoLive_ = false;
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
       applyMonitoringGoLiveSearchFilter(true);
     }
 
@@ -2439,6 +2597,13 @@
         title: 'Dashboard B2C — Go Live B2C',
         subtitle: 'Progres Go Live Project B2C'
       },
+      'project-b2c': {
+        navId: 'nav-project-b2c',
+        segment: 'B2C',
+        view: 'project',
+        title: 'Dashboard B2C — Project B2C',
+        subtitle: 'Progres New Status Project B2C'
+      },
       'survey-dsi': {
         navId: 'nav-survey-dsi',
         title: 'Dashboard B2C — Survey DSI',
@@ -2450,6 +2615,13 @@
         segment: 'B2B',
         title: 'Dashboard B2B — Go Live B2B',
         subtitle: 'Progres Go Live Project B2B'
+      },
+      'project-b2b': {
+        navId: 'nav-project-b2b',
+        segment: 'B2B',
+        view: 'project',
+        title: 'Dashboard B2B — Project B2B',
+        subtitle: 'Progres New Status Project B2B'
       },
       'abd-dashboard': {
         navId: 'nav-abd-dashboard',
@@ -2492,7 +2664,15 @@
         // (#page-golive-b2c). Kalau segmen berganti, tampilan di-reset
         // lalu dimuat ulang dari sheet segmen baru lewat 1 request
         // bootstrap + 1 request tabel detail.
-        document.getElementById('page-golive-b2c').classList.add('active-page');
+        const glPageEl = document.getElementById('page-golive-b2c');
+        glPageEl.classList.add('active-page');
+        const newView = meta.view || 'golive';
+        if (glPageEl.getAttribute('data-view') !== newView) {
+          glPageEl.setAttribute('data-view', newView);
+          // Filter cepat New Status milik mode Project tidak dibawa ke mode Go Live (dan sebaliknya).
+          if (glQuickNewStatusValue_) { glQuickNewStatusValue_ = ''; applyMonitoringGoLiveSearchFilter(true); }
+        }
+        renderProjectStatus_();
         const segmentChanged = setGoLiveSegment_(meta.segment || 'B2C');
         if (segmentChanged) {
           ensureGoLiveDailyFilterOptions_();
@@ -2543,7 +2723,7 @@
       golive_currentDetailRow_ = null;
       currentMonitoringGoLivePage = 1;
       glQuickBucketFilter_ = '';
-      glQuickNewStatusGoLive_ = false;
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
       glQuickStatusTaskNeedIhld_ = false;
 
       // Filter tabel detail: kosongkan nilai & opsi (opsi diisi ulang
@@ -2594,6 +2774,7 @@
 
       const btn = document.querySelector('.btn-refresh');
       if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate"></i><span class="hidden sm:inline">Refresh Data</span>';
+      renderProjectStatus_();
     }
 
     function forceRefreshData() {
@@ -3444,12 +3625,14 @@
           activeMonitoringGoLiveRows = (response && response.data) || [];
           populateMonitoringGoLiveFilterOptions_(activeMonitoringGoLiveRows);
           applyMonitoringGoLiveSearchFilter(false);
+          renderProjectStatus_();
         })
         .withFailureHandler(function(err) {
           isFetchingMonitoringGoLive = false;
           const btn = document.querySelector('.btn-refresh');
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i><span class="hidden sm:inline">Refresh Data</span>`;
           console.error('Gagal mengambil data Go Live ' + glSegment_ + ':', err.message);
+          renderProjectStatus_(err.message);
           tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
             <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;opacity:0.6;display:block;margin-bottom:10px;"></i>
             Gagal memuat data Go Live ${glSegment_}: ${escapeHtml(err.message)}
@@ -3574,7 +3757,7 @@
       // sel tabel Perolehan Harian (lihat initGoLiveSummaryDrilldown_())
       // -- bukan dropdown biasa, jadi dihitung terpisah dari fieldFilters.
       const activeFilterCount = fieldFilters.length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
-        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0) + (glQuickStatusTaskNeedIhld_ ? 1 : 0);
+        + (glQuickBucketFilter_ ? 1 : 0) + (glQuickNewStatusValue_ ? 1 : 0) + (glQuickNewStatusGoLive_ ? 1 : 0) + (glQuickStatusTaskNeedIhld_ ? 1 : 0);
 
       let filtered = activeMonitoringGoLiveRows;
 
@@ -3597,6 +3780,12 @@
         filtered = filtered.filter(function (row) {
           return golive_classifyBucketJs_(row.statusGoLive) === glQuickBucketFilter_
               && GOLIVE_SUMMARY_STATUSES_JS_.indexOf(golive_normJs_(row.newStatus)) !== -1;
+        });
+      }
+
+      if (glQuickNewStatusValue_) {
+        filtered = filtered.filter(function (row) {
+          return golive_normJs_(row.newStatus) === glQuickNewStatusValue_;
         });
       }
 
@@ -3648,10 +3837,13 @@
           const newStatusChip = glQuickNewStatusGoLive_
             ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNewStatusFilter_()">New Status: Go Live <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
+          const statusValChip = glQuickNewStatusValue_
+            ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickStatusValue_()">New Status: ' + escapeHtml(glQuickNewStatusValue_) + ' <i class="fa-solid fa-circle-xmark"></i></button>'
+            : '';
           const needIhldChip = glQuickStatusTaskNeedIhld_
             ? ' <button type="button" class="gl-bucket-chip" onclick="clearGoLiveQuickNeedIhldFilter_()">Status Task: Need Go Live IHLD <i class="fa-solid fa-circle-xmark"></i></button>'
             : '';
-          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + newStatusChip + needIhldChip;
+          hintEl.innerHTML = activeFilterCount + ' filter aktif — menampilkan ' + formatNum_(filtered.length) + ' dari ' + formatNum_(activeMonitoringGoLiveRows.length) + ' data.' + bucketChip + statusValChip + newStatusChip + needIhldChip;
           hintEl.classList.add('show');
         } else {
           hintEl.classList.remove('show');
@@ -3693,7 +3885,7 @@
       if (dateToEl)   dateToEl.value   = '';
       document.getElementById('glSearchInput').value = '';
       glQuickBucketFilter_    = '';
-      glQuickNewStatusGoLive_ = false;
+      glQuickNewStatusGoLive_ = false; glQuickNewStatusValue_ = '';
       glQuickStatusTaskNeedIhld_ = false;
       applyMonitoringGoLiveSearchFilter(true);
     }
