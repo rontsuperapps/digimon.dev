@@ -582,6 +582,12 @@
     .pj-rekap-table td.pj-c { background: color-mix(in srgb, var(--pj-c) 10%, transparent); }
     .pj-rekap-table td.pj-c.pj-hit { background: color-mix(in srgb, var(--pj-c) 24%, transparent); font-weight: 600; }
     .pj-rekap-table tbody tr.pivot-total-row td.pj-c { background: var(--pj-c); color: var(--pj-fg, #fff); font-weight: 600; }
+    /* TOTAL ORDER: warna isi = kolom DISTRICT / SUB DISTRICT (label-cell) */
+    .pj-rekap-table td.pj-c.pj-total { background: var(--pv-total-tint); color: var(--pv-label-fg); font-weight: 600; }
+    /* Garis tabel: putih, 1px, sama di semua sisi (termasuk pemisah blok & baris total) */
+    .pivot-table-wrap-full .pivot-grouped-table.pj-rekap-table :is(th, td),
+    .pivot-table-wrap-full .pivot-grouped-table.pj-rekap-table tbody tr.pivot-total-row td { box-shadow: inset -1px -1px 0 0 #fff; }
+    #pj-rekap-container .pivot-table-wrap-full { border-color: #fff; }
     .pj-note { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
     .pj-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 250px; padding: 8px 4px 0; overflow-x: auto; border-bottom: 1px solid var(--pv-line); }
     .pj-bar-col { flex: 1 0 78px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; }
@@ -2088,7 +2094,7 @@
     }
 
     function pjCells_(m, spec, hit, ctx) {
-      const cls = 'num-cell pj-c cell-lop-click group-divider' + (hit && m.lop !== 0 ? ' pj-hit' : '');
+      const cls = 'num-cell pj-c cell-lop-click group-divider' + (spec === PJ_TOTAL_SPEC ? ' pj-total' : '') + (hit && m.lop !== 0 ? ' pj-hit' : '');
       const attrs = ' style="--pj-c:' + spec.color + ';--pj-fg:' + spec.fg + ';" data-pj-cell="1" data-label-type="' + ctx.type + '" data-label="' + escapeHtml(ctx.label) + '" data-program="' + ctx.program + '" data-status="' + ctx.status + '" title="Klik untuk lihat detail datanya di tabel Data Go Live"';
       const plain = cls.replace(' group-divider', '');
       return '<td class="' + plain + '"' + attrs + '>' + formatNum_(m.lop) + '</td>'
