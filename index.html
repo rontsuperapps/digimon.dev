@@ -577,6 +577,11 @@
     .pj-donut-body { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; min-height: 250px; }
     .pj-donut-body .golive-chart-legend-item[data-pj-program] { cursor: pointer; }
     .pj-donut-body .golive-chart-legend-item[data-pj-program]:hover .golive-chart-legend-name { text-decoration: underline; }
+    /* Tabel rekap Project: warna kolom = warna badge status */
+    .pj-rekap-table thead th.hdr-pj { background: var(--pj-c); color: var(--pj-fg, #fff); }
+    .pj-rekap-table td.pj-c { background: color-mix(in srgb, var(--pj-c) 10%, transparent); }
+    .pj-rekap-table td.pj-c.pj-hit { background: color-mix(in srgb, var(--pj-c) 24%, transparent); font-weight: 600; }
+    .pj-rekap-table tbody tr.pivot-total-row td.pj-c { background: var(--pj-c); color: var(--pj-fg, #fff); font-weight: 600; }
     .pj-note { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
     .pj-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 250px; padding: 8px 4px 0; overflow-x: auto; border-bottom: 1px solid var(--pv-line); }
     .pj-bar-col { flex: 1 0 78px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; }
@@ -1869,15 +1874,17 @@
     // Refresh Data. Klik badge/bar -> filter tabel detail.
     // ═════════════════════════════════════════════════════════════
     const PJ_STATUSES = [
-      { key: 'PREPARING',      icon: 'fa-pen-to-square',        color: 'var(--color-gray-400)' },
-      { key: 'DROP',           icon: 'fa-triangle-exclamation', color: 'var(--color-error-500)' },
-      { key: 'HOLD',           icon: 'fa-arrows-rotate',        color: 'var(--color-warning-500)' },
-      { key: 'PERIZINAN',      icon: 'fa-clipboard-check',      color: 'var(--color-orange-500)' },
-      { key: 'MATDEL',         icon: 'fa-layer-group',          color: 'var(--color-theme-purple-500)' },
-      { key: 'INSTALASI',      icon: 'fa-plug-circle-check',    color: 'var(--color-blue-light-500)' },
-      { key: 'FI-OGP GO LIVE', icon: 'fa-tower-broadcast',      color: 'var(--color-success-400)' },
-      { key: 'GO LIVE',        icon: 'fa-circle-check',         color: 'var(--color-success-600)' }
+      { key: 'PREPARING',      icon: 'fa-pen-to-square',        color: '#98A2B3', fg: '#101828' },
+      { key: 'DROP',           icon: 'fa-triangle-exclamation', color: '#F04438', fg: '#fff' },
+      { key: 'HOLD',           icon: 'fa-arrows-rotate',        color: '#F79009', fg: '#fff' },
+      { key: 'PERIZINAN',      icon: 'fa-clipboard-check',      color: '#FB6514', fg: '#fff' },
+      { key: 'MATDEL',         icon: 'fa-layer-group',          color: '#7A5AF8', fg: '#fff' },
+      { key: 'INSTALASI',      icon: 'fa-plug-circle-check',    color: '#0BA5EC', fg: '#fff' },
+      { key: 'FI-OGP GO LIVE', icon: 'fa-tower-broadcast',      color: '#32D583', fg: '#101828' },
+      { key: 'GO LIVE',        icon: 'fa-circle-check',         color: '#039855', fg: '#fff' }
     ];
+    // TOTAL ORDER = #2C3979 (var(--pv-total) = brand-500; ikut terang di dark mode)
+    const PJ_TOTAL_SPEC = { color: 'var(--pv-total)', fg: '#fff' };
     const PJ_BAR_MAX_PX = 160;
 
     function pjIsProjectView_() {
@@ -2080,39 +2087,41 @@
       return { rows: list, grand: grand };
     }
 
-    function pjCells_(m, group, divider, hit, ctx) {
-      const cls = 'num-cell cell-' + group + (hit && m.lop !== 0 ? ' cell-hit' : '') + ' cell-lop-click';
-      const attrs = ' data-pj-cell="1" data-label-type="' + ctx.type + '" data-label="' + escapeHtml(ctx.label) + '" data-program="' + ctx.program + '" data-status="' + ctx.status + '" title="Klik untuk lihat detail datanya di tabel Data Go Live"';
-      return '<td class="' + cls + '"' + attrs + '>' + formatNum_(m.lop) + '</td>'
-        + '<td class="' + cls + '"' + attrs + '>' + formatNum_(m.odp) + '</td>'
-        + '<td class="' + cls + (divider ? ' group-divider' : '') + '"' + attrs + '>' + formatNum_(m.port) + '</td>';
+    function pjCells_(m, spec, hit, ctx) {
+      const cls = 'num-cell pj-c cell-lop-click group-divider' + (hit && m.lop !== 0 ? ' pj-hit' : '');
+      const attrs = ' style="--pj-c:' + spec.color + ';--pj-fg:' + spec.fg + ';" data-pj-cell="1" data-label-type="' + ctx.type + '" data-label="' + escapeHtml(ctx.label) + '" data-program="' + ctx.program + '" data-status="' + ctx.status + '" title="Klik untuk lihat detail datanya di tabel Data Go Live"';
+      const plain = cls.replace(' group-divider', '');
+      return '<td class="' + plain + '"' + attrs + '>' + formatNum_(m.lop) + '</td>'
+        + '<td class="' + plain + '"' + attrs + '>' + formatNum_(m.odp) + '</td>'
+        + '<td class="' + cls + '"' + attrs + '>' + formatNum_(m.port) + '</td>';
     }
 
     function pjRowHtml_(r, isGrand, type, program) {
       const label = isGrand ? '' : (r.label === '(KOSONG)' ? '' : r.label);
       let h = '<tr' + (isGrand ? ' class="pivot-total-row"' : '') + '><td class="label-cell">' + escapeHtml(isGrand ? 'GRAND TOTAL' : r.label) + '</td>';
-      h += pjCells_(r.total, 'total', true, false, { type: type, label: label, program: program, status: '' });
-      PJ_STATUSES.forEach(function (s, i) {
-        h += pjCells_(r.st[s.key], i < 6 ? 'mitra' : 'sdi', i === 5, !isGrand, { type: type, label: label, program: program, status: s.key });
+      h += pjCells_(r.total, PJ_TOTAL_SPEC, false, { type: type, label: label, program: program, status: '' });
+      PJ_STATUSES.forEach(function (s) {
+        h += pjCells_(r.st[s.key], s, !isGrand, { type: type, label: label, program: program, status: s.key });
       });
       return h + '</tr>';
     }
 
     function pjTableHtml_(tableId, head, data, type, program) {
       const N = 28;
-      let th = '<thead><tr class="pivot-hdr-r1"><th rowspan="3" class="hdr-navy">' + head + '</th>'
-        + '<th rowspan="2" colspan="3" class="hdr-band hdr-band-total group-divider">TOTAL ORDER</th>'
-        + '<th colspan="18" class="hdr-band hdr-band-mitra group-divider">PROGRES PROJECT</th>'
-        + '<th colspan="6" class="hdr-band hdr-band-sdi">GO LIVE</th></tr><tr class="pivot-hdr-r2">';
-      PJ_STATUSES.forEach(function (s, i) {
-        th += '<th colspan="3" class="' + (i < 6 ? 'hdr-sub-mitra' : 'hdr-sub-sdi') + (i === 5 ? ' group-divider' : '') + '">' + s.key + '</th>';
+      const sty = function (sp) { return ' style="--pj-c:' + sp.color + ';--pj-fg:' + sp.fg + ';"'; };
+      // 2 baris header: (1) label + nama status berwarna, (2) LOP / ODP / PORT
+      let r1 = '<tr class="pivot-hdr-r1"><th rowspan="2" class="hdr-navy">' + head + '</th>'
+        + '<th colspan="3" class="hdr-pj group-divider"' + sty(PJ_TOTAL_SPEC) + '>TOTAL ORDER</th>';
+      let r2 = '<tr class="pivot-hdr-r2">';
+      const leaf = function (sp) {
+        return '<th class="hdr-pj"' + sty(sp) + '>LOP</th><th class="hdr-pj"' + sty(sp) + '>ODP</th><th class="hdr-pj group-divider"' + sty(sp) + '>PORT</th>';
+      };
+      r2 += leaf(PJ_TOTAL_SPEC);
+      PJ_STATUSES.forEach(function (s) {
+        r1 += '<th colspan="3" class="hdr-pj group-divider"' + sty(s) + '>' + s.key + '</th>';
+        r2 += leaf(s);
       });
-      th += '</tr><tr class="pivot-hdr-r3"><th class="hdr-sub-total">LOP</th><th class="hdr-sub-total">ODP</th><th class="hdr-sub-total group-divider">PORT</th>';
-      PJ_STATUSES.forEach(function (s, i) {
-        const c = i < 6 ? 'hdr-leaf-mitra' : 'hdr-leaf-sdi';
-        th += '<th class="' + c + '">LOP</th><th class="' + c + '">ODP</th><th class="' + c + (i === 5 ? ' group-divider' : '') + '">PORT</th>';
-      });
-      th += '</tr></thead>';
+      const th = '<thead>' + r1 + '</tr>' + r2 + '</tr></thead>';
       const body = data.rows.length
         ? data.rows.map(function (r) { return pjRowHtml_(r, false, type, program); }).join('') + pjRowHtml_(data.grand, true, type, program)
         : '<tr><td colspan="' + N + '" class="golive-summary-empty"><i class="fa-solid fa-inbox"></i>Tidak ada data.</td></tr>';
@@ -3713,11 +3722,11 @@
       const r1 = table.querySelector('.pivot-hdr-r1');
       const r2 = table.querySelector('.pivot-hdr-r2');
       const r3 = table.querySelector('.pivot-hdr-r3');
-      if (!r1 || !r2 || !r3) return;
+      if (!r1 || !r2) return;
       const h1 = r1.getBoundingClientRect().height;
       const h2 = r2.getBoundingClientRect().height;
       Array.prototype.forEach.call(r2.children, function (th) { th.style.top = h1 + 'px'; });
-      Array.prototype.forEach.call(r3.children, function (th) { th.style.top = (h1 + h2) + 'px'; });
+      if (r3) Array.prototype.forEach.call(r3.children, function (th) { th.style.top = (h1 + h2) + 'px'; });
     }
 
     // Ganti tab aktif DISTRICT <-> SUB DISTRICT pada kartu "Rekap Go
