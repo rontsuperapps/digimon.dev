@@ -574,13 +574,6 @@
     [data-theme="dark"] .sidebar-footer .sb-logout { color: var(--color-error-400); }
     [data-theme="dark"] .sidebar-footer .sb-logout:hover { background: rgba(240, 68, 56, 0.1); }
 
-    /* Info user di atas menu sidebar */
-    .sb-user { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 18px; text-align: left; border-bottom: 1px solid var(--color-gray-200); transition: background-color .15s; }
-    .sb-user:hover { background: var(--color-gray-50); }
-    [data-theme="dark"] .sb-user { border-bottom-color: var(--color-gray-800); }
-    [data-theme="dark"] .sb-user:hover { background: rgba(255, 255, 255, 0.05); }
-    .sb-profile-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; line-height: 1.25; }
-    .sb-profile-text .profile-name { max-width: 130px; }
     .sidebar-footer .nav-header-trigger.active { background: var(--color-brand-50); color: var(--color-brand-500); }
     .sidebar-footer .nav-header-trigger.active .icon-box-wrapper { color: var(--color-brand-500); }
     [data-theme="dark"] .sidebar-footer .nav-header-trigger.active { background: rgba(78, 118, 199, 0.14); color: var(--color-brand-400); }
@@ -693,15 +686,6 @@
       </div>
     </div>
 
-    <!-- Info user login: di antara logo dan menu -->
-    <button type="button" class="sb-user" id="sbUserCard" onclick="switchPage('profile')" title="Profil Saya">
-      <span class="profile-avatar" id="profileAvatarInitial">M</span>
-      <span class="menu-title-text sb-profile-text">
-        <span class="profile-name" id="profileNameText">Memuat...</span>
-        <span class="profile-role" id="profileRoleText">-</span>
-      </span>
-    </button>
-
     <div class="sidebar-nav-title">Menu</div>
     <nav class="menu-container">
       <div class="menu-item-group open">
@@ -793,6 +777,15 @@
           </div>
         </div>
 
+
+        <!-- Info user login (klik = halaman Profil Saya) -->
+        <button type="button" class="btn-profile-trigger" id="profileBtn" onclick="switchPage('profile')" title="Profil Saya">
+          <span class="profile-avatar" id="profileAvatarInitial">M</span>
+          <span class="profile-name-block">
+            <span class="profile-name" id="profileNameText">Memuat...</span>
+            <span class="profile-role" id="profileRoleText">-</span>
+          </span>
+        </button>
       </div>
     </header>
 
