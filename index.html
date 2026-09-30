@@ -628,6 +628,14 @@
     /* Baris GRAND TOTAL semua tabel pivot: 11px, semibold, kapital */
     body .pivot-grouped-table tbody tr.pivot-total-row td { font-size: 11px; font-weight: 600; text-transform: uppercase; }
 
+    /* Filter data: 9 dropdown baris 1 + baris 2 = tetap 2 baris mulai lebar 1280px
+       (sebelumnya baru di 1536px). Kolom, jarak, dan font dirapatkan supaya muat. */
+    @media (min-width: 1280px) {
+      .golive-filter-bar.golive-filter-row1 { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
+      .golive-filter-row1 .golive-filter-field label { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .golive-filter-row1 .golive-filter-field select { font-size: 11px; padding-left: 8px; padding-right: 26px; background-position: right 6px center; background-size: 1.1em 1.1em; text-overflow: ellipsis; }
+    }
+
     /* ═════ MODE PROJECT (Project B2C / B2B) ═════ */
     #page-golive-b2c .gl-only-project { display: none; }
     #page-golive-b2c[data-view="project"] .gl-only-project { display: block; }
