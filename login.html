@@ -295,6 +295,69 @@
       margin-top: calc(var(--spacing, .25rem) * 4);
     }
     .text-title-xs { font-size: var(--text-title-xs, 24px); line-height: var(--text-title-xs--line-height, 32px); }
+
+    /* ============================================================
+       POP UP NOTIFIKASI LOGIN -- pengganti kotak .alert-box inline.
+       Ditulis manual (bukan class Tailwind) supaya tidak perlu build
+       ulang assets/app.css. Dark mode mengikuti body[data-theme].
+       ============================================================ */
+    .login-notif-overlay {
+      position: fixed; inset: 0; z-index: 100000;
+      display: none; align-items: center; justify-content: center;
+      padding: 16px; overflow-y: auto;
+      background: rgba(152, 162, 179, .5);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    .login-notif-overlay.show { display: flex; }
+    .login-notif-overlay.is-success { --n-color: #12b76a; }
+    .login-notif-overlay.is-error   { --n-color: #f04438; }
+    .login-notif-overlay.is-warning { --n-color: #f79009; }
+    .login-notif-overlay.is-info    { --n-color: #0ba5ec; }
+    .login-notif-card {
+      width: 100%; max-width: 380px; text-align: center;
+      padding: 28px 24px 22px;
+      background: var(--color-white, #fff);
+      border: 1px solid var(--color-gray-200, #e4e7ec);
+      border-radius: 16px;
+      box-shadow: var(--shadow-theme-xl, 0 20px 24px -4px rgba(16,24,40,.08));
+    }
+    body[data-theme="dark"] .login-notif-card {
+      background: var(--color-gray-dark, #1a2231);
+      border-color: var(--color-gray-800, #1d2939);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .login-notif-overlay.show .login-notif-card { animation: loginNotifIn .18s ease-out; }
+      @keyframes loginNotifIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+    }
+    .login-notif-icon {
+      width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 9999px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--n-color, #0ba5ec);
+      background: color-mix(in srgb, var(--n-color, #0ba5ec) 15%, transparent);
+    }
+    .login-notif-icon svg { width: 26px; height: 26px; }
+    .login-notif-title { font-size: 16px; font-weight: 600; color: var(--color-gray-800, #1d2939); }
+    body[data-theme="dark"] .login-notif-title { color: rgba(255,255,255,.9); }
+    .login-notif-msg {
+      margin-top: 6px; font-size: 13px; line-height: 1.5; white-space: pre-line;
+      color: var(--color-gray-500, #667085);
+    }
+    body[data-theme="dark"] .login-notif-msg { color: var(--color-gray-400, #98a2b3); }
+    .login-notif-btn {
+      margin-top: 18px; width: 100%; padding: 10px 16px; border: 0; border-radius: 10px; cursor: pointer;
+      font: inherit; font-size: 14px; font-weight: 500; color: #fff;
+      background: var(--color-brand-500, #2c3979);
+    }
+    .login-notif-btn:hover { background: var(--color-brand-600, #212c5e); }
+    .login-notif-btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-brand-500, #2c3979) 35%, transparent); outline-offset: 2px; }
+    .login-notif-spinner {
+      display: none; width: 22px; height: 22px; margin: 16px auto 0;
+      border: 3px solid color-mix(in srgb, var(--n-color, #12b76a) 25%, transparent);
+      border-top-color: var(--n-color, #12b76a); border-radius: 9999px;
+      animation: loginNotifSpin .8s linear infinite;
+    }
+    .login-notif-overlay.is-success .login-notif-spinner { display: block; }
+    @keyframes loginNotifSpin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body data-theme="light">
@@ -401,11 +464,6 @@
             </button>
           </form>
 
-          <div class="alert-box" id="alertBox" role="alert">
-            <span id="alertIcon"></span>
-            <span id="alertText"></span>
-          </div>
-
           <p class="mt-6 text-center text-theme-xs text-gray-400"><span class="font-medium text-gray-500 dark:text-gray-400">DIGIMON</span> &nbsp;·&nbsp; © 2026</p>
         </section>
     </main>
@@ -417,6 +475,17 @@
     <svg id="loginThemeIconMoon" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path></svg>
     <svg id="loginThemeIconSun" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
   </button>
+
+  <!-- Pop up notifikasi (pengganti kotak alert inline di kartu login) -->
+  <div id="loginNotifOverlay" class="login-notif-overlay" role="alertdialog" aria-modal="true" aria-labelledby="loginNotifTitle" aria-describedby="loginNotifMsg">
+    <div class="login-notif-card">
+      <div class="login-notif-icon" id="loginNotifIcon"></div>
+      <div class="login-notif-title" id="loginNotifTitle">-</div>
+      <p class="login-notif-msg" id="loginNotifMsg">-</p>
+      <div class="login-notif-spinner" aria-hidden="true"></div>
+      <button type="button" class="login-notif-btn" id="loginNotifBtn" onclick="hideAlert()">OK</button>
+    </div>
+  </div>
 
   <!-- Leaflet JS (peta district) -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -430,7 +499,7 @@
        kamu (Deploy > Manage deployments > Web app > URL, yang
        berakhiran "/exec"). URL ini SAMA dipakai di index.html.
        ============================================================ */
-    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby2i2ouNqZPI5il8_eNaIOzSTR6YU7Vmhc-A63IfS7F85Xb1n1pcRCrxfOQTz4vwwrh/exec';
+    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby6qUomlq-4uDMvCJyj2BCUR-Oope1oaCGXZgWydnWjv5FKb7qDEP3yutQ8rbAdZWu7rw/exec';
 
     // Wrapper pengganti google.script.run. Body dikirim sebagai STRING
     // JSON dengan Content-Type text/plain supaya browser tidak kirim
@@ -472,41 +541,55 @@
     }
 
 
-    function showAlert(type, message) {
-      const box = document.getElementById('alertBox');
-      const text = document.getElementById('alertText');
-      const icon = document.getElementById('alertIcon');
+    // Pop up notifikasi login. type: 'success' | 'error' | 'warning' | 'info'.
+    // 'success' = pop up "Mengalihkan..." tanpa tombol (halaman segera
+    // pindah ke dashboard). onClose (opsional) jalan saat pop up ditutup
+    // user -- dipakai untuk mengembalikan fokus ke kolom yang relevan.
+    const LOGIN_NOTIF_ICONS_ = {
+      success: '<circle cx="12" cy="12" r="9"></circle><path d="m8 12.3 2.7 2.7L16 9.3"></path>',
+      error:   '<circle cx="12" cy="12" r="9"></circle><path d="m9.5 9.5 5 5"></path><path d="m14.5 9.5-5 5"></path>',
+      warning: '<path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z"></path><path d="M12 9.5v4"></path><path d="M12 17h.01"></path>',
+      info:    '<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path>'
+    };
+    const LOGIN_NOTIF_TITLES_ = { success: 'Berhasil', error: 'Terjadi Kesalahan', warning: 'Perhatian', info: 'Informasi' };
+    let loginNotifOnClose_ = null;
 
-      box.className = 'alert-box ' + type + ' show';
-      text.textContent = message;
+    function showAlert(type, message, title, onClose) {
+      if (!LOGIN_NOTIF_ICONS_[type]) type = 'info';
+      const overlay = document.getElementById('loginNotifOverlay');
+      const btn     = document.getElementById('loginNotifBtn');
 
-      if (type === 'success') {
-        icon.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="m8 12.3 2.7 2.7L16 9.3"></path>
-          </svg>
-        `;
-      } else {
-        icon.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="M12 8v4"></path>
-            <path d="M12 16h.01"></path>
-          </svg>
-        `;
-      }
+      loginNotifOnClose_ = (typeof onClose === 'function' && type !== 'success') ? onClose : null;
+      overlay.className = 'login-notif-overlay show is-' + type;
+      document.getElementById('loginNotifIcon').innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round">' + LOGIN_NOTIF_ICONS_[type] + '</svg>';
+      document.getElementById('loginNotifTitle').textContent = title || LOGIN_NOTIF_TITLES_[type];
+      document.getElementById('loginNotifMsg').textContent   = message || '';
+
+      btn.style.display = (type === 'success') ? 'none' : '';
+      if (type !== 'success') btn.focus();
     }
 
 
     function hideAlert() {
-      const box = document.getElementById('alertBox');
-      box.className = 'alert-box';
+      const overlay = document.getElementById('loginNotifOverlay');
+      const wasOpen = overlay.classList.contains('show');
+      overlay.className = 'login-notif-overlay';
+
+      const cb = loginNotifOnClose_;
+      loginNotifOnClose_ = null;
+      if (wasOpen && cb) { try { cb(); } catch (e) { console.error(e); } }
     }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      const overlay = document.getElementById('loginNotifOverlay');
+      if (overlay.classList.contains('show') && !overlay.classList.contains('is-success')) {
+        e.preventDefault();
+        hideAlert();
+      }
+    });
 
 
     function addRipple(btn, event) {
@@ -800,13 +883,18 @@
         addRipple(document.getElementById('btnLogin'), e);
       }
 
+      // hideAlert() di sini sengaja TANPA memicu onClose (callback fokus):
+      // user sedang submit ulang, fokus tidak perlu dipindah.
+      loginNotifOnClose_ = null;
       hideAlert();
 
       const username = document.getElementById('inputUsername').value.trim();
       const password = document.getElementById('inputPassword').value.trim();
 
       if (!username || !password) {
-        showAlert('error', 'Username dan password tidak boleh kosong.');
+        showAlert('warning', 'Username dan password tidak boleh kosong.', 'Data Belum Lengkap', function () {
+          document.getElementById(!username ? 'inputUsername' : 'inputPassword').focus();
+        });
         shakeCard();
         return;
       }
@@ -819,7 +907,7 @@
           setLoading(false);
 
           if (result.success) {
-            showAlert('success', 'Login berhasil! Mengalihkan ke dashboard...');
+            showAlert('success', 'Mengalihkan ke dashboard...', 'Login Berhasil');
 
             if (document.getElementById('rememberMe').checked) {
               localStorage.setItem('nimon_user', username);
@@ -848,7 +936,13 @@
             isSubmitting = false;
             showAlert(
               'error',
-              result.message || 'Username atau password salah.'
+              result.message || 'Username atau password salah.',
+              'Login Gagal',
+              function () {
+                const pw = document.getElementById('inputPassword');
+                pw.focus();
+                pw.select();
+              }
             );
             shakeCard();
           }
@@ -859,7 +953,8 @@
 
           showAlert(
             'error',
-            'Gagal terhubung ke server. Coba lagi.'
+            'Gagal terhubung ke server. Coba lagi.',
+            'Tidak Bisa Terhubung'
           );
 
           shakeCard();
@@ -926,6 +1021,20 @@
         document.getElementById('inputPassword').focus();
       } else {
         document.getElementById('inputUsername').focus();
+      }
+
+      // index.html menandai sessionStorage saat server menolak token
+      // (sesi habis / tidak valid) sebelum melempar user ke sini.
+      let loginNotice = null;
+      try {
+        loginNotice = sessionStorage.getItem('digimon_login_notice');
+        sessionStorage.removeItem('digimon_login_notice');
+      } catch (e) { /* abaikan */ }
+
+      if (loginNotice === 'expired') {
+        showAlert('warning', 'Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.', 'Sesi Berakhir', function () {
+          document.getElementById(document.getElementById('inputUsername').value ? 'inputPassword' : 'inputUsername').focus();
+        });
       }
     };
   </script>
