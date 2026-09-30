@@ -1191,7 +1191,6 @@
           </div>
           </div>
           </div><!-- /.gl-update-form-body -->
-          <div id="glu-message" style="font-size:12px; margin-top:10px; display:none;"></div>
           <div class="modal-footer">
             <button class="btn-modal btn-m-cancel" style="max-width:none;" onclick="closeGoLiveUpdateModal()">Batal</button>
             <button class="btn-modal btn-m-accent" id="glu-save-btn" onclick="submitGoLiveUpdateForm()">Simpan Perubahan</button>
@@ -1282,7 +1281,6 @@
           <button type="button" class="btn-eye-toggle" onclick="togglePasswordVisibility('prf-password-confirm', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
-      <div id="prf-message" style="font-size:12px; margin-top:10px; display:none;"></div>
       <div class="modal-footer">
         <button class="btn-modal btn-m-cancel" onclick="closeProfileInfoModal()">Tutup</button>
         <button class="btn-modal btn-m-accent" id="prf-save-btn" onclick="submitPasswordChange()">Simpan Password</button>
@@ -1307,6 +1305,27 @@
     </div>
   </div>
 
+  <!-- ═══ POP UP NOTIFIKASI UMUM ═══
+       Satu modal untuk semua pesan sistem (sukses / error / peringatan /
+       info) -- dipanggil lewat showAppNotif(type, message, title, onClose).
+       Ada di level <body> (bukan di dalam .page-section) supaya tetap
+       tampil di halaman manapun, dan z-index-nya di atas modal lain
+       (Profil, Update, dst.) karena bisa muncul di atas modal itu. -->
+  <div id="appNotifOverlay" class="modal-overlay" style="z-index:100001;" role="alertdialog" aria-modal="true" aria-labelledby="appNotifTitle" aria-describedby="appNotifMessage">
+    <div class="modal-card text-center" style="max-width:380px;">
+      <div id="appNotifIconWrap" class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full">
+        <i id="appNotifIcon" class="fa-solid" style="font-size:22px;"></i>
+      </div>
+      <div class="modal-header">
+        <h2 id="appNotifTitle" class="justify-center">-</h2>
+        <p id="appNotifMessage" style="white-space:pre-line;">-</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="appNotifOkBtn" class="btn-modal btn-m-accent" style="max-width:none;" onclick="closeAppNotif()">OK</button>
+      </div>
+    </div>
+  </div>
+
     <script>
     /* ============================================================
        KONFIGURASI API GAS
@@ -1314,7 +1333,7 @@
        (Deploy > Manage deployments > Web app > URL, berakhiran
        "/exec"). URL ini SAMA dipakai di login.html.
        ============================================================ */
-    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby2i2ouNqZPI5il8_eNaIOzSTR6YU7Vmhc-A63IfS7F85Xb1n1pcRCrxfOQTz4vwwrh/exec';
+    const GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycby6qUomlq-4uDMvCJyj2BCUR-Oope1oaCGXZgWydnWjv5FKb7qDEP3yutQ8rbAdZWu7rw/exec';
 
     // AUDIT (poin 3, keandalan): dulu fetch() di callGAS() di bawah TIDAK
     // punya batas waktu sama sekali -- kalau server GAS lambat/nge-hang
@@ -1415,6 +1434,7 @@
     // di signature fungsi backend-nya (lihat code.gs v1.6).
     // ===================================================================
     let glSegment_ = 'B2C';
+    let appSessionEnding_ = false; // true = sedang redirect ke login (sesi habis) -> jangan munculkan pop up lain
     let glSegmentEpoch_ = 0; // naik tiap ganti segmen -> respons lama dibuang
 
     const GL_SEGMENT_ARG_INDEX_ = {
@@ -1505,6 +1525,10 @@
             console.warn('[SESI DITOLAK] fn=' + fn + ' -- sesi tidak valid/kadaluarsa. (Set DEBUG_LOGIN=true di code.gs untuk detail lebih lanjut.)');
           }
           localStorage.removeItem('monproj_session_token');
+          // Tandai supaya login.html menampilkan pop up "Sesi Berakhir",
+          // dan bungkam pop up error lain selama halaman ini pindah.
+          appSessionEnding_ = true;
+          try { sessionStorage.setItem('digimon_login_notice', 'expired'); } catch (e) { /* abaikan */ }
           window.location.replace('login.html');
         }
         throw new Error(data.message || ('Router error: ' + data.code));
@@ -2072,7 +2096,6 @@
       document.getElementById('profileInfoModalOverlay').style.display = 'flex';
       document.getElementById('prf-password-new').value = '';
       document.getElementById('prf-password-confirm').value = '';
-      hideProfileMessage();
       loadMyProfile();
     }
 
@@ -2090,7 +2113,7 @@
         .withSuccessHandler(function(res) {
           if (!res || res.success === false) {
             document.getElementById('prf-username').textContent = '-';
-            showProfileMessage((res && res.message) || 'Gagal memuat data profil.', true);
+            showAppNotif('error', (res && res.message) || 'Gagal memuat data profil.');
             return;
           }
           document.getElementById('prf-username').textContent = res.username    || '-';
@@ -2100,7 +2123,7 @@
         })
         .withFailureHandler(function(err) {
           document.getElementById('prf-username').textContent = '-';
-          showProfileMessage('Terjadi kesalahan: ' + (err && err.message ? err.message : err), true);
+          showAppNotif('error', 'Terjadi kesalahan: ' + (err && err.message ? err.message : err));
         })
         .getMyProfile(SESSION_TOKEN);
     }
@@ -2117,33 +2140,20 @@
       }
     }
 
-    function showProfileMessage(msg, isError) {
-      const el = document.getElementById('prf-message');
-      el.textContent = msg;
-      el.style.display = 'block';
-      el.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
-    }
-
-    function hideProfileMessage() {
-      const el = document.getElementById('prf-message');
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-
     function submitPasswordChange() {
       const newPass     = document.getElementById('prf-password-new').value.trim();
       const confirmPass = document.getElementById('prf-password-confirm').value.trim();
 
       if (!newPass && !confirmPass) {
-        showProfileMessage('Isi password baru untuk mengganti password Anda.', true);
+        showAppNotif('warning', 'Isi password baru untuk mengganti password Anda.', 'Periksa Kembali');
         return;
       }
       if (newPass !== confirmPass) {
-        showProfileMessage('Konfirmasi password baru tidak cocok.', true);
+        showAppNotif('warning', 'Konfirmasi password baru tidak cocok.', 'Periksa Kembali');
         return;
       }
       if (newPass.length < 4) {
-        showProfileMessage('Password baru minimal 4 karakter.', true);
+        showAppNotif('warning', 'Password baru minimal 4 karakter.', 'Periksa Kembali');
         return;
       }
 
@@ -2156,21 +2166,88 @@
           btn.disabled = false;
           btn.textContent = 'SIMPAN PASSWORD';
           if (res && res.success) {
-            showProfileMessage(res.message || 'Password berhasil diperbarui.', false);
+            showAppNotif('success', res.message || 'Password berhasil diperbarui.', 'Password Diperbarui');
             document.getElementById('prf-password-new').value = '';
             document.getElementById('prf-password-confirm').value = '';
             document.getElementById('prf-password-current').value = newPass;
           } else {
-            showProfileMessage((res && res.message) || 'Gagal memperbarui password.', true);
+            showAppNotif('error', (res && res.message) || 'Gagal memperbarui password.');
           }
         })
         .withFailureHandler(function(err) {
           btn.disabled = false;
           btn.textContent = 'SIMPAN PASSWORD';
-          showProfileMessage('Terjadi kesalahan: ' + (err && err.message ? err.message : err), true);
+          showAppNotif('error', 'Terjadi kesalahan: ' + (err && err.message ? err.message : err));
         })
         .updateMyPassword(SESSION_TOKEN, newPass);
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // POP UP NOTIFIKASI UMUM  showAppNotif(type, message, title, onClose)
+    //   type: 'success' | 'error' | 'warning' | 'info'
+    // Pengganti alert() & pesan teks kecil di dalam modal. Kalau ada
+    // pop up yang sedang terbuka, yang baru DIANTRIKAN (tidak saling
+    // menimpa); pesan identik yang sudah terbuka/mengantri diabaikan
+    // supaya error berulang tidak menumpuk. Enter / Esc menutup.
+    // ═══════════════════════════════════════════════════════════════
+    const APP_NOTIF_TYPES_ = {
+      success: { icon: 'fa-circle-check',          color: 'var(--success-color, #12b76a)', title: 'Berhasil' },
+      error:   { icon: 'fa-circle-xmark',          color: 'var(--danger-color, #f04438)',  title: 'Terjadi Kesalahan' },
+      warning: { icon: 'fa-triangle-exclamation',  color: 'var(--warning-color, var(--color-warning-500, #f79009))', title: 'Perhatian' },
+      info:    { icon: 'fa-circle-info',           color: 'var(--color-blue-light-500, #0ba5ec)', title: 'Informasi' }
+    };
+    let appNotifQueue_   = [];
+    let appNotifCurrent_ = null;
+
+    function showAppNotif(type, message, title, onClose) {
+      if (appSessionEnding_) return; // halaman sedang redirect ke login
+      const cfg = APP_NOTIF_TYPES_[type] || APP_NOTIF_TYPES_.info;
+      const item = {
+        type: APP_NOTIF_TYPES_[type] ? type : 'info',
+        message: String(message == null ? '' : message),
+        title: title || cfg.title,
+        onClose: (typeof onClose === 'function') ? onClose : null
+      };
+      const same = function (o) { return o && o.type === item.type && o.message === item.message && o.title === item.title; };
+      if (same(appNotifCurrent_) || appNotifQueue_.some(same)) return;
+      appNotifQueue_.push(item);
+      if (!appNotifCurrent_) appNotifShowNext_();
+    }
+
+    function appNotifShowNext_() {
+      const item = appNotifQueue_.shift();
+      appNotifCurrent_ = item || null;
+      const overlay = document.getElementById('appNotifOverlay');
+      if (!item) { overlay.style.display = 'none'; return; }
+
+      const cfg = APP_NOTIF_TYPES_[item.type];
+      const wrap = document.getElementById('appNotifIconWrap');
+      const icon = document.getElementById('appNotifIcon');
+      wrap.style.backgroundColor = 'color-mix(in srgb, ' + cfg.color + ' 15%, transparent)';
+      icon.className   = 'fa-solid ' + cfg.icon;
+      icon.style.color = cfg.color;
+      document.getElementById('appNotifTitle').textContent   = item.title;
+      document.getElementById('appNotifMessage').textContent = item.message;
+      overlay.style.display = 'flex';
+      const ok = document.getElementById('appNotifOkBtn');
+      if (ok) ok.focus();
+    }
+
+    function closeAppNotif() {
+      const done = appNotifCurrent_;
+      appNotifCurrent_ = null;
+      if (done && done.onClose) { try { done.onClose(); } catch (e) { console.error(e); } }
+      appNotifShowNext_();
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (!appNotifCurrent_) return;
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeAppNotif();
+      }
+    }, true);
 
     function handleLogout() {
       document.getElementById('profilePanel').classList.remove('show');
@@ -2279,7 +2356,7 @@
 
     function viewAllNotif() {
       document.getElementById('notifPanel').classList.remove('show');
-      alert('Halaman daftar notifikasi lengkap belum tersedia.');
+      showAppNotif('info', 'Halaman daftar notifikasi lengkap belum tersedia.', 'Segera Hadir');
     }
 
     function escapeHtml(str) {
@@ -3069,7 +3146,7 @@
       const monthSel = document.getElementById('glDailyMonthSelect');
       const yearSel  = document.getElementById('glDailyYearSelect');
       if (!monthSel.value || !yearSel.value) {
-        alert('Silakan pilih bulan dan tahun terlebih dahulu.');
+        showAppNotif('warning', 'Silakan pilih bulan dan tahun terlebih dahulu.', 'Filter Belum Lengkap');
         return;
       }
       ['glDailyDistrictBody', 'glDailySubDistrictBody'].forEach(function (id) {
@@ -3771,12 +3848,11 @@
     function openGoLiveUpdateModal() {
       const row = golive_currentDetailRow_;
       if (!row || !row.idIhld) {
-        alert('ID IHLD tidak ditemukan pada baris ini.');
+        showAppNotif('error', 'ID IHLD tidak ditemukan pada baris ini.', 'ID IHLD Tidak Ditemukan');
         return;
       }
 
       closeMonitoringGoLiveDetail();
-      hideGoLiveUpdateMessage();
 
       document.getElementById('glu-id-ihld').textContent      = row.idIhld;
       document.getElementById('glu-nama-proyek').textContent  = row.namaProyek || '-';
@@ -3800,7 +3876,7 @@
         .then(function(res) {
           if (!res || !res.success) {
             golive_setUpdateLoading_(false);
-            showGoLiveUpdateMessage((res && res.message) || 'Gagal memuat data dari sheet target.', true);
+            showAppNotif('error', (res && res.message) || 'Gagal memuat data dari sheet target.', 'Gagal Memuat Data');
             return;
           }
           document.getElementById('glu-odp-real-8').value      = res.odpReal8      || '';
@@ -3839,7 +3915,7 @@
           }
 
           golive_setUpdateFormDisabled_(false);
-          showGoLiveUpdateMessage('Gagal memuat data: ' + msg, true);
+          showAppNotif('error', 'Gagal memuat data: ' + msg, 'Gagal Memuat Data');
         });
     }
 
@@ -4006,19 +4082,6 @@
     }
     golive_syncUpdateFormFontToDetail_();
 
-    function showGoLiveUpdateMessage(msg, isError) {
-      const el = document.getElementById('glu-message');
-      el.textContent = msg;
-      el.style.display = 'block';
-      el.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
-    }
-
-    function hideGoLiveUpdateMessage() {
-      const el = document.getElementById('glu-message');
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-
     function submitGoLiveUpdateForm() {
       const row = golive_currentDetailRow_;
       if (!row || !row.idIhld) return;
@@ -4041,7 +4104,6 @@
       const SAVE_BTN_IDLE_HTML = 'Simpan Perubahan';
       saveBtn.disabled = true;
       saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-      hideGoLiveUpdateMessage();
 
       callGAS('updateGoLiveTargetData', [SESSION_TOKEN, row.idIhld, payload])
         .then(function(res) {
@@ -4171,7 +4233,7 @@
     function exportMonitoringGoLiveData() {
       const rows = monitoringGoLiveLastFiltered_ || [];
       if (!rows.length) {
-        alert('Tidak ada data untuk diexport. Sesuaikan filter/pencarian terlebih dahulu.');
+        showAppNotif('warning', 'Tidak ada data untuk diexport. Sesuaikan filter/pencarian terlebih dahulu.', 'Tidak Ada Data');
         return;
       }
       const header = MONITORING_GOLIVE_FULL_COLUMNS_.map(function(c) { return golive_csvEscape_(c.label); }).join(',');
