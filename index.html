@@ -895,21 +895,20 @@
     .gl-seg-switch {
       position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; width: 100%; box-sizing: border-box;
       padding: 3px; border-radius: 10px; background: var(--color-gray-100);
-      box-shadow: inset 0 1px 2px rgba(16,24,40,.08);
+      box-shadow: inset 0 1px 2px rgba(16,24,40,.06);
     }
-    /* Thumb berwarna yang meluncur ke tab aktif: B2C = merah IndiHome, B2B = navy Infranexia */
+    /* Thumb warna SOFT (tint pastel + teks warna brand) yang meluncur ke tab aktif:
+       B2C = merah IndiHome lembut, B2B = navy Infranexia lembut */
     .gl-seg-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-      border-radius: 8px; background: #EC1C24;
-      box-shadow: 0 3px 8px -2px rgba(236,28,36,.45);
-      transition: transform .35s cubic-bezier(.4, 0, .2, 1), background-color .35s ease, box-shadow .35s ease;
+      border-radius: 8px; background: #FCE4E5; border: 1px solid #F6C3C5; box-sizing: border-box;
+      box-shadow: 0 1px 2px rgba(236,28,36,.12);
+      transition: transform .35s cubic-bezier(.4, 0, .2, 1), background-color .35s ease, border-color .35s ease, box-shadow .35s ease;
     }
     .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb {
-      transform: translateX(100%); background: var(--color-brand-500);
-      box-shadow: 0 3px 8px -2px rgba(44,57,121,.45);
+      transform: translateX(100%); background: var(--color-brand-100); border-color: var(--color-brand-200);
+      box-shadow: 0 1px 2px rgba(44,57,121,.14);
     }
-    /* Mode gelap: navy dicerahkan sedikit supaya thumb tetap terbaca di atas latar gelap */
-    body[data-theme="dark"] .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb { background: var(--color-brand-400); }
     .gl-seg-btn {
       position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       min-width: 0; height: 32px; padding: 0 12px; border: 0; background: transparent; border-radius: 8px;
@@ -918,13 +917,17 @@
     }
     .gl-seg-btn i { font-size: 12px; transition: transform .3s ease; }
     .gl-seg-btn:hover { color: var(--color-gray-800); }
-    .gl-seg-btn[aria-selected="true"] { color: #fff; }
     .gl-seg-btn[aria-selected="true"] i { transform: scale(1.12); }
+    .gl-seg-switch[data-seg="B2C"] .gl-seg-btn[aria-selected="true"] { color: #C8161D; }
+    .gl-seg-switch[data-seg="B2B"] .gl-seg-btn[aria-selected="true"] { color: var(--color-brand-600); }
     .gl-seg-btn:focus-visible { outline: 2px solid var(--color-brand-400); outline-offset: 2px; }
     body[data-theme="dark"] .gl-seg-switch { background: rgba(255,255,255,.06); box-shadow: none; }
     body[data-theme="dark"] .gl-seg-btn { color: var(--color-gray-400); }
     body[data-theme="dark"] .gl-seg-btn:hover { color: var(--color-gray-200); }
-    body[data-theme="dark"] .gl-seg-btn[aria-selected="true"] { color: #fff; }
+    body[data-theme="dark"] .gl-seg-thumb { background: rgba(236,28,36,.20); border-color: rgba(236,28,36,.35); box-shadow: none; }
+    body[data-theme="dark"] .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb { background: rgba(78,118,199,.25); border-color: rgba(78,118,199,.45); }
+    body[data-theme="dark"] .gl-seg-switch[data-seg="B2C"] .gl-seg-btn[aria-selected="true"] { color: #FF8A90; }
+    body[data-theme="dark"] .gl-seg-switch[data-seg="B2B"] .gl-seg-btn[aria-selected="true"] { color: var(--color-brand-200); }
     @media (prefers-reduced-motion: reduce) {
       .gl-seg-thumb, .gl-seg-btn, .gl-seg-btn i { transition: none; }
     }
