@@ -2781,9 +2781,19 @@
     const BERANDA_PAD_TOP_PROJECT = 210;
     // Arah kartu khusus tab Project: kartu Madiun ke bawah supaya tidak menabrak kotak
     // "Total Region Jawa Timur" di kiri atas yang lebih tinggi di tab ini.
-    const BERANDA_DIR_PROJECT = { Madiun: 'bottom' };
+    // Penataan ulang tab Project (kartu 8 baris lebih tinggi -> mudah saling tumpuk):
+    //   - Madiun : tetap di bawah marker tapi digeser ke kiri 34px supaya tidak menutup
+    //              kolom TOTAL kartu Malang.
+    //   - Jember : pindah ke sisi kanan marker (naik 60px agar tidak keluar dari peta)
+    //              supaya tidak menimpa kartu Sidoarjo.
+    //   Lamongan & Suramadu sengaja tidak diubah (tidak bertumpuk).
+    const BERANDA_DIR_PROJECT = { Madiun: 'bottom', Jember: 'right' };
+    const BERANDA_OFFSET_PROJECT = { Madiun: [-34, 12], Jember: [14, -60] };
     function berandaDirFor_(d) {
       return (berandaTab_ === 'project' && BERANDA_DIR_PROJECT[d.name]) || d.dir;
+    }
+    function berandaOffsetFor_(d, dir) {
+      return (berandaTab_ === 'project' && BERANDA_OFFSET_PROJECT[d.name]) || berandaOffset_(dir);
     }
 
     let berandaTab_ = 'golive'; // 'golive' | 'project'
@@ -3083,7 +3093,7 @@
             } else {
               const dir = berandaDirFor_(d);
               m.bindTooltip(html, {
-                permanent: true, direction: dir, offset: berandaOffset_(dir),
+                permanent: true, direction: dir, offset: berandaOffsetFor_(d, dir),
                 className: 'bm-card-tooltip', opacity: 1
               });
             }
