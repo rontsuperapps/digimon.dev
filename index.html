@@ -890,7 +890,41 @@
     body[data-theme="dark"] .bm-tab:hover { color: var(--color-gray-200); }
     body[data-theme="dark"] .bm-tab[aria-selected="true"] { background: rgba(255,255,255,.12); color: #fff; }
     /* Tab segmen B2C | B2B di halaman Go Live / Project */
-    .gl-seg-tabs { align-self: flex-start; }
+    .gl-seg-tabs { align-self: center; }
+    .gl-seg-switch {
+      position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; gap: 0;
+      padding: 4px; border-radius: 14px; background: var(--color-gray-100);
+      box-shadow: inset 0 1px 2px rgba(16,24,40,.08);
+    }
+    /* Thumb berwarna yang meluncur ke tab aktif: B2C = navy brand, B2B = oranye (sama dengan penanda segmen di peta) */
+    .gl-seg-thumb {
+      position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+      border-radius: 10px; background: var(--color-brand-500);
+      box-shadow: 0 4px 10px -2px rgba(44,57,121,.45);
+      transition: transform .35s cubic-bezier(.4, 0, .2, 1), background-color .35s ease, box-shadow .35s ease;
+    }
+    .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb {
+      transform: translateX(100%); background: var(--color-orange-500);
+      box-shadow: 0 4px 10px -2px rgba(251,101,20,.45);
+    }
+    .gl-seg-btn {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-width: 116px; height: 38px; padding: 0 18px; border: 0; background: transparent; border-radius: 10px;
+      font-size: 13.5px; font-weight: 600; letter-spacing: .02em; color: var(--color-gray-500); cursor: pointer;
+      transition: color .3s ease;
+    }
+    .gl-seg-btn i { font-size: 14px; transition: transform .3s ease; }
+    .gl-seg-btn:hover { color: var(--color-gray-800); }
+    .gl-seg-btn[aria-selected="true"] { color: #fff; }
+    .gl-seg-btn[aria-selected="true"] i { transform: scale(1.12); }
+    .gl-seg-btn:focus-visible { outline: 2px solid var(--color-brand-400); outline-offset: 2px; }
+    body[data-theme="dark"] .gl-seg-switch { background: rgba(255,255,255,.06); box-shadow: none; }
+    body[data-theme="dark"] .gl-seg-btn { color: var(--color-gray-400); }
+    body[data-theme="dark"] .gl-seg-btn:hover { color: var(--color-gray-200); }
+    body[data-theme="dark"] .gl-seg-btn[aria-selected="true"] { color: #fff; }
+    @media (prefers-reduced-motion: reduce) {
+      .gl-seg-thumb, .gl-seg-btn, .gl-seg-btn i { transition: none; }
+    }
     /* Tab Project tidak memakai filter tanggal Go Live -> kontrolnya diredupkan */
     .bm-dates-off .golive-filter-daterange, .bm-dates-off .bm-presets { opacity: .45; pointer-events: none; }
     /* Kartu pivot tab Project (baris = New Status, kolom = B2C | B2B | Total) */
@@ -1115,9 +1149,10 @@
 
       <!-- Tab segmen: berlaku untuk halaman Go Live DAN Project (disinkronkan glSyncSegTabs_) -->
       <div class="gl-seg-tabs">
-        <div class="bm-tabs" role="tablist" aria-label="Segmen data">
-          <button type="button" class="bm-tab" role="tab" id="glSegTabB2C" aria-selected="true" onclick="glSelectSegmentTab_('B2C')">B2C</button>
-          <button type="button" class="bm-tab" role="tab" id="glSegTabB2B" aria-selected="false" onclick="glSelectSegmentTab_('B2B')">B2B</button>
+        <div class="gl-seg-switch" id="glSegSwitch" data-seg="B2C" role="tablist" aria-label="Segmen data">
+          <span class="gl-seg-thumb" aria-hidden="true"></span>
+          <button type="button" class="gl-seg-btn" role="tab" id="glSegTabB2C" aria-selected="true" onclick="glSelectSegmentTab_('B2C')"><i class="fa-solid fa-user"></i><span>B2C</span></button>
+          <button type="button" class="gl-seg-btn" role="tab" id="glSegTabB2B" aria-selected="false" onclick="glSelectSegmentTab_('B2B')"><i class="fa-solid fa-building"></i><span>B2B</span></button>
         </div>
       </div>
 
@@ -4034,6 +4069,8 @@
     }
 
     function glSyncSegTabs_() {
+      const sw = document.getElementById('glSegSwitch');
+      if (sw) sw.setAttribute('data-seg', glSegment_ === 'B2B' ? 'B2B' : 'B2C');
       ['B2C', 'B2B'].forEach(function (k) {
         const b = document.getElementById('glSegTab' + k);
         if (b) b.setAttribute('aria-selected', k === glSegment_ ? 'true' : 'false');
