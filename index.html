@@ -891,6 +891,9 @@
     body[data-theme="dark"] .bm-tab[aria-selected="true"] { background: rgba(255,255,255,.12); color: #fff; }
     /* Tab Project tidak memakai filter tanggal Go Live -> kontrolnya diredupkan */
     .bm-dates-off .golive-filter-daterange, .bm-dates-off .bm-presets { opacity: .45; pointer-events: none; }
+    /* Kartu rekap New Status per District (tab Project) di bawah peta */
+    #bmProjectTableCard[hidden] { display: none !important; }
+    #bmProjectTableCard .golive-summary-head { align-items: center; gap: 12px; flex-wrap: wrap; }
     /* Kartu pivot tab Project (baris = New Status, kolom = B2C | B2B | Total) */
     .bm-pivot-project { line-height: 15px; }
     .bm-pivot-project th:first-child { min-width: 108px; }
@@ -1104,6 +1107,19 @@
           <div class="bm-fallback" id="bmFallback"></div>
           <div class="bm-map-msg" id="bmMapMsg"></div>
         </div>
+      </section>
+
+      <!-- Tab Project: rekap New Status per District (diisi berandaRenderProjectTable_) -->
+      <section class="golive-summary-card" id="bmProjectTableCard" hidden>
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap New Status per District</div>
+          <div class="bm-tabs" role="tablist" aria-label="Segmen tabel Project">
+            <button type="button" class="bm-tab" role="tab" id="bmSegALL" aria-selected="true" onclick="berandaSetProjSeg_('ALL')">Semua</button>
+            <button type="button" class="bm-tab" role="tab" id="bmSegB2C" aria-selected="false" onclick="berandaSetProjSeg_('B2C')">B2C</button>
+            <button type="button" class="bm-tab" role="tab" id="bmSegB2B" aria-selected="false" onclick="berandaSetProjSeg_('B2B')">B2B</button>
+          </div>
+        </div>
+        <div id="bmProjectTableBody"></div>
       </section>
     </div>
 
@@ -2778,6 +2794,7 @@
     const BERANDA_PAD_TOP_PROJECT = 250;
 
     let berandaTab_ = 'golive'; // 'golive' | 'project'
+    let berandaProjSeg_ = 'ALL'; // segmen tabel rekap Project: 'ALL' | 'B2C' | 'B2B'
     let berandaMap_ = null;
     let berandaMarkers_ = {};
     let berandaLines_ = {};
@@ -2979,6 +2996,94 @@
         '<tbody>' + body + '</tbody></table></div>';
     }
 
+    // ── Tabel rekap New Status per District (tab Project) ──
+    // Memakai kelas tabel yang sama dengan rekap di halaman Project (kolom TOTAL ORDER +
+    // 8 New Status x LOP/ODP/PORT), tapi sel TIDAK clickable: klik sel di halaman Project
+    // memfilter tabel detail, sedangkan di Beranda tidak ada tabel detail.
+    function berandaProjectTableData_() {
+      const segs = berandaProjSeg_ === 'ALL' ? BERANDA_SEGMENTS : [berandaProjSeg_];
+      const blank = function () { return { lop: 0, odp: 0, port: 0 }; };
+      const mkRow = function (label) {
+        const o = { label: label, total: blank(), st: {} };
+        PJ_STATUSES.forEach(function (s) { o.st[s.key] = blank(); });
+        return o;
+      };
+      const map = {};
+      BERANDA_DISTRICTS.forEach(function (d) { map[d.name.toUpperCase()] = mkRow(d.name); });
+      const grand = mkRow('');
+
+      segs.forEach(function (seg) {
+        (berandaData_[seg] || []).forEach(function (r) {
+          const row = map[r.d];
+          if (!row) return; // district di luar 6 district peta
+          [row, grand].forEach(function (t) {
+            t.total.lop++; t.total.odp += r.odp; t.total.port += r.port;
+            if (r.s) { const m = t.st[r.s]; m.lop++; m.odp += r.odp; m.port += r.port; }
+          });
+        });
+      });
+      const rows = BERANDA_DISTRICTS.map(function (d) { return map[d.name.toUpperCase()]; })
+        .sort(function (a, b) { return a.label.localeCompare(b.label); });
+      return { rows: rows, grand: grand };
+    }
+
+    function berandaPjCells_(m, spec, hit) {
+      const cls = 'num-cell pj-c' + (spec === PJ_TOTAL_SPEC ? ' pj-total' : '') + (hit && m.lop !== 0 ? ' pj-hit' : '');
+      const sty = ' style="--pj-c:' + spec.color + ';--pj-fg:' + spec.fg + ';"';
+      return '<td class="' + cls + '"' + sty + '>' + formatNum_(m.lop) + '</td>'
+        + '<td class="' + cls + '"' + sty + '>' + formatNum_(m.odp) + '</td>'
+        + '<td class="' + cls + ' group-divider"' + sty + '>' + formatNum_(m.port) + '</td>';
+    }
+
+    function berandaProjectTableHtml_(data) {
+      const sty = function (sp) { return ' style="--pj-c:' + sp.color + ';--pj-fg:' + sp.fg + ';"'; };
+      const leaf = function (sp) {
+        return '<th class="hdr-pj"' + sty(sp) + '>LOP</th><th class="hdr-pj"' + sty(sp) + '>ODP</th><th class="hdr-pj group-divider"' + sty(sp) + '>PORT</th>';
+      };
+      let r1 = '<tr class="pivot-hdr-r1"><th rowspan="2" class="hdr-navy">DISTRICT</th>'
+        + '<th colspan="3" class="hdr-pj group-divider"' + sty(PJ_TOTAL_SPEC) + '>TOTAL ORDER</th>';
+      let r2 = '<tr class="pivot-hdr-r2">' + leaf(PJ_TOTAL_SPEC);
+      PJ_STATUSES.forEach(function (s) {
+        r1 += '<th colspan="3" class="hdr-pj group-divider"' + sty(s) + '>' + s.key + '</th>';
+        r2 += leaf(s);
+      });
+      const rowHtml = function (r, isGrand) {
+        let h = '<tr' + (isGrand ? ' class="pivot-total-row"' : '') + '><td class="label-cell">' + escapeHtml(isGrand ? 'GRAND TOTAL' : r.label) + '</td>';
+        h += berandaPjCells_(r.total, PJ_TOTAL_SPEC, false);
+        PJ_STATUSES.forEach(function (s) { h += berandaPjCells_(r.st[s.key], s, !isGrand); });
+        return h + '</tr>';
+      };
+      const body = data.rows.map(function (r) { return rowHtml(r, false); }).join('') + rowHtml(data.grand, true);
+      return '<div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>'
+        + '<div class="pivot-table-wrap pivot-table-wrap-full"><table class="pivot-grouped-table pj-rekap-table" id="bmProjectTable">'
+        + '<thead>' + r1 + '</tr>' + r2 + '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    function berandaRenderProjectTable_() {
+      const card = berandaEl_('bmProjectTableCard');
+      if (!card) return;
+      const show = berandaTab_ === 'project';
+      card.hidden = !show;
+      if (!show) return;
+      const body = berandaEl_('bmProjectTableBody');
+      if (!body) return;
+      if (!berandaLoadedAt_) {
+        body.innerHTML = '<div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data Project...</div>';
+        return;
+      }
+      body.innerHTML = berandaProjectTableHtml_(berandaProjectTableData_());
+      syncPivotStickyHeaderOffsets_('bmProjectTable');
+    }
+
+    function berandaSetProjSeg_(seg) {
+      berandaProjSeg_ = (seg === 'B2C' || seg === 'B2B') ? seg : 'ALL';
+      ['ALL', 'B2C', 'B2B'].forEach(function (k) {
+        const b = berandaEl_('bmSeg' + k);
+        if (b) b.setAttribute('aria-selected', k === berandaProjSeg_ ? 'true' : 'false');
+      });
+      berandaRenderProjectTable_();
+    }
+
     // Pilih kartu sesuai tab aktif. key = nama district (UPPERCASE) atau null untuk total Jatim.
     function berandaCardHtml_(title, key, res, loaded) {
       const data = key ? res.agg[key] : res.total;
@@ -3086,6 +3191,7 @@
       }
 
       berandaRenderStatus_(res);
+      berandaRenderProjectTable_();
     }
 
     // ── Peta ──
