@@ -1506,11 +1506,11 @@
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead>
-              <tr><th>DISTRICT</th><th>SUB DISTRICT</th><th>STO</th><th>ID IHLD</th><th>STATUS IHLD</th><th>NAMA PROYEK</th><th class="text-right">TOTAL ODP</th><th class="text-right">TOTAL PORT</th><th>TIPE DESIGN</th><th>PROGRAM</th><th>STATUS GO LIVE</th><th>NEW STATUS</th><th>ACTION</th></tr>
+              <tr><th>DISTRICT</th><th>SUB DISTRICT</th><th>STO</th><th>ID IHLD</th><th>STATUS IHLD</th><th>NAMA PROYEK</th><th class="text-right">TOTAL ODP</th><th class="text-right">TOTAL PORT</th><th>TIPE DESIGN</th><th>PROGRAM</th><th>STATUS GO LIVE</th><th>NEW STATUS</th><th>STATUS PROYEK</th><th>ACTION</th></tr>
             </thead>
             <tbody id="gl-rows-target">
               <tr>
-                <td colspan="13" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+                <td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
                   <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin:0 auto 10px; opacity:0.6;"></i>
                   Memuat data Go Live...
                 </td>
@@ -5020,7 +5020,7 @@
 
       const tbody = document.getElementById('gl-rows-target');
       if (!monitoringGoLiveLoadedOnce) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:var(--text-muted); padding:40px 20px;">
           <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; display:block; margin-bottom:10px; opacity:0.6;"></i>
           Memuat data Go Live ${glSegment_}...
         </td></tr>`;
@@ -5044,7 +5044,7 @@
           if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate"></i><span class="hidden sm:inline">Refresh Data</span>`;
           console.error('Gagal mengambil data Go Live ' + glSegment_ + ':', err.message);
           renderProjectStatus_(err.message);
-          tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
+          tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--danger-color);">
             <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;opacity:0.6;display:block;margin-bottom:10px;"></i>
             Gagal memuat data Go Live ${glSegment_}: ${escapeHtml(err.message)}
           </td></tr>`;
@@ -5340,7 +5340,7 @@
           icon = 'fa-magnifying-glass';
           emptyMsg = `Tidak ada data yang cocok dengan pencarian "${escapeHtml(query)}".`;
         }
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
           <i class="fa-solid ${icon}" style="font-size:22px;opacity:0.35;display:block;margin-bottom:10px;"></i>
           ${emptyMsg}
         </td></tr>`;
@@ -5361,7 +5361,7 @@
 
       const rowsHtml = pageData.map(function(row, idx) {
         // IMPROVEMENT TAHAP 3 (poin 4) — URUTAN <td> HARUS SAMA PERSIS
-        // dengan urutan <th> di markup tabel (13 kolom + ACTION).
+        // dengan urutan <th> di markup tabel (14 kolom + ACTION).
         // Kolom BRANCH/WOK/SEGMEN/BATCH PROGRAM/STATUS PROGRESS/
         // TANGGAL GO LIVE/NAMA ALPRO/ID SW/KET KENDALA/STATUS TASK/
         // STATUS PROYEK TIDAK ditampilkan lagi di sini (poin improve:
@@ -5381,6 +5381,7 @@
             <td>${escapeHtml(row.program)||'-'}</td>
             <td><span class="${statusBadgeClass_(row.statusGoLive)}">${escapeHtml(row.statusGoLive)||'-'}</span></td>
             <td><span class="${statusBadgeClass_(row.newStatus)}">${escapeHtml(row.newStatus)||'-'}</span></td>
+            <td><span class="${statusBadgeClass_(row.statusProyek)}">${escapeHtml(row.statusProyek)||'-'}</span></td>
             <td><button type="button" class="gl-view-btn" onclick="openMonitoringGoLiveDetail(${idx})"><i class="fa-solid fa-eye"></i> VIEW</button></td>
           </tr>`;
       });
