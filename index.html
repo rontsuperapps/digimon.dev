@@ -1708,14 +1708,14 @@
           <div class="pf-field">
             <label class="pf-label" for="prf-password-current">Password saat ini</label>
             <div class="pf-pw">
-              <input type="password" id="prf-password-current" class="pf-input" readonly>
+              <input type="password" id="prf-password-current" class="pf-input" placeholder="Masukkan password saat ini" autocomplete="current-password">
               <button type="button" class="pf-eye" onclick="togglePasswordVisibility('prf-password-current', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
             </div>
           </div>
           <div class="pf-field">
             <label class="pf-label" for="prf-password-new">Password baru</label>
             <div class="pf-pw">
-              <input type="password" id="prf-password-new" class="pf-input" placeholder="Minimal 4 karakter" autocomplete="new-password">
+              <input type="password" id="prf-password-new" class="pf-input" placeholder="Minimal 6 karakter" autocomplete="new-password">
               <button type="button" class="pf-eye" onclick="togglePasswordVisibility('prf-password-new', this)" aria-label="Tampilkan password"><i class="fa-solid fa-eye"></i></button>
             </div>
           </div>
@@ -1824,7 +1824,7 @@
     // di atas) tetap kebagian cache offline yang sama.
     const PWA_OFFLINE_CACHEABLE_FN = [
       'getMonitoringGoLiveData',
-      'getLoggedInUserInfo', 'getMyProfile', 'getNotifications',
+      'getLoggedInUserInfo', 'getNotifications',
       'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal',
       'getDashboardBootstrap',
       'getMonitoringGoLiveSummary', 'getMonitoringGoLivePT2Summary', 'getMonitoringGoLivePT3Summary',
@@ -1860,6 +1860,24 @@
         console.warn('Gagal menyimpan cache offline untuk ' + fn + ':', e);
       }
     }
+
+    // Keamanan: hapus cache offline di localStorage. Tanpa argumen = SEMUA data
+    // cache (dipanggil saat logout / sesi berakhir, supaya data user sebelumnya
+    // tidak bisa terbaca user lain di perangkat yang sama). Dengan argumen =
+    // hanya cache fungsi tertentu.
+    function purgeOfflineCache_(onlyFn) {
+      try {
+        const prefix = onlyFn ? ('pwa_offline_cache_v2::' + onlyFn + '::') : 'pwa_offline_cache_';
+        const doomed = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.indexOf(prefix) === 0) doomed.push(k);
+        }
+        doomed.forEach(function (k) { localStorage.removeItem(k); });
+      } catch (e) { /* abaikan */ }
+    }
+    // Versi lama menyimpan hasil getMyProfile (berisi password) -- buang sekarang.
+    purgeOfflineCache_('getMyProfile');
 
     function updatePwaOfflineBanner(show, ts) {
       const banner = document.getElementById('pwaOfflineBanner');
@@ -1984,6 +2002,7 @@
           } else {
             console.warn('[SESI DITOLAK] fn=' + fn + ' -- sesi tidak valid/kadaluarsa. (Set DEBUG_LOGIN=true di code.gs untuk detail lebih lanjut.)');
           }
+          purgeOfflineCache_();
           localStorage.removeItem('monproj_session_token');
           // Tandai supaya login.html menampilkan pop up "Sesi Berakhir",
           // dan bungkam pop up error lain selama halaman ini pindah.
@@ -3680,7 +3699,6 @@
           document.getElementById('prf-username').textContent = res.username    || '-';
           document.getElementById('prf-access').textContent   = res.accessLevel || '-';
           document.getElementById('prf-status').textContent   = res.status      || '-';
-          document.getElementById('prf-password-current').value = res.password  || '';
           pfSetStatusBadge_(res.status);
         })
         .withFailureHandler(function(err) {
@@ -3703,9 +3721,14 @@
     }
 
     function submitPasswordChange() {
+      const currentPass = document.getElementById('prf-password-current').value.trim();
       const newPass     = document.getElementById('prf-password-new').value.trim();
       const confirmPass = document.getElementById('prf-password-confirm').value.trim();
 
+      if (!currentPass) {
+        showAppNotif('warning', 'Isi password saat ini terlebih dahulu.', 'Periksa Kembali');
+        return;
+      }
       if (!newPass && !confirmPass) {
         showAppNotif('warning', 'Isi password baru untuk mengganti password Anda.', 'Periksa Kembali');
         return;
@@ -3714,8 +3737,12 @@
         showAppNotif('warning', 'Konfirmasi password baru tidak cocok.', 'Periksa Kembali');
         return;
       }
-      if (newPass.length < 4) {
-        showAppNotif('warning', 'Password baru minimal 4 karakter.', 'Periksa Kembali');
+      if (newPass.length < 6) {
+        showAppNotif('warning', 'Password baru minimal 6 karakter.', 'Periksa Kembali');
+        return;
+      }
+      if (newPass === currentPass) {
+        showAppNotif('warning', 'Password baru tidak boleh sama dengan password saat ini.', 'Periksa Kembali');
         return;
       }
 
@@ -3723,15 +3750,19 @@
       btn.disabled = true;
       btn.textContent = 'MENYIMPAN...';
 
+      function clearPwFields_() {
+        document.getElementById('prf-password-current').value = '';
+        document.getElementById('prf-password-new').value = '';
+        document.getElementById('prf-password-confirm').value = '';
+      }
+
       google.script.run
         .withSuccessHandler(function(res) {
           btn.disabled = false;
           btn.textContent = 'SIMPAN PASSWORD';
           if (res && res.success) {
-            showAppNotif('success', res.message || 'Password berhasil diperbarui.', 'Password Diperbarui');
-            document.getElementById('prf-password-new').value = '';
-            document.getElementById('prf-password-confirm').value = '';
-            document.getElementById('prf-password-current').value = newPass;
+            showAppNotif('success', (res.message || 'Password berhasil diperbarui.') + ' Sesi di perangkat lain otomatis dikeluarkan.', 'Password Diperbarui');
+            clearPwFields_();
           } else {
             showAppNotif('error', (res && res.message) || 'Gagal memperbarui password.');
           }
@@ -3741,7 +3772,7 @@
           btn.textContent = 'SIMPAN PASSWORD';
           showAppNotif('error', 'Terjadi kesalahan: ' + (err && err.message ? err.message : err));
         })
-        .updateMyPassword(SESSION_TOKEN, newPass);
+        .updateMyPassword(SESSION_TOKEN, newPass, currentPass);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -3825,6 +3856,7 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
 
+      purgeOfflineCache_();
       try { localStorage.removeItem('monproj_session_token'); } catch (e) {}
 
       google.script.run
