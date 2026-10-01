@@ -890,9 +890,10 @@
     body[data-theme="dark"] .bm-tab:hover { color: var(--color-gray-200); }
     body[data-theme="dark"] .bm-tab[aria-selected="true"] { background: rgba(255,255,255,.12); color: #fff; }
     /* Tab segmen B2C | B2B di halaman Go Live / Project */
-    .gl-seg-tabs { align-self: center; }
+    /* Lebar penuh, sama dengan kartu-kartu lain di halaman (mis. Ringkasan New Status Project) */
+    .gl-seg-tabs { align-self: stretch; }
     .gl-seg-switch {
-      position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; gap: 0;
+      position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; width: 100%; box-sizing: border-box;
       padding: 3px; border-radius: 10px; background: var(--color-gray-100);
       box-shadow: inset 0 1px 2px rgba(16,24,40,.08);
     }
@@ -911,7 +912,7 @@
     body[data-theme="dark"] .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb { background: var(--color-brand-400); }
     .gl-seg-btn {
       position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      min-width: 78px; height: 28px; padding: 0 12px; border: 0; background: transparent; border-radius: 8px;
+      min-width: 0; height: 32px; padding: 0 12px; border: 0; background: transparent; border-radius: 8px;
       font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--color-gray-500); cursor: pointer;
       transition: color .3s ease;
     }
