@@ -895,8 +895,10 @@
     #bmProjectTableCard[hidden] { display: none !important; }
     #bmProjectTableCard .golive-summary-head { align-items: center; gap: 12px; flex-wrap: wrap; }
     /* Kartu pivot tab Project (baris = New Status, kolom = B2C | B2B | Total) */
-    .bm-pivot-project { line-height: 15px; }
-    .bm-pivot-project th:first-child { min-width: 108px; }
+    .bm-pivot.bm-pivot-project { font-size: 10.5px; line-height: 14px; }
+    .bm-pivot.bm-pivot-project th, .bm-pivot.bm-pivot-project td { padding-top: 1px; padding-bottom: 1px; padding-left: 8px; }
+    .bm-pivot.bm-pivot-project th:first-child { padding-left: 0; }
+    .bm-pivot.bm-pivot-project thead th { font-size: 9px; }
     .bm-st-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
 
     .bm-card-tooltip {
@@ -2787,11 +2789,18 @@
     // Kartu pivot hanya muat bila peta cukup lebar/zoom; di bawah ini
     // beralih ke mode ringkas (nama saja + klik marker = popup pivot).
     const BERANDA_MIN_ZOOM_FULL = 8.75;
-    // Kartu tab Project lebih tinggi/lebar (8 baris New Status), jadi butuh zoom lebih dekat.
-    const BERANDA_MIN_ZOOM_FULL_PROJECT = 9;
-    // Ruang kosong di atas peta (px) agar kartu arah 'top' tidak terpotong.
+    // Kartu tab Project dibuat tetap tampil PENUH di peta seperti tab Go Live (ambang zoom
+    // sama). Kartunya lebih tinggi (8 baris New Status), jadi ruang kosong di atas peta
+    // dinaikkan secukupnya; kalau terlalu besar, zoom turun dan kartu jatuh ke mode ringkas.
+    const BERANDA_MIN_ZOOM_FULL_PROJECT = 8.75;
     const BERANDA_PAD_TOP_GOLIVE = 150;
-    const BERANDA_PAD_TOP_PROJECT = 250;
+    const BERANDA_PAD_TOP_PROJECT = 210;
+    // Arah kartu khusus tab Project: kartu Madiun ke bawah supaya tidak menabrak kotak
+    // "Total Region Jawa Timur" di kiri atas yang lebih tinggi di tab ini.
+    const BERANDA_DIR_PROJECT = { Madiun: 'bottom' };
+    function berandaDirFor_(d) {
+      return (berandaTab_ === 'project' && BERANDA_DIR_PROJECT[d.name]) || d.dir;
+    }
 
     let berandaTab_ = 'golive'; // 'golive' | 'project'
     let berandaProjSeg_ = 'ALL'; // segmen tabel rekap Project: 'ALL' | 'B2C' | 'B2B'
@@ -2800,6 +2809,7 @@
     let berandaLines_ = {};
     let berandaBounds_ = null;
     let berandaCompact_ = null;
+    let berandaBoundTab_ = null; // tab saat tooltip kartu terakhir di-bind (arah kartu bisa beda per tab)
     let berandaData_ = { B2C: [], B2B: [] };
     let berandaLoadedAt_ = 0;
     let berandaLoading_ = false;
@@ -3169,15 +3179,16 @@
           const m = berandaMarkers_[d.name];
           if (!m) return;
           const html = berandaCardHtml_(d.name, d.name.toUpperCase(), res, loaded);
-          if (compact !== berandaCompact_) {
+          if (compact !== berandaCompact_ || berandaBoundTab_ !== berandaTab_) {
             m.unbindTooltip();
             m.unbindPopup();
             if (compact) {
               m.bindTooltip(d.name, { permanent: true, direction: 'top', offset: [0, -10], className: 'district-tooltip' });
               m.bindPopup(html, { className: 'bm-popup', minWidth: 210, maxWidth: 280 });
             } else {
+              const dir = berandaDirFor_(d);
               m.bindTooltip(html, {
-                permanent: true, direction: d.dir, offset: berandaOffset_(d.dir),
+                permanent: true, direction: dir, offset: berandaOffset_(dir),
                 className: 'bm-card-tooltip', opacity: 1
               });
             }
@@ -3188,6 +3199,7 @@
           }
         });
         berandaCompact_ = compact;
+        berandaBoundTab_ = berandaTab_;
       }
 
       berandaRenderStatus_(res);
