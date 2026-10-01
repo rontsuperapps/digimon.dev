@@ -504,18 +504,32 @@
     // Wrapper pengganti google.script.run. Body dikirim sebagai STRING
     // JSON dengan Content-Type text/plain supaya browser tidak kirim
     // CORS preflight (GAS tidak bisa merespons preflight OPTIONS).
+    const GAS_CALL_TIMEOUT_MS = 25000;
+
     async function callGAS(fn, args) {
-      const res = await fetch(GAS_EXEC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ fn: fn, args: args || [] })
-      });
+      // Batas waktu: tanpa ini tombol Masuk bisa menggantung tanpa akhir kalau
+      // server GAS lambat/cold start.
+      const controller = new AbortController();
+      const timer = setTimeout(function () { controller.abort(); }, GAS_CALL_TIMEOUT_MS);
+      try {
+        const res = await fetch(GAS_EXEC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: fn, args: args || [] }),
+          signal: controller.signal
+        });
 
-      if (!res.ok) {
-        throw new Error('HTTP ' + res.status + ' dari server GAS.');
+        if (!res.ok) {
+          throw new Error('HTTP ' + res.status + ' dari server GAS.');
+        }
+
+        return await res.json();
+      } catch (err) {
+        if (err && err.name === 'AbortError') throw new Error('timeout');
+        throw err;
+      } finally {
+        clearTimeout(timer);
       }
-
-      return res.json();
     }
 
     /* ============================================================
@@ -917,6 +931,12 @@
 
             // Token sesi disimpan di localStorage. index.html membacanya
             // balik dari sini di setiap panggilan API.
+            // Buang sisa cache offline milik user sebelumnya di perangkat ini.
+            try {
+              Object.keys(localStorage).forEach(function (k) {
+                if (k.indexOf('pwa_offline_cache_') === 0) localStorage.removeItem(k);
+              });
+            } catch (e) { /* abaikan */ }
             localStorage.setItem('monproj_session_token', result.token);
 
             setTimeout(function() {
@@ -937,7 +957,7 @@
             showAlert(
               'error',
               result.message || 'Username atau password salah.',
-              'Login Gagal',
+              result.locked ? 'Login Dikunci Sementara' : 'Login Gagal',
               function () {
                 const pw = document.getElementById('inputPassword');
                 pw.focus();
@@ -953,7 +973,9 @@
 
           showAlert(
             'error',
-            'Gagal terhubung ke server. Coba lagi.',
+            (err && err.message === 'timeout')
+              ? 'Server tidak merespons dalam 25 detik (kemungkinan sedang lambat). Coba lagi sebentar lagi.'
+              : 'Gagal terhubung ke server. Coba lagi.',
             'Tidak Bisa Terhubung'
           );
 
