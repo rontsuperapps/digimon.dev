@@ -675,6 +675,233 @@
     .pj-bar { width: min(32px, 60%); min-height: 2px; border-radius: 6px 6px 0 0; background: var(--pj-c); transition: height .35s ease, opacity .15s; }
     .pj-bar-col:hover .pj-bar, .pj-bar-col:focus-visible .pj-bar { opacity: .75; }
     .pj-bar-lbl { min-height: 26px; margin: 4px 0 3px; font-size: 10px; line-height: 12px; text-align: center; color: var(--text-muted); }
+
+    /* ══════════════════════════════════════════════════════════════
+       BERANDA — peta Go Live per District (Leaflet).
+       Gaya peta DISALIN dari login.html (marker, arc, hub, overlay,
+       dark mode) supaya tampilannya sama persis. Class bm-* khusus
+       halaman Beranda (kartu pivot, filter, status).
+       ══════════════════════════════════════════════════════════════ */
+    #nav-beranda.active { background: var(--color-brand-50); color: var(--color-brand-500); }
+    #nav-beranda.active .icon-box-wrapper { color: var(--color-brand-500); }
+    [data-theme="dark"] #nav-beranda.active { background: rgba(78, 118, 199, 0.14); color: var(--color-brand-400); }
+    [data-theme="dark"] #nav-beranda.active .icon-box-wrapper { color: var(--color-brand-400); }
+
+    #berandaMap { position: absolute; inset: 0; z-index: 0; background: #0b1c33; }
+    #berandaMap .leaflet-control-attribution { font-size: 9px; background: #ffffffb3; }
+    body[data-theme="dark"] #berandaMap .leaflet-tile-pane {
+      filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.8);
+    }
+
+    .district-marker { position: relative; width: 24px; height: 24px; }
+    .district-marker-dot {
+      position: absolute; inset: 0; margin: auto;
+      width: 8px; height: 8px; border-radius: 9999px;
+      background: var(--color-brand-400, #6a8dfb);
+      border: 2px solid #fff;
+      box-shadow: 0 0 6px 1px rgba(106,141,251,.7);
+      z-index: 2;
+    }
+    .district-marker-halo {
+      position: absolute; inset: 0; margin: auto;
+      width: 22px; height: 22px; border-radius: 9999px;
+      border: 1px solid rgba(106,141,251,.35);
+      z-index: 1;
+    }
+    .district-marker-ring {
+      position: absolute; inset: 0; margin: auto;
+      width: 22px; height: 22px; border-radius: 9999px;
+      background: conic-gradient(from 0deg,
+        transparent 0deg,
+        var(--color-brand-400, #6a8dfb) 55deg,
+        transparent 130deg, transparent 360deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2.2px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 2.2px), #000 calc(100% - 2.2px));
+      animation: district-ring-spin 2.4s linear infinite;
+      opacity: .9;
+      z-index: 1;
+    }
+    @keyframes district-ring-spin { to { transform: rotate(360deg); } }
+    .district-tooltip {
+      background: #0b1c33; color: #fff; border: none;
+      font-family: "Outfit", sans-serif; font-size: 11.5px; font-weight: 500;
+      padding: 3px 9px; border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      transition: background-color .2s ease, color .2s ease;
+    }
+    .district-tooltip::before { display: none; }
+    body[data-theme="dark"] .district-tooltip {
+      background: var(--color-brand-400, #6a8dfb);
+      color: #07192f;
+      box-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
+
+    .district-link-base {
+      fill: none;
+      stroke: var(--color-brand-400, #6a8dfb);
+      stroke-linecap: round;
+      opacity: .28;
+      transition: opacity .2s ease, stroke-width .2s ease;
+    }
+    .district-link-flow {
+      fill: none;
+      stroke: var(--color-brand-400, #6a8dfb);
+      stroke-linecap: round;
+      stroke-dasharray: 5 46;
+      filter: drop-shadow(0 0 3px rgba(106,141,251,.9));
+      animation: district-link-flow 2.8s linear infinite;
+      transition: opacity .2s ease, stroke-width .2s ease;
+    }
+    @keyframes district-link-flow { to { stroke-dashoffset: -510; } }
+    body[data-theme="dark"] .district-link-base,
+    body[data-theme="dark"] .district-link-flow { stroke: var(--color-brand-300, #9db3fc); }
+
+    .hub-marker { position: relative; width: 30px; height: 30px; }
+    .hub-marker-dot {
+      position: absolute; inset: 0; margin: auto;
+      width: 11px; height: 11px; border-radius: 9999px;
+      background: #df1d26; border: 2px solid #fff;
+      box-shadow: 0 0 7px 1px rgba(223,29,38,.7);
+      z-index: 2;
+    }
+    .hub-marker-halo {
+      position: absolute; inset: 0; margin: auto;
+      width: 28px; height: 28px; border-radius: 9999px;
+      border: 1px solid rgba(223,29,38,.35);
+      z-index: 1;
+    }
+    .hub-marker-ring {
+      position: absolute; inset: 0; margin: auto;
+      width: 28px; height: 28px; border-radius: 9999px;
+      background: conic-gradient(from 0deg,
+        transparent 0deg, #df1d26 70deg,
+        transparent 160deg, transparent 360deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 2.4px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 2.4px));
+      animation: district-ring-spin 3.2s linear infinite reverse;
+      opacity: .9;
+      z-index: 1;
+    }
+
+    .map-overlay {
+      position: absolute; z-index: 10; max-width: 280px;
+      padding: 14px 18px; border-radius: 12px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(15, 23, 42, .07);
+      box-shadow: 0 10px 30px rgba(7, 25, 47, .18);
+      pointer-events: none;
+      font-family: "Outfit", sans-serif;
+    }
+    .map-overlay--top { top: 16px; left: 16px; }
+    .map-overlay--bottom { bottom: 16px; left: 16px; padding: 10px 14px; }
+    .map-overlay-subtitle {
+      font-size: 10px; font-weight: 500; text-transform: uppercase;
+      letter-spacing: .16em; color: #667085; margin-top: 8px;
+    }
+    .map-overlay-desc { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: #475467; }
+    body[data-theme="dark"] .map-overlay {
+      background: rgba(13, 27, 49, 0.88);
+      border-color: rgba(255, 255, 255, .08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    }
+    body[data-theme="dark"] .map-overlay-subtitle { color: #8b9dc3; }
+    body[data-theme="dark"] .map-overlay-desc { color: #cbd5e1; }
+
+    .bm-logo { height: 38px; width: auto; display: block; }
+    .bm-logo-dark { display: none; }
+    body[data-theme="dark"] .bm-logo-light { display: none; }
+    body[data-theme="dark"] .bm-logo-dark { display: block; }
+
+    /* Filter */
+    .bm-filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+    .bm-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+    .bm-chip {
+      height: 36px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--color-gray-300); background: transparent; color: var(--color-gray-700);
+      cursor: pointer; transition: background-color .15s ease, border-color .15s ease;
+    }
+    .bm-chip:hover { background: var(--color-gray-50); border-color: var(--color-gray-400); }
+    [data-theme="dark"] .bm-chip { border-color: var(--color-gray-700); color: var(--color-gray-300); }
+    [data-theme="dark"] .bm-chip:hover { background: rgba(255,255,255,.05); }
+    .bm-refresh { margin-left: auto; }
+    .bm-status { margin-top: 10px; font-size: 11.5px; line-height: 1.5; color: var(--color-gray-500); }
+    .bm-status b { color: var(--color-gray-800); font-weight: 600; }
+    [data-theme="dark"] .bm-status b { color: var(--color-gray-200); }
+    .bm-status .bm-warn { color: var(--color-warning-700); }
+    .bm-status .bm-err { color: var(--color-error-600); }
+
+    /* Peta */
+    .bm-map-card { padding: 0 !important; overflow: hidden; }
+    .bm-map-wrap {
+      position: relative; width: 100%;
+      height: clamp(600px, calc(100dvh - 210px), 820px);
+      background: #0b1c33;
+    }
+    .bm-map-msg {
+      position: absolute; inset: 0; z-index: 20; display: none;
+      align-items: center; justify-content: center; text-align: center; padding: 24px;
+      background: var(--color-gray-50); color: var(--color-gray-500); font-size: 13px;
+    }
+    .bm-map-msg.show { display: flex; }
+    [data-theme="dark"] .bm-map-msg { background: var(--color-gray-900); }
+    .bm-fallback {
+      display: none; position: absolute; inset: 0; z-index: 15; overflow: auto; padding: 16px;
+      background: var(--color-gray-50);
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; align-content: start;
+    }
+    .bm-fallback.show { display: grid; }
+    [data-theme="dark"] .bm-fallback { background: var(--color-gray-900); }
+
+    /* Kartu pivot per district */
+    .bm-card { font-family: "Outfit", sans-serif; color: #101828; }
+    .bm-card-title {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+      font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--color-brand-500);
+    }
+    .bm-card-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--color-brand-500); }
+    .bm-pivot { border-collapse: collapse; font-size: 11px; line-height: 16px; }
+    .bm-pivot th, .bm-pivot td { padding: 2px 0 2px 10px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .bm-pivot thead th { font-size: 9.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #667085; border-bottom: 1px solid #e4e7ec; }
+    .bm-pivot th:first-child { padding-left: 0; text-align: left; font-weight: 500; }
+    .bm-pivot tbody th { color: #344054; }
+    .bm-pivot td { font-weight: 500; }
+    .bm-pivot tr.bm-total th, .bm-pivot tr.bm-total td { font-weight: 700; border-top: 1px solid #e4e7ec; }
+    .bm-seg { display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+    .bm-seg-b2c { background: var(--color-brand-500); }
+    .bm-seg-b2b { background: var(--color-orange-500); }
+    .bm-pivot .bm-na { color: #98a2b3; font-weight: 400; }
+
+    .bm-card-tooltip {
+      background: rgba(255,255,255,.96); border: 1px solid rgba(15,23,42,.08);
+      border-radius: 10px; padding: 8px 10px; opacity: 1;
+      box-shadow: 0 8px 24px rgba(7,25,47,.18);
+    }
+    .bm-card-tooltip::before { display: none; }
+    .bm-popup .leaflet-popup-content-wrapper { border-radius: 10px; padding: 0; }
+    .bm-popup .leaflet-popup-content { margin: 10px 12px; }
+    .bm-fallback .bm-card, .bm-total-box .bm-card {
+      background: #fff; border: 1px solid #e4e7ec; border-radius: 10px; padding: 10px 12px;
+    }
+    .bm-total-box .bm-card { background: transparent; border: 0; padding: 0; }
+
+    body[data-theme="dark"] .bm-card { color: #e2e8f0; }
+    body[data-theme="dark"] .bm-card-title { color: var(--color-brand-300); }
+    body[data-theme="dark"] .bm-card-title::before { background: var(--color-brand-300); }
+    body[data-theme="dark"] .bm-pivot thead th { color: #8b9dc3; border-bottom-color: rgba(255,255,255,.12); }
+    body[data-theme="dark"] .bm-pivot tbody th { color: #cbd5e1; }
+    body[data-theme="dark"] .bm-pivot tr.bm-total th, body[data-theme="dark"] .bm-pivot tr.bm-total td { border-top-color: rgba(255,255,255,.12); }
+    body[data-theme="dark"] .bm-card-tooltip { background: rgba(13,27,49,.93); border-color: rgba(255,255,255,.1); box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+    body[data-theme="dark"] .bm-popup .leaflet-popup-content-wrapper,
+    body[data-theme="dark"] .bm-popup .leaflet-popup-tip { background: #0d1b31; color: #e2e8f0; }
+    body[data-theme="dark"] .bm-fallback .bm-card { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.1); }
+
+    @media (max-width: 640px) {
+      .map-overlay--top .map-overlay-desc { display: none; }
+      .bm-logo { height: 28px; }
+      .bm-refresh { margin-left: 0; }
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -701,6 +928,11 @@
 
     <div class="sidebar-nav-title">Menu</div>
     <nav class="menu-container">
+      <!-- Beranda (menu tunggal, tanpa submenu) -->
+      <button type="button" class="nav-header-trigger" id="nav-beranda" onclick="switchPage('beranda')" title="Beranda">
+        <span class="nav-header-left"><span class="icon-box-wrapper"><i class="fa-solid fa-house"></i></span><span class="menu-title-text">Beranda</span></span>
+      </button>
+
       <div class="menu-item-group open">
         <button class="nav-header-trigger" onclick="toggleAccordion(this)">
           <div class="nav-header-left">
@@ -804,6 +1036,49 @@
 
     <main class="content-scroll">
       <div class="content-inner">
+
+    <!-- ═════════ HALAMAN: BERANDA (peta Go Live per District) ═════════ -->
+    <div class="page-section" id="page-beranda">
+      <section class="golive-filter-card">
+        <div class="bm-filter-row">
+          <div class="golive-filter-field golive-filter-daterange">
+            <label for="bmDateFrom">Tanggal Go Live</label>
+            <div class="golive-filter-daterange-inputs">
+              <input type="date" id="bmDateFrom" onchange="berandaOnDateChange_('from')">
+              <span>s/d</span>
+              <input type="date" id="bmDateTo" onchange="berandaOnDateChange_('to')">
+            </div>
+          </div>
+          <div class="bm-presets" role="group" aria-label="Rentang cepat">
+            <button type="button" class="bm-chip" onclick="berandaSetPreset_('today')">Hari ini</button>
+            <button type="button" class="bm-chip" onclick="berandaSetPreset_('7d')">7 Hari</button>
+            <button type="button" class="bm-chip" onclick="berandaSetPreset_('month')">Bulan ini</button>
+          </div>
+          <button type="button" class="btn-refresh bm-refresh" id="bmRefreshBtn" onclick="berandaRefresh_()"><i class="fa-solid fa-rotate"></i><span>Refresh</span></button>
+        </div>
+        <div class="bm-status" id="bmStatus"></div>
+      </section>
+
+      <section class="golive-summary-card bm-map-card">
+        <div class="bm-map-wrap" id="bmMapWrap">
+          <div id="berandaMap"></div>
+
+          <div class="map-overlay map-overlay--top">
+            <img class="bm-logo bm-logo-light" src="icons/logo-infranexia-light.png" alt="Infranexia"
+                 onerror="this.onerror=null;this.src='icons/logo-infranexia-dark.png';">
+            <img class="bm-logo bm-logo-dark" src="icons/logo-infranexia-dark.png" alt="" aria-hidden="true"
+                 onerror="this.onerror=null;this.src='icons/logo-infranexia-light.png';">
+            <div class="map-overlay-subtitle">AREA 3 · REGION JAWA TIMUR</div>
+            <p class="map-overlay-desc">Capaian Go Live per district berdasarkan Tanggal Go Live.</p>
+          </div>
+
+          <div class="map-overlay map-overlay--bottom bm-total-box" id="bmTotalBox"></div>
+
+          <div class="bm-fallback" id="bmFallback"></div>
+          <div class="bm-map-msg" id="bmMapMsg"></div>
+        </div>
+      </section>
+    </div>
 
     <!-- ═════════ HALAMAN: GO LIVE B2C ═════════ -->
     <div class="page-section active-page" id="page-golive-b2c" data-view="golive">
@@ -1565,8 +1840,10 @@
       return out;
     }
 
-    async function callGAS(fn, args) {
-      args = glInjectSegmentArg_(fn, args);
+    // opts.rawArgs = true -> argumen dipakai apa adanya (TANPA injeksi segmen
+    // aktif). Dipakai Beranda yang meminta B2C dan B2B sekaligus.
+    async function callGAS(fn, args, opts) {
+      args = (opts && opts.rawArgs) ? (args || []) : glInjectSegmentArg_(fn, args);
       let res;
 
       // AbortController: paksa batalkan request kalau server tidak
@@ -2436,6 +2713,455 @@
       applyMonitoringGoLiveSearchFilter(true);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ── BERANDA: peta Go Live per District ──
+    // Peta Leaflet memakai gaya yang sama dengan login.html (hub NOC,
+    // arc animasi, marker district). Di tiap district ada kartu pivot:
+    //   baris  : Segmen -> B2C, B2B (+ Total)
+    //   kolom  : LOP / ODP / PORT
+    // Sumber data = getMonitoringGoLiveData untuk sheet B2C DAN B2B
+    // (dua request, segmen dikirim eksplisit lewat callGAS opts.rawArgs
+    // sehingga TIDAK terpengaruh segmen halaman Go Live yang aktif).
+    // Definisi angka:
+    //   LOP  = jumlah baris | ODP = SUM Total ODP | PORT = SUM Total Port
+    //   hanya baris New Status = "GO LIVE" dengan Tanggal Go Live di
+    //   dalam rentang filter (inklusif). Ubah BERANDA_STATUS_GOLIVE
+    //   kalau definisinya perlu mencakup "FI-OGP GO LIVE".
+    // ══════════════════════════════════════════════════════════════
+    const BERANDA_DISTRICTS = [
+      { name: 'Suramadu', lat: -7.154249, lng: 113.473910, dir: 'top'   },
+      { name: 'Lamongan', lat: -7.120873, lng: 112.566203, dir: 'top'   },
+      { name: 'Madiun',   lat: -7.627721, lng: 111.520189, dir: 'top'   },
+      { name: 'Malang',   lat: -7.955166, lng: 112.638130, dir: 'left'  },
+      { name: 'Sidoarjo', lat: -7.448807, lng: 112.717775, dir: 'right' },
+      { name: 'Jember',   lat: -8.174740, lng: 113.693352, dir: 'top'   }
+    ];
+    // Pusat "NOC" -- titik asal garis koneksi animasi (sama dengan login.html).
+    const BERANDA_HUB = { lat: -7.2575, lng: 112.7521 };
+    const BERANDA_SEGMENTS = ['B2C', 'B2B'];
+    const BERANDA_STATUS_GOLIVE = ['GO LIVE'];
+    const BERANDA_STALE_MS = 180000; // data dianggap basi setelah 3 menit (= TTL cache backend)
+    // Kartu pivot hanya muat bila peta cukup lebar/zoom; di bawah ini
+    // beralih ke mode ringkas (nama saja + klik marker = popup pivot).
+    const BERANDA_MIN_ZOOM_FULL = 8.75;
+
+    let berandaMap_ = null;
+    let berandaMarkers_ = {};
+    let berandaLines_ = {};
+    let berandaBounds_ = null;
+    let berandaCompact_ = null;
+    let berandaData_ = { B2C: [], B2B: [] };
+    let berandaLoadedAt_ = 0;
+    let berandaLoading_ = false;
+    let berandaErrors_ = {};
+    let berandaLeafletPromise_ = null;
+    let berandaLeafletFailed_ = false;
+    let berandaDatesInit_ = false;
+    let berandaResizeTimer_ = null;
+    let berandaResizeWatched_ = false;
+
+    function berandaEl_(id) { return document.getElementById(id); }
+    function berandaPad_(n) { return (n < 10 ? '0' : '') + n; }
+    function berandaDateStr_(d) {
+      return d.getFullYear() + '-' + berandaPad_(d.getMonth() + 1) + '-' + berandaPad_(d.getDate());
+    }
+    function berandaParseInput_(s) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+      return m ? new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)).getTime() : null;
+    }
+    function berandaFmtDate_(ts) {
+      return new Date(ts).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ── Leaflet dimuat saat dibutuhkan (index.html tidak membawa Leaflet di <head>) ──
+    function berandaEnsureLeaflet_() {
+      if (typeof L !== 'undefined') return Promise.resolve();
+      if (berandaLeafletPromise_) return berandaLeafletPromise_;
+      berandaLeafletPromise_ = new Promise(function (resolve, reject) {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        css.crossOrigin = '';
+        document.head.appendChild(css);
+
+        const js = document.createElement('script');
+        js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        js.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        js.crossOrigin = '';
+        js.onload = function () { resolve(); };
+        js.onerror = function () {
+          berandaLeafletPromise_ = null; // izinkan coba lagi saat Refresh
+          reject(new Error('Leaflet gagal dimuat'));
+        };
+        document.head.appendChild(js);
+      });
+      return berandaLeafletPromise_;
+    }
+
+    // ── Arc (quadratic bezier) -- SAMA dengan arcPoints() di login.html ──
+    function berandaArcPoints_(from, to, curveFactor, segments) {
+      curveFactor = curveFactor || 0.18;
+      segments = segments || 48;
+      const midLat = (from.lat + to.lat) / 2;
+      const midLng = (from.lng + to.lng) / 2;
+      const dLat = to.lat - from.lat;
+      const dLng = to.lng - from.lng;
+      const ctrlLat = midLat + (-dLng) * curveFactor;
+      const ctrlLng = midLng + (dLat) * curveFactor;
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments, mt = 1 - t;
+        pts.push([
+          mt * mt * from.lat + 2 * mt * t * ctrlLat + t * t * to.lat,
+          mt * mt * from.lng + 2 * mt * t * ctrlLng + t * t * to.lng
+        ]);
+      }
+      return pts;
+    }
+
+    function berandaOffset_(dir) {
+      if (dir === 'left')   return [-14, 0];
+      if (dir === 'right')  return [14, 0];
+      if (dir === 'bottom') return [0, 12];
+      return [0, -12];
+    }
+
+    // ── Data ──
+    // Simpan hanya 4 field yang dipakai (district, tanggal, odp, port)
+    // supaya dua sheet penuh tidak ditahan di memori.
+    function berandaCompactRows_(rows) {
+      const out = [];
+      (rows || []).forEach(function (r) {
+        if (BERANDA_STATUS_GOLIVE.indexOf(golive_normJs_(r.newStatus)) === -1) return;
+        const dt = golive_parseTanggalJs_(r.tanggalGoLive);
+        if (!dt) return;
+        dt.setHours(0, 0, 0, 0);
+        out.push({
+          d: golive_normJs_(r.district),
+          t: dt.getTime(),
+          odp: pjToNum_(r.totalOdp),
+          port: pjToNum_(r.totalPort)
+        });
+      });
+      return out;
+    }
+
+    function berandaNewBucket_() {
+      const o = {};
+      BERANDA_SEGMENTS.forEach(function (s) { o[s] = { lop: 0, odp: 0, port: 0 }; });
+      return o;
+    }
+
+    function berandaAggregate_() {
+      const from = berandaParseInput_(berandaEl_('bmDateFrom').value);
+      const to   = berandaParseInput_(berandaEl_('bmDateTo').value);
+      const agg = {};
+      BERANDA_DISTRICTS.forEach(function (d) { agg[d.name.toUpperCase()] = berandaNewBucket_(); });
+      const total = berandaNewBucket_();
+      let other = 0;
+
+      BERANDA_SEGMENTS.forEach(function (seg) {
+        (berandaData_[seg] || []).forEach(function (r) {
+          if (from !== null && r.t < from) return;
+          if (to !== null && r.t > to) return;
+          const a = agg[r.d];
+          if (!a) { other++; return; }
+          a[seg].lop++;  a[seg].odp += r.odp;  a[seg].port += r.port;
+          total[seg].lop++;  total[seg].odp += r.odp;  total[seg].port += r.port;
+        });
+      });
+      return { agg: agg, total: total, other: other, from: from, to: to };
+    }
+
+    // ── Render kartu pivot ──
+    function berandaPivotHtml_(title, a, loaded) {
+      const tot = { lop: 0, odp: 0, port: 0 };
+      let body = '';
+      BERANDA_SEGMENTS.forEach(function (seg) {
+        const v = a[seg];
+        tot.lop += v.lop; tot.odp += v.odp; tot.port += v.port;
+        body += '<tr><th scope="row"><span class="bm-seg bm-seg-' + seg.toLowerCase() + '"></span>' + seg + '</th>' +
+          berandaCellsHtml_(v, loaded) + '</tr>';
+      });
+      body += '<tr class="bm-total"><th scope="row">Total</th>' + berandaCellsHtml_(tot, loaded) + '</tr>';
+      return '<div class="bm-card">' +
+        (title ? '<div class="bm-card-title">' + escapeHtml(title) + '</div>' : '') +
+        '<table class="bm-pivot"><thead><tr><th>Segmen</th><th>LOP</th><th>ODP</th><th>PORT</th></tr></thead>' +
+        '<tbody>' + body + '</tbody></table></div>';
+    }
+    function berandaCellsHtml_(v, loaded) {
+      if (!loaded) return '<td class="bm-na">–</td><td class="bm-na">–</td><td class="bm-na">–</td>';
+      return '<td>' + formatNum_(v.lop) + '</td><td>' + formatNum_(v.odp) + '</td><td>' + formatNum_(v.port) + '</td>';
+    }
+
+    function berandaRenderStatus_(res) {
+      const el = berandaEl_('bmStatus');
+      if (!el) return;
+      const parts = [];
+
+      if (res.from !== null && res.to !== null) {
+        parts.push('Periode Go Live: <b>' + (res.from === res.to
+          ? berandaFmtDate_(res.from)
+          : berandaFmtDate_(res.from) + ' – ' + berandaFmtDate_(res.to)) + '</b>');
+      }
+      if (berandaLoading_ && !berandaLoadedAt_) {
+        parts.push('Memuat data Go Live B2C &amp; B2B…');
+      } else if (berandaLoadedAt_) {
+        let lop = 0;
+        BERANDA_SEGMENTS.forEach(function (s) { lop += res.total[s].lop; });
+        parts.push('Total <b>' + formatNum_(lop) + '</b> LOP');
+        parts.push('diperbarui ' + new Date(berandaLoadedAt_).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+        if (res.other > 0) {
+          parts.push('<span class="bm-warn">' + formatNum_(res.other) + ' LOP di luar 6 district tidak ditampilkan di peta</span>');
+        }
+      }
+      BERANDA_SEGMENTS.forEach(function (s) {
+        if (berandaErrors_[s]) {
+          parts.push('<span class="bm-err">Gagal memuat ' + s + ': ' + escapeHtml(berandaErrors_[s]) + '</span>');
+        }
+      });
+      el.innerHTML = parts.join(' · ');
+    }
+
+    function berandaRenderCards_() {
+      const res = berandaAggregate_();
+      const loaded = !!berandaLoadedAt_;
+
+      // Kotak total (overlay kiri bawah) + fallback grid (kalau peta tidak tersedia)
+      const totalBox = berandaEl_('bmTotalBox');
+      if (totalBox) totalBox.innerHTML = berandaPivotHtml_('Total Area 3', res.total, loaded);
+      const fb = berandaEl_('bmFallback');
+      if (fb) {
+        fb.classList.toggle('show', berandaLeafletFailed_);
+        if (berandaLeafletFailed_) {
+          fb.innerHTML = BERANDA_DISTRICTS.map(function (d) {
+            return berandaPivotHtml_(d.name, res.agg[d.name.toUpperCase()], loaded);
+          }).join('');
+        }
+      }
+
+      if (berandaMap_) {
+        const compact = berandaMap_.getZoom() < BERANDA_MIN_ZOOM_FULL;
+        BERANDA_DISTRICTS.forEach(function (d) {
+          const m = berandaMarkers_[d.name];
+          if (!m) return;
+          const html = berandaPivotHtml_(d.name, res.agg[d.name.toUpperCase()], loaded);
+          if (compact !== berandaCompact_) {
+            m.unbindTooltip();
+            m.unbindPopup();
+            if (compact) {
+              m.bindTooltip(d.name, { permanent: true, direction: 'top', offset: [0, -10], className: 'district-tooltip' });
+              m.bindPopup(html, { className: 'bm-popup', minWidth: 210, maxWidth: 280 });
+            } else {
+              m.bindTooltip(html, {
+                permanent: true, direction: d.dir, offset: berandaOffset_(d.dir),
+                className: 'bm-card-tooltip', opacity: 1
+              });
+            }
+          } else if (compact) {
+            m.setPopupContent(html);
+          } else {
+            m.setTooltipContent(html);
+          }
+        });
+        berandaCompact_ = compact;
+      }
+
+      berandaRenderStatus_(res);
+    }
+
+    // ── Peta ──
+    function berandaInitMap_() {
+      const el = berandaEl_('berandaMap');
+      if (!el || berandaMap_ || typeof L === 'undefined') return;
+
+      berandaMap_ = L.map('berandaMap', {
+        zoomControl: false,
+        attributionControl: true,
+        scrollWheelZoom: false,
+        zoomSnap: 0.25
+      }).setView([-7.6, 112.9], 8);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(berandaMap_);
+
+      const bounds = [[BERANDA_HUB.lat, BERANDA_HUB.lng]];
+
+      // Garis koneksi hub -> district (base redup + flow bercahaya), di bawah marker.
+      BERANDA_DISTRICTS.forEach(function (d) {
+        const pts = berandaArcPoints_(BERANDA_HUB, d);
+        pts.forEach(function (p) { bounds.push(p); });
+        berandaLines_[d.name] = {
+          base: L.polyline(pts, { className: 'district-link-base', weight: 1.4, interactive: false }).addTo(berandaMap_),
+          flow: L.polyline(pts, { className: 'district-link-flow', weight: 2, interactive: false }).addTo(berandaMap_)
+        };
+      });
+
+      const hubIcon = L.divIcon({
+        className: 'hub-marker',
+        html: '<span class="hub-marker-ring"></span><span class="hub-marker-halo"></span><span class="hub-marker-dot"></span>',
+        iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+      L.marker([BERANDA_HUB.lat, BERANDA_HUB.lng], { icon: hubIcon })
+        .addTo(berandaMap_)
+        .bindTooltip('NOC · Command Center', { direction: 'top', offset: [0, -8], className: 'district-tooltip' });
+
+      BERANDA_DISTRICTS.forEach(function (d) {
+        const icon = L.divIcon({
+          className: 'district-marker',
+          html: '<span class="district-marker-ring"></span><span class="district-marker-halo"></span><span class="district-marker-dot"></span>',
+          iconSize: [24, 24], iconAnchor: [12, 12]
+        });
+        const marker = L.marker([d.lat, d.lng], { icon: icon }).addTo(berandaMap_);
+        berandaMarkers_[d.name] = marker;
+
+        // Hover marker -> garis koneksinya menyala (sama seperti login).
+        const lines = berandaLines_[d.name];
+        marker.on('mouseover', function () {
+          lines.base.setStyle({ opacity: .6, weight: 2 });
+          lines.flow.setStyle({ opacity: 1, weight: 3 });
+        });
+        marker.on('mouseout', function () {
+          lines.base.setStyle({ opacity: .28, weight: 1.4 });
+          lines.flow.setStyle({ opacity: 1, weight: 2 });
+        });
+        bounds.push([d.lat, d.lng]);
+      });
+
+      berandaBounds_ = bounds;
+      berandaWatchResize_();
+    }
+
+    // fitBounds + hitung ulang ukuran. Padding atas besar supaya kartu
+    // di atas marker (Lamongan/Suramadu/Madiun/Jember) tidak terpotong.
+    function berandaRefit_() {
+      const wrap = berandaEl_('bmMapWrap');
+      if (!berandaMap_ || !berandaBounds_ || !wrap || wrap.clientWidth === 0) return;
+      berandaMap_.invalidateSize();
+      berandaMap_.fitBounds(berandaBounds_, {
+        paddingTopLeft: [56, 150],
+        paddingBottomRight: [56, 60],
+        maxZoom: 10,
+        animate: false
+      });
+      berandaRenderCards_(); // zoom bisa berubah -> mode kartu penuh/ringkas dicek ulang
+    }
+
+    function berandaWatchResize_() {
+      if (berandaResizeWatched_) return;
+      berandaResizeWatched_ = true;
+      const schedule = function () {
+        clearTimeout(berandaResizeTimer_);
+        berandaResizeTimer_ = setTimeout(berandaRefit_, 150);
+      };
+      const wrap = berandaEl_('bmMapWrap');
+      if (typeof ResizeObserver !== 'undefined' && wrap) new ResizeObserver(schedule).observe(wrap);
+      else window.addEventListener('resize', schedule);
+    }
+
+    // ── Fetch dua segmen ──
+    function berandaFetch_(forceFresh) {
+      if (berandaLoading_) return;
+      berandaLoading_ = true;
+      berandaSetLoadingUi_(true);
+      berandaRenderCards_();
+
+      const calls = BERANDA_SEGMENTS.map(function (seg) {
+        return callGAS('getMonitoringGoLiveData', [!!forceFresh, seg], { rawArgs: true });
+      });
+
+      Promise.allSettled(calls).then(function (results) {
+        berandaLoading_ = false;
+        if (appSessionEnding_) return; // sesi habis -> sedang redirect ke login
+        berandaErrors_ = {};
+        let anyOk = false;
+        results.forEach(function (r, i) {
+          const seg = BERANDA_SEGMENTS[i];
+          if (r.status === 'fulfilled') {
+            berandaData_[seg] = berandaCompactRows_(r.value && r.value.data);
+            anyOk = true;
+          } else {
+            berandaErrors_[seg] = (r.reason && r.reason.message) || 'Gagal memuat data';
+            console.error('Beranda: gagal memuat ' + seg + ':', r.reason);
+          }
+        });
+        if (anyOk) berandaLoadedAt_ = Date.now();
+        berandaSetLoadingUi_(false);
+        berandaRenderCards_();
+      });
+    }
+
+    function berandaSetLoadingUi_(on) {
+      const btn = berandaEl_('bmRefreshBtn');
+      if (!btn) return;
+      btn.disabled = on;
+      btn.innerHTML = on
+        ? '<i class="fa-solid fa-rotate fa-spin"></i><span>Memuat...</span>'
+        : '<i class="fa-solid fa-rotate"></i><span>Refresh</span>';
+    }
+
+    // ── Interaksi filter ──
+    function berandaInitDates_() {
+      if (berandaDatesInit_) return;
+      berandaDatesInit_ = true;
+      const today = berandaDateStr_(new Date());
+      berandaEl_('bmDateFrom').value = today;
+      berandaEl_('bmDateTo').value = today;
+    }
+
+    function berandaOnDateChange_(which) {
+      const f = berandaEl_('bmDateFrom'), t = berandaEl_('bmDateTo');
+      const today = berandaDateStr_(new Date());
+      if (!f.value && !t.value) { f.value = today; t.value = today; }
+      else if (!f.value) f.value = t.value;
+      else if (!t.value) t.value = f.value;
+      if (f.value > t.value) { // string ISO -> urutan leksikal = urutan tanggal
+        if (which === 'from') t.value = f.value; else f.value = t.value;
+      }
+      berandaRenderCards_();
+    }
+
+    function berandaSetPreset_(kind) {
+      const now = new Date();
+      let from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (kind === '7d') from.setDate(from.getDate() - 6);
+      else if (kind === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+      berandaEl_('bmDateFrom').value = berandaDateStr_(from);
+      berandaEl_('bmDateTo').value = berandaDateStr_(now);
+      berandaRenderCards_();
+    }
+
+    function berandaRefresh_() {
+      // Refresh juga mencoba memuat ulang Leaflet kalau sebelumnya gagal.
+      if (berandaLeafletFailed_) berandaPrepareMap_();
+      berandaFetch_(true);
+    }
+
+    function berandaPrepareMap_() {
+      const msg = berandaEl_('bmMapMsg');
+      berandaEnsureLeaflet_().then(function () {
+        berandaLeafletFailed_ = false;
+        if (msg) msg.classList.remove('show');
+        berandaInitMap_();
+        setTimeout(berandaRefit_, 120);
+      }).catch(function () {
+        // Offline / unpkg diblokir: tampilkan kartu pivot sebagai grid biasa.
+        berandaLeafletFailed_ = true;
+        berandaRenderCards_();
+      });
+    }
+
+    function berandaOnEnter_() {
+      berandaInitDates_();
+      berandaRenderCards_();
+      if (!berandaMap_) berandaPrepareMap_();
+      else setTimeout(berandaRefit_, 120);
+      if (!berandaLoadedAt_ || (Date.now() - berandaLoadedAt_) > BERANDA_STALE_MS) berandaFetch_(false);
+    }
+
     // PWA — daftarkan service worker (app-shell cache untuk mode offline).
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
@@ -2493,6 +3219,10 @@
       // di bawah, termasuk jeda saat tab tidak aktif (hemat kuota & tidak
       // membebani server saat tidak ada yang melihat layar).
       startDashboardAutoRefresh_();
+
+      // Halaman awal setelah login = Beranda. setTimeout 0 supaya seluruh
+      // script (termasuk const PAGE_META) sudah selesai dieksekusi.
+      setTimeout(function () { switchPage('beranda'); }, 0);
     }
 
     if (document.readyState === 'loading') {
@@ -3022,6 +3752,7 @@
     function syncSidebarActiveState(navId) {
       document.querySelectorAll('.sub-nav-item').forEach(function(el) { el.classList.remove('active'); });
       const pfNav = document.getElementById('nav-profile'); if (pfNav) pfNav.classList.remove('active');
+      const bmNav = document.getElementById('nav-beranda'); if (bmNav) bmNav.classList.remove('active');
       document.querySelectorAll('.menu-item-group').forEach(function(el) { el.classList.remove('open'); });
 
       var link = document.getElementById(navId);
@@ -3043,6 +3774,13 @@
     // yang sama, dengan judul/deskripsi diisi dari sini (bukan alert
     // seperti sebelumnya -- sekarang Coming Soon tampil DI PAGE).
     const PAGE_META = {
+      'beranda': {
+        navId: 'nav-beranda',
+        customPage: 'page-beranda',
+        title: 'Beranda',
+        subtitle: 'Peta capaian Go Live per District',
+        onEnter: function () { berandaOnEnter_(); }
+      },
       'golive-b2c': {
         navId: 'nav-golive-b2c',
         segment: 'B2C',
