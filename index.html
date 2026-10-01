@@ -875,6 +875,27 @@
     .bm-seg-b2b { background: var(--color-orange-500); }
     .bm-pivot .bm-na { color: #98a2b3; font-weight: 400; }
 
+    /* Tab tampilan tabel peta: Go Live / Project */
+    .bm-tabs { display: inline-flex; gap: 2px; padding: 3px; height: 36px; box-sizing: border-box; border-radius: 10px; background: var(--color-gray-100); }
+    .bm-tab {
+      padding: 0 14px; border: 0; border-radius: 8px; background: transparent;
+      font-size: 13px; font-weight: 500; color: var(--color-gray-500); cursor: pointer;
+      transition: background-color .15s ease, color .15s ease;
+    }
+    .bm-tab:hover { color: var(--color-gray-800); }
+    .bm-tab[aria-selected="true"] { background: #fff; color: var(--color-brand-500); box-shadow: var(--shadow-theme-xs); }
+    .bm-tab:focus-visible { outline: 2px solid var(--color-brand-400); outline-offset: 1px; }
+    body[data-theme="dark"] .bm-tabs { background: rgba(255,255,255,.06); }
+    body[data-theme="dark"] .bm-tab { color: var(--color-gray-400); }
+    body[data-theme="dark"] .bm-tab:hover { color: var(--color-gray-200); }
+    body[data-theme="dark"] .bm-tab[aria-selected="true"] { background: rgba(255,255,255,.12); color: #fff; }
+    /* Tab Project tidak memakai filter tanggal Go Live -> kontrolnya diredupkan */
+    .bm-dates-off .golive-filter-daterange, .bm-dates-off .bm-presets { opacity: .45; pointer-events: none; }
+    /* Kartu pivot tab Project (baris = New Status, kolom = B2C | B2B | Total) */
+    .bm-pivot-project { line-height: 15px; }
+    .bm-pivot-project th:first-child { min-width: 108px; }
+    .bm-st-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+
     .bm-card-tooltip {
       background: rgba(255,255,255,.96); border: 1px solid rgba(15,23,42,.08);
       border-radius: 10px; padding: 8px 10px; opacity: 1;
@@ -1041,7 +1062,14 @@
     <!-- ═════════ HALAMAN: BERANDA (peta Go Live per District) ═════════ -->
     <div class="page-section" id="page-beranda">
       <section class="golive-filter-card">
-        <div class="bm-filter-row">
+        <div class="bm-filter-row" id="bmFilterRow">
+          <div class="golive-filter-field">
+            <label id="bmTabLabel">Tampilan tabel</label>
+            <div class="bm-tabs" role="tablist" aria-labelledby="bmTabLabel">
+              <button type="button" class="bm-tab" role="tab" id="bmTabGolive" aria-selected="true" onclick="berandaSetTab_('golive')">Go Live</button>
+              <button type="button" class="bm-tab" role="tab" id="bmTabProject" aria-selected="false" onclick="berandaSetTab_('project')">Project</button>
+            </div>
+          </div>
           <div class="golive-filter-field golive-filter-daterange">
             <label for="bmDateFrom">Tanggal Go Live</label>
             <div class="golive-filter-daterange-inputs">
@@ -2743,7 +2771,13 @@
     // Kartu pivot hanya muat bila peta cukup lebar/zoom; di bawah ini
     // beralih ke mode ringkas (nama saja + klik marker = popup pivot).
     const BERANDA_MIN_ZOOM_FULL = 8.75;
+    // Kartu tab Project lebih tinggi/lebar (8 baris New Status), jadi butuh zoom lebih dekat.
+    const BERANDA_MIN_ZOOM_FULL_PROJECT = 9;
+    // Ruang kosong di atas peta (px) agar kartu arah 'top' tidak terpotong.
+    const BERANDA_PAD_TOP_GOLIVE = 150;
+    const BERANDA_PAD_TOP_PROJECT = 250;
 
+    let berandaTab_ = 'golive'; // 'golive' | 'project'
     let berandaMap_ = null;
     let berandaMarkers_ = {};
     let berandaLines_ = {};
@@ -2827,18 +2861,24 @@
     }
 
     // ── Data ──
-    // Simpan hanya 4 field yang dipakai (district, tanggal, odp, port)
-    // supaya dua sheet penuh tidak ditahan di memori.
+    // Simpan field ringkas per baris: district (d), tanggal go live (t),
+    // flag baris Go Live yang valid (g), kunci New Status kanonik (s), odp, port.
+    //   Tab Go Live  -> hanya baris g = true (New Status GO LIVE + tanggal valid),
+    //                   aturannya sama persis seperti sebelumnya.
+    //   Tab Project  -> semua baris, dikelompokkan menurut s (pjStatusKey_).
     function berandaCompactRows_(rows) {
       const out = [];
       (rows || []).forEach(function (r) {
-        if (BERANDA_STATUS_GOLIVE.indexOf(golive_normJs_(r.newStatus)) === -1) return;
-        const dt = golive_parseTanggalJs_(r.tanggalGoLive);
-        if (!dt) return;
-        dt.setHours(0, 0, 0, 0);
+        let t = null;
+        if (BERANDA_STATUS_GOLIVE.indexOf(golive_normJs_(r.newStatus)) !== -1) {
+          const dt = golive_parseTanggalJs_(r.tanggalGoLive);
+          if (dt) { dt.setHours(0, 0, 0, 0); t = dt.getTime(); }
+        }
         out.push({
           d: golive_normJs_(r.district),
-          t: dt.getTime(),
+          t: t,
+          g: t !== null,
+          s: pjStatusKey_(r.newStatus),
           odp: pjToNum_(r.totalOdp),
           port: pjToNum_(r.totalPort)
         });
@@ -2862,6 +2902,7 @@
 
       BERANDA_SEGMENTS.forEach(function (seg) {
         (berandaData_[seg] || []).forEach(function (r) {
+          if (!r.g) return;
           if (from !== null && r.t < from) return;
           if (to !== null && r.t > to) return;
           const a = agg[r.d];
@@ -2871,6 +2912,79 @@
         });
       });
       return { agg: agg, total: total, other: other, from: from, to: to };
+    }
+
+    // ── Agregasi tab Project: jumlah LOP per New Status per segmen ──
+    // Tidak memakai filter tanggal (status belum Go Live belum punya tanggal Go Live).
+    // Total = semua baris district tsb; status di luar daftar PJ_STATUSES masuk "Lainnya".
+    function berandaNewProjectBucket_() {
+      const o = { st: {}, oth: {}, tot: {} };
+      PJ_STATUSES.forEach(function (s) {
+        o.st[s.key] = {};
+        BERANDA_SEGMENTS.forEach(function (g) { o.st[s.key][g] = 0; });
+      });
+      BERANDA_SEGMENTS.forEach(function (g) { o.oth[g] = 0; o.tot[g] = 0; });
+      return o;
+    }
+
+    function berandaAggregateProject_() {
+      const agg = {};
+      BERANDA_DISTRICTS.forEach(function (d) { agg[d.name.toUpperCase()] = berandaNewProjectBucket_(); });
+      const total = berandaNewProjectBucket_();
+      let other = 0;
+
+      BERANDA_SEGMENTS.forEach(function (seg) {
+        (berandaData_[seg] || []).forEach(function (r) {
+          const a = agg[r.d];
+          if (!a) { other++; return; }
+          [a, total].forEach(function (b) {
+            b.tot[seg]++;
+            if (r.s) b.st[r.s][seg]++; else b.oth[seg]++;
+          });
+        });
+      });
+      return { agg: agg, total: total, other: other, from: null, to: null };
+    }
+
+    function berandaProjectHtml_(title, p, loaded) {
+      const cell = function (n) {
+        if (!loaded) return '<td class="bm-na">–</td>';
+        return n ? '<td>' + formatNum_(n) + '</td>' : '<td class="bm-na">0</td>';
+      };
+      const rowHtml = function (dotColor, label, bySeg, isTotal) {
+        let tds = '', sum = 0;
+        BERANDA_SEGMENTS.forEach(function (g) { sum += bySeg[g]; tds += cell(bySeg[g]); });
+        tds += cell(sum);
+        return '<tr' + (isTotal ? ' class="bm-total"' : '') + '><th scope="row">' +
+          (dotColor ? '<span class="bm-st-dot" style="background:' + dotColor + ';"></span>' : '') +
+          escapeHtml(label) + '</th>' + tds + '</tr>';
+      };
+
+      let body = '';
+      PJ_STATUSES.forEach(function (s) { body += rowHtml(s.color, s.key, p.st[s.key], false); });
+      let othSum = 0;
+      BERANDA_SEGMENTS.forEach(function (g) { othSum += p.oth[g]; });
+      if (othSum > 0) body += rowHtml('#d0d5dd', 'Lainnya', p.oth, false);
+      body += rowHtml('', 'Total', p.tot, true);
+
+      let head = '<th>New Status</th>';
+      BERANDA_SEGMENTS.forEach(function (g) {
+        head += '<th><span class="bm-seg bm-seg-' + g.toLowerCase() + '"></span>' + g + '</th>';
+      });
+      head += '<th>Total</th>';
+
+      return '<div class="bm-card">' +
+        (title ? '<div class="bm-card-title">' + escapeHtml(title) + '</div>' : '') +
+        '<table class="bm-pivot bm-pivot-project"><thead><tr>' + head + '</tr></thead>' +
+        '<tbody>' + body + '</tbody></table></div>';
+    }
+
+    // Pilih kartu sesuai tab aktif. key = nama district (UPPERCASE) atau null untuk total Jatim.
+    function berandaCardHtml_(title, key, res, loaded) {
+      const data = key ? res.agg[key] : res.total;
+      return berandaTab_ === 'project'
+        ? berandaProjectHtml_(title, data, loaded)
+        : berandaPivotHtml_(title, data, loaded);
     }
 
     // ── Render kartu pivot ──
@@ -2898,17 +3012,20 @@
       const el = berandaEl_('bmStatus');
       if (!el) return;
       const parts = [];
+      const isProject = berandaTab_ === 'project';
 
-      if (res.from !== null && res.to !== null) {
+      if (isProject) {
+        parts.push('Posisi <b>New Status</b> saat ini (tidak mengikuti filter tanggal)');
+      } else if (res.from !== null && res.to !== null) {
         parts.push('Periode Go Live: <b>' + (res.from === res.to
           ? berandaFmtDate_(res.from)
           : berandaFmtDate_(res.from) + ' – ' + berandaFmtDate_(res.to)) + '</b>');
       }
       if (berandaLoading_ && !berandaLoadedAt_) {
-        parts.push('Memuat data Go Live B2C &amp; B2B…');
+        parts.push('Memuat data ' + (isProject ? 'Project' : 'Go Live') + ' B2C &amp; B2B…');
       } else if (berandaLoadedAt_) {
         let lop = 0;
-        BERANDA_SEGMENTS.forEach(function (s) { lop += res.total[s].lop; });
+        BERANDA_SEGMENTS.forEach(function (s) { lop += isProject ? res.total.tot[s] : res.total[s].lop; });
         parts.push('Total <b>' + formatNum_(lop) + '</b> LOP');
         parts.push('diperbarui ' + new Date(berandaLoadedAt_).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
         if (res.other > 0) {
@@ -2924,28 +3041,29 @@
     }
 
     function berandaRenderCards_() {
-      const res = berandaAggregate_();
+      const res = berandaTab_ === 'project' ? berandaAggregateProject_() : berandaAggregate_();
       const loaded = !!berandaLoadedAt_;
 
       // Kotak total (overlay kiri bawah) + fallback grid (kalau peta tidak tersedia)
       const totalBody = berandaEl_('bmTotalBody');
-      if (totalBody) totalBody.innerHTML = berandaPivotHtml_('Total Region Jawa Timur', res.total, loaded);
+      if (totalBody) totalBody.innerHTML = berandaCardHtml_('Total Region Jawa Timur', null, res, loaded);
       const fb = berandaEl_('bmFallback');
       if (fb) {
         fb.classList.toggle('show', berandaLeafletFailed_);
         if (berandaLeafletFailed_) {
           fb.innerHTML = BERANDA_DISTRICTS.map(function (d) {
-            return berandaPivotHtml_(d.name, res.agg[d.name.toUpperCase()], loaded);
+            return berandaCardHtml_(d.name, d.name.toUpperCase(), res, loaded);
           }).join('');
         }
       }
 
       if (berandaMap_) {
-        const compact = berandaMap_.getZoom() < BERANDA_MIN_ZOOM_FULL;
+        const minZoomFull = berandaTab_ === 'project' ? BERANDA_MIN_ZOOM_FULL_PROJECT : BERANDA_MIN_ZOOM_FULL;
+        const compact = berandaMap_.getZoom() < minZoomFull;
         BERANDA_DISTRICTS.forEach(function (d) {
           const m = berandaMarkers_[d.name];
           if (!m) return;
-          const html = berandaPivotHtml_(d.name, res.agg[d.name.toUpperCase()], loaded);
+          const html = berandaCardHtml_(d.name, d.name.toUpperCase(), res, loaded);
           if (compact !== berandaCompact_) {
             m.unbindTooltip();
             m.unbindPopup();
@@ -3045,7 +3163,8 @@
       // ruang atas yang ditambah.
       const badge = berandaEl_('bmTotalBox');
       const wide = wrap.clientWidth >= 900;
-      const padTL = wide ? [(badge ? badge.offsetWidth : 240) + 40, 150]
+      const padTop = berandaTab_ === 'project' ? BERANDA_PAD_TOP_PROJECT : BERANDA_PAD_TOP_GOLIVE;
+      const padTL = wide ? [(badge ? badge.offsetWidth : 240) + 40, padTop]
                          : [56, (badge ? badge.offsetHeight : 200) + 130];
       berandaMap_.fitBounds(berandaBounds_, {
         paddingTopLeft: padTL,
@@ -3140,6 +3259,30 @@
       berandaRenderCards_();
     }
 
+    // Tab Project tidak memakai filter tanggal Go Live -> kontrol tanggal & preset dimatikan.
+    function berandaApplyTabUi_() {
+      const isProject = berandaTab_ === 'project';
+      const tg = berandaEl_('bmTabGolive'), tp = berandaEl_('bmTabProject');
+      if (tg) tg.setAttribute('aria-selected', isProject ? 'false' : 'true');
+      if (tp) tp.setAttribute('aria-selected', isProject ? 'true' : 'false');
+      const row = berandaEl_('bmFilterRow');
+      if (row) row.classList.toggle('bm-dates-off', isProject);
+      ['bmDateFrom', 'bmDateTo'].forEach(function (id) {
+        const el = berandaEl_(id);
+        if (el) el.disabled = isProject;
+      });
+      document.querySelectorAll('#bmFilterRow .bm-chip').forEach(function (b) { b.disabled = isProject; });
+    }
+
+    function berandaSetTab_(tab) {
+      tab = (tab === 'project') ? 'project' : 'golive';
+      if (tab === berandaTab_) return;
+      berandaTab_ = tab;
+      berandaApplyTabUi_();
+      berandaRenderCards_();           // ukuran kotak total berubah -> padding refit ikut benar
+      setTimeout(berandaRefit_, 0);    // tinggi kartu beda -> fit ulang peta & cek mode kartu penuh/ringkas
+    }
+
     function berandaRefresh_() {
       // Refresh juga mencoba memuat ulang Leaflet kalau sebelumnya gagal.
       if (berandaLeafletFailed_) berandaPrepareMap_();
@@ -3162,6 +3305,7 @@
 
     function berandaOnEnter_() {
       berandaInitDates_();
+      berandaApplyTabUi_();
       berandaRenderCards_();
       if (!berandaMap_) berandaPrepareMap_();
       else setTimeout(berandaRefit_, 120);
