@@ -896,17 +896,19 @@
       padding: 3px; border-radius: 10px; background: var(--color-gray-100);
       box-shadow: inset 0 1px 2px rgba(16,24,40,.08);
     }
-    /* Thumb berwarna yang meluncur ke tab aktif: B2C = navy brand, B2B = oranye (sama dengan penanda segmen di peta) */
+    /* Thumb berwarna yang meluncur ke tab aktif: B2C = merah IndiHome, B2B = navy Infranexia */
     .gl-seg-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-      border-radius: 8px; background: var(--color-brand-500);
-      box-shadow: 0 3px 8px -2px rgba(44,57,121,.45);
+      border-radius: 8px; background: #EC1C24;
+      box-shadow: 0 3px 8px -2px rgba(236,28,36,.45);
       transition: transform .35s cubic-bezier(.4, 0, .2, 1), background-color .35s ease, box-shadow .35s ease;
     }
     .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb {
-      transform: translateX(100%); background: var(--color-orange-500);
-      box-shadow: 0 3px 8px -2px rgba(251,101,20,.45);
+      transform: translateX(100%); background: var(--color-brand-500);
+      box-shadow: 0 3px 8px -2px rgba(44,57,121,.45);
     }
+    /* Mode gelap: navy dicerahkan sedikit supaya thumb tetap terbaca di atas latar gelap */
+    body[data-theme="dark"] .gl-seg-switch[data-seg="B2B"] .gl-seg-thumb { background: var(--color-brand-400); }
     .gl-seg-btn {
       position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       min-width: 78px; height: 28px; padding: 0 12px; border: 0; background: transparent; border-radius: 8px;
