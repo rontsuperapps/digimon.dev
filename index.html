@@ -889,6 +889,8 @@
     body[data-theme="dark"] .bm-tab { color: var(--color-gray-400); }
     body[data-theme="dark"] .bm-tab:hover { color: var(--color-gray-200); }
     body[data-theme="dark"] .bm-tab[aria-selected="true"] { background: rgba(255,255,255,.12); color: #fff; }
+    /* Tab segmen B2C | B2B di halaman Go Live / Project */
+    .gl-seg-tabs { align-self: flex-start; }
     /* Tab Project tidak memakai filter tanggal Go Live -> kontrolnya diredupkan */
     .bm-dates-off .golive-filter-daterange, .bm-dates-off .bm-presets { opacity: .45; pointer-events: none; }
     /* Kartu pivot tab Project (baris = New Status, kolom = B2C | B2B | Total) */
@@ -957,32 +959,31 @@
         <span class="nav-header-left"><span class="icon-box-wrapper"><i class="fa-solid fa-house"></i></span><span class="menu-title-text">Beranda</span></span>
       </button>
 
+      <!-- Dashboard: 1 halaman Go Live & 1 halaman Project, masing-masing punya tab B2C | B2B -->
       <div class="menu-item-group open">
         <button class="nav-header-trigger" onclick="toggleAccordion(this)">
           <div class="nav-header-left">
             <div class="icon-box-wrapper"><i class="fa-solid fa-chart-simple"></i></div>
-            <span class="menu-title-text">Dashboard B2C</span>
+            <span class="menu-title-text">Dashboard</span>
           </div>
           <i class="fa-solid fa-chevron-right arrow-icon"></i>
         </button>
         <div class="submenu-list">
-          <a class="sub-nav-item active" id="nav-golive-b2c" onclick="switchPage('golive-b2c')"><span class="nav-icon-bullet"></span> Go Live B2C</a>
-          <a class="sub-nav-item" id="nav-project-b2c" onclick="switchPage('project-b2c')"><span class="nav-icon-bullet"></span> Project B2C</a>
-          <a class="sub-nav-item" id="nav-survey-dsi" onclick="switchPage('survey-dsi')"><span class="nav-icon-bullet"></span> Survey DSI</a>
+          <a class="sub-nav-item" id="nav-project" onclick="switchPage(glNavPage_('project'))"><span class="nav-icon-bullet"></span> Project</a>
+          <a class="sub-nav-item" id="nav-golive" onclick="switchPage(glNavPage_('golive'))"><span class="nav-icon-bullet"></span> Go Live</a>
         </div>
       </div>
 
       <div class="menu-item-group">
         <button class="nav-header-trigger" onclick="toggleAccordion(this)">
           <div class="nav-header-left">
-            <div class="icon-box-wrapper"><i class="fa-solid fa-building"></i></div>
-            <span class="menu-title-text">Dashboard B2B</span>
+            <div class="icon-box-wrapper"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="menu-title-text">Micro Demand</span>
           </div>
           <i class="fa-solid fa-chevron-right arrow-icon"></i>
         </button>
         <div class="submenu-list">
-          <a class="sub-nav-item" id="nav-golive-b2b" onclick="switchPage('golive-b2b')"><span class="nav-icon-bullet"></span> Go Live B2B</a>
-          <a class="sub-nav-item" id="nav-project-b2b" onclick="switchPage('project-b2b')"><span class="nav-icon-bullet"></span> Project B2B</a>
+          <a class="sub-nav-item" id="nav-survey-dsi" onclick="switchPage('survey-dsi')"><span class="nav-icon-bullet"></span> Survey DSI</a>
         </div>
       </div>
 
@@ -1018,7 +1019,7 @@
       <div class="top-bar-left">
         <button class="btn-hamburger" onclick="toggleMobileSidebar(true)" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
         <div class="top-bar-titles">
-          <h1 id="pageTitle">Dashboard B2C — Go Live B2C</h1>
+          <h1 id="pageTitle">Dashboard — Go Live</h1>
           <span class="top-subtitle" id="pageSubtitle">Progres Go Live Project B2C</span>
         </div>
       </div>
@@ -1111,6 +1112,14 @@
 
     <!-- ═════════ HALAMAN: GO LIVE B2C ═════════ -->
     <div class="page-section active-page" id="page-golive-b2c" data-view="golive">
+
+      <!-- Tab segmen: berlaku untuk halaman Go Live DAN Project (disinkronkan glSyncSegTabs_) -->
+      <div class="gl-seg-tabs">
+        <div class="bm-tabs" role="tablist" aria-label="Segmen data">
+          <button type="button" class="bm-tab" role="tab" id="glSegTabB2C" aria-selected="true" onclick="glSelectSegmentTab_('B2C')">B2C</button>
+          <button type="button" class="bm-tab" role="tab" id="glSegTabB2B" aria-selected="false" onclick="glSelectSegmentTab_('B2B')">B2B</button>
+        </div>
+      </div>
 
       <!-- 1. Ringkasan total (badge per bucket) — diisi renderGoLiveBadgeTotals_() -->
       <section class="golive-summary-card gl-only-golive">
@@ -3953,37 +3962,39 @@
         subtitle: 'Peta capaian Go Live per District',
         onEnter: function () { berandaOnEnter_(); }
       },
+      // Go Live & Project = 1 menu sidebar masing-masing; segmen B2C/B2B dipilih lewat tab di
+      // halaman. Key 'golive-b2c' dst. tetap dipakai sebagai "varian" internal (segmen + view).
       'golive-b2c': {
-        navId: 'nav-golive-b2c',
+        navId: 'nav-golive',
         segment: 'B2C',
-        title: 'Dashboard B2C — Go Live B2C',
+        title: 'Dashboard — Go Live',
         subtitle: 'Progres Go Live Project B2C'
       },
+      'golive-b2b': {
+        navId: 'nav-golive',
+        segment: 'B2B',
+        title: 'Dashboard — Go Live',
+        subtitle: 'Progres Go Live Project B2B'
+      },
       'project-b2c': {
-        navId: 'nav-project-b2c',
+        navId: 'nav-project',
         segment: 'B2C',
         view: 'project',
-        title: 'Dashboard B2C — Project B2C',
+        title: 'Dashboard — Project',
         subtitle: 'Progres New Status Project B2C'
+      },
+      'project-b2b': {
+        navId: 'nav-project',
+        segment: 'B2B',
+        view: 'project',
+        title: 'Dashboard — Project',
+        subtitle: 'Progres New Status Project B2B'
       },
       'survey-dsi': {
         navId: 'nav-survey-dsi',
-        title: 'Dashboard B2C — Survey DSI',
+        title: 'Micro Demand — Survey DSI',
         subtitle: 'Progres Survey DSI',
         comingSoon: true
-      },
-      'golive-b2b': {
-        navId: 'nav-golive-b2b',
-        segment: 'B2B',
-        title: 'Dashboard B2B — Go Live B2B',
-        subtitle: 'Progres Go Live Project B2B'
-      },
-      'project-b2b': {
-        navId: 'nav-project-b2b',
-        segment: 'B2B',
-        view: 'project',
-        title: 'Dashboard B2B — Project B2B',
-        subtitle: 'Progres New Status Project B2B'
       },
       'profile': {
         navId: 'nav-profile',
@@ -4008,6 +4019,26 @@
         comingSoon: true
       }
     };
+
+    // Nama halaman internal untuk klik menu sidebar: view ('golive' | 'project') + segmen
+    // yang terakhir dipilih lewat tab (default B2C).
+    function glNavPage_(view) {
+      return view + '-' + (glSegment_ === 'B2B' ? 'b2b' : 'b2c');
+    }
+
+    // Klik tab B2C | B2B: tetap di view yang sedang aktif (Go Live atau Project).
+    function glSelectSegmentTab_(seg) {
+      const glPageEl = document.getElementById('page-golive-b2c');
+      const view = (glPageEl && glPageEl.getAttribute('data-view') === 'project') ? 'project' : 'golive';
+      switchPage(view + '-' + (seg === 'B2B' ? 'b2b' : 'b2c'));
+    }
+
+    function glSyncSegTabs_() {
+      ['B2C', 'B2B'].forEach(function (k) {
+        const b = document.getElementById('glSegTab' + k);
+        if (b) b.setAttribute('aria-selected', k === glSegment_ ? 'true' : 'false');
+      });
+    }
 
     function switchPage(pageName) {
       const meta = PAGE_META[pageName];
@@ -4050,6 +4081,7 @@
         }
         renderProjectStatus_();
         const segmentChanged = setGoLiveSegment_(meta.segment || 'B2C');
+        glSyncSegTabs_();
         if (segmentChanged) {
           ensureGoLiveDailyFilterOptions_();
           fetchMonitoringGoLiveData(false);
