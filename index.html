@@ -968,6 +968,35 @@
       .bm-logo { height: 28px; }
       .bm-refresh { margin-left: 0; }
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       MICRO DEMAND — SURVEY DSI
+       Ditaruh inline (bukan di components.css) supaya langsung jalan
+       TANPA perlu `npm run build:css` ulang. Boleh dipindah ke
+       components.css kapan saja.
+       ══════════════════════════════════════════════════════════════ */
+    .dsi-head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .dsi-updated { font-size: 11px; color: var(--text-muted); }
+    .dsi-badge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 4px; }
+    @media (min-width: 640px)  { .dsi-badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 1280px) { .dsi-badge-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+    .dsi-group-label { margin: 10px 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+    .dsi-group-label:first-child { margin-top: 0; }
+    .dsi-total-grid .golive-badge-value { font-size: 18px; }
+    .dsi-chart-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    @media (min-width: 640px)  { .dsi-chart-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                 .dsi-chart-row > :first-child { grid-column: 1 / -1; } }
+    @media (min-width: 1280px) { .dsi-chart-row { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr); }
+                                 .dsi-chart-row > :first-child { grid-column: auto; } }
+    .dsi-bar-wrap { height: 205px; gap: 3px; }
+    .dsi-bar-wrap .pj-bar-col { flex: 1 0 42px; }
+    .dsi-bar-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 8px; font-size: 11px; color: var(--text-muted); }
+    .dsi-bar-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dsi-bar-legend span i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .dsi-bar-legend em { margin-left: auto; font-style: normal; opacity: .8; }
+    .dsi-donut-item[data-dsi-click] { cursor: pointer; }
+    .dsi-donut-item[data-dsi-click]:hover .golive-chart-legend-name { text-decoration: underline; }
+    .dsi-bar-lbl-pic { display: block; font-size: 9px; opacity: .7; }
   </style>
 </head>
 <body data-theme="light">
@@ -1675,6 +1704,146 @@
       </div>
     </div>
 
+    <!-- ═════════ HALAMAN: MICRO DEMAND — SURVEY DSI ═════════
+         Sumber: sheet "DSI" (getSurveyDsiData). Seluruh pivot, chart & tabel dihitung
+         di browser dari SATU response, logikanya ada di blok "SURVEY DSI" di <script>.
+         Header pivot & kotak filter dibangun dsiInitUi_() dari konfigurasi DSI_BUCKETS /
+         DSI_FILTER_FIELDS, jadi menambah status baru cukup mengubah konfigurasi itu. -->
+    <div class="page-section" id="page-survey-dsi">
+
+      <!-- 1. Ringkasan (badge per status) -->
+      <section class="golive-summary-card">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-chart-simple"></i> Ringkasan Survey DSI (Polygon)</div>
+          <div class="dsi-head-actions">
+            <span class="dsi-updated" id="dsiUpdatedAt"></span>
+            <button type="button" class="golive-daily-filter-btn" id="dsiRefreshBtn" onclick="dsiRefresh_()">
+              <i class="fa-solid fa-rotate"></i> Refresh Data
+            </button>
+          </div>
+        </div>
+        <div id="dsiBadgeArea">
+          <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat data Survey DSI...</div>
+        </div>
+        <div class="pj-note" id="dsiNote"></div>
+      </section>
+
+      <!-- 2. Chart: bar per status + donut Telkomsel + donut Telkom Akses -->
+      <div class="dsi-chart-row">
+        <section class="golive-summary-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-bar"></i> Total Polygon per Status</div>
+          </div>
+          <div class="pj-chart-wrap dsi-bar-wrap" id="dsiBarBody">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+          </div>
+          <div class="dsi-bar-legend"><span>TSEL = Telkomsel</span><span>TA = Telkom Akses</span><em>Klik batang untuk melihat datanya di tabel</em></div>
+        </section>
+        <section class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase Telkomsel (Polygon)</div>
+          </div>
+          <div class="golive-chart-body" id="dsiDonutTelkomsel">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+          </div>
+        </section>
+        <section class="golive-chart-card">
+          <div class="golive-summary-head">
+            <div class="golive-summary-title"><i class="fa-solid fa-chart-pie"></i> Persentase Telkom Akses (Polygon)</div>
+          </div>
+          <div class="golive-chart-body" id="dsiDonutTelkomAkses">
+            <div class="golive-chart-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat chart...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 3. Rekap pivot (District / Sub District) — header dibangun dsiInitUi_() -->
+      <section class="golive-summary-card">
+        <div class="golive-summary-head">
+          <div class="golive-summary-title"><i class="fa-solid fa-table-cells"></i> Rekap Survey DSI</div>
+        </div>
+        <div class="golive-tabs" role="tablist" aria-label="Rekap Survey DSI">
+          <button type="button" class="golive-tab-btn active" role="tab" aria-selected="true" aria-controls="dsiPanel-district" onclick="switchGoLiveTab('dsi', 'district', this)"><i class="fa-solid fa-location-dot"></i> District</button>
+          <button type="button" class="golive-tab-btn" role="tab" aria-selected="false" aria-controls="dsiPanel-subdistrict" onclick="switchGoLiveTab('dsi', 'subdistrict', this)"><i class="fa-solid fa-location-dot"></i> Sub District</button>
+        </div>
+        <div class="golive-tab-panel active" id="dsiPanel-district" data-group="dsi" data-tab="district" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom (TAGGING = Tagging Target, INTERVIEW = Interview Target)</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="dsiDistrictTable">
+              <thead id="dsiDistrictThead"></thead>
+              <tbody id="dsiDistrictBody"><tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per district...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="golive-tab-panel" id="dsiPanel-subdistrict" data-group="dsi" data-tab="subdistrict" role="tabpanel">
+          <div class="golive-scroll-hint"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom (TAGGING = Tagging Target, INTERVIEW = Interview Target)</div>
+          <div class="pivot-table-wrap pivot-table-wrap-full">
+            <table class="pivot-grouped-table" id="dsiSubDistrictTable">
+              <thead id="dsiSubDistrictThead"></thead>
+              <tbody id="dsiSubDistrictBody"><tr><td class="golive-summary-empty"><i class="fa-solid fa-spinner fa-spin"></i>Memuat rekap per sub district...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Filter + pencarian tabel data -->
+      <section class="golive-filter-card" id="dsiFilterBar">
+        <div class="golive-filter-bar golive-filter-row1" id="dsiFilterFields"></div>
+        <div class="golive-filter-bar golive-filter-row2">
+          <div class="golive-filter-field golive-filter-search-field">
+            <label for="dsiSearchInput">Pencarian</label>
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="dsiSearchInput" class="search-input" placeholder="Cari ID Polygon, Nama Polygon, IHLD ID, Nama Proyek, STO..." oninput="dsiOnSearchInput_()">
+              <button class="search-clear-btn" id="dsiSearchClearBtn" onclick="dsiClearSearch_()" title="Hapus pencarian">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="golive-filter-reset-btn sm:ml-auto" onclick="dsiResetFilters_()">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Reset
+          </button>
+          <button type="button" class="golive-export-btn" onclick="dsiExport_()">
+            <i class="fa-solid fa-file-export"></i> Export
+          </button>
+        </div>
+        <div class="golive-filter-active-hint" id="dsiFilterActiveHint"></div>
+      </section>
+
+      <!-- 5. Tabel data — 13 kolom. URUTAN <th> HARUS sama dengan <td> di dsiRenderRows_(). -->
+      <section class="table-container" id="dsiTableSection">
+        <div class="golive-scroll-hint px-4 pt-3"><i class="fa-solid fa-chevron-right"></i> Geser tabel ke kanan untuk melihat semua kolom</div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>ID POLYGON</th><th>NAMA POLYGON</th><th class="text-right">TAGGING TARGET</th><th class="text-right">INTERVIEW TARGET</th><th>NEXT ACTION</th><th>STATUS POLYGON</th><th class="text-right">TOTAL VALID</th><th>IHLD ID</th><th>NAMA PROYEK</th><th>STATUS ORDER</th><th>NEW STATUS</th><th>TASK ORDER</th><th>LAST UPDATE</th></tr>
+            </thead>
+            <tbody id="dsiRowsTarget">
+              <tr><td colspan="13" style="text-align:center;color:var(--text-muted);padding:40px 20px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:20px;display:block;margin:0 auto 10px;opacity:0.6;"></i>Memuat data Survey DSI...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar" id="dsiPaginationBar">
+          <div class="page-size-select-wrap">
+            <label for="dsiPageSizeSelect">Tampilkan</label>
+            <select id="dsiPageSizeSelect" class="page-size-select" onchange="dsiChangePageSize_(this.value)">
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+            <span>data</span>
+          </div>
+          <div class="pagination-controls">
+            <button class="btn-page" id="dsiBtnPrev" onclick="dsiGoToPage_(dsiPage_ - 1)" aria-label="Halaman sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="pagination-current" id="dsiPaginationCurrent">1</span>
+            <button class="btn-page" id="dsiBtnNext" onclick="dsiGoToPage_(dsiPage_ + 1)" aria-label="Halaman berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </section>
+    </div>
+
     <!-- ═════════ HALAMAN: PROFIL SAYA ═════════ -->
     <div class="page-section" id="page-profile">
       <section class="golive-summary-card pf-hero">
@@ -1828,7 +1997,8 @@
       'getMonitoringGoLiveRunRate7Hari', 'getMonitoringGoLiveDailyPortReal',
       'getDashboardBootstrap',
       'getMonitoringGoLiveSummary', 'getMonitoringGoLivePT2Summary', 'getMonitoringGoLivePT3Summary',
-      'getMonitoringGoLiveNeedIhldSummary'
+      'getMonitoringGoLiveNeedIhldSummary',
+      'getSurveyDsiData'
     ];
 
     // Prefiks dinaikkan ke _v2 saat migrasi ke sheet "B2C": bentuk data
@@ -4065,9 +4235,10 @@
       },
       'survey-dsi': {
         navId: 'nav-survey-dsi',
+        customPage: 'page-survey-dsi',
         title: 'Micro Demand — Survey DSI',
-        subtitle: 'Progres Survey DSI',
-        comingSoon: true
+        subtitle: 'Progres Survey DSI per District / Sub District',
+        onEnter: function () { dsiOnEnter_(); }
       },
       'profile': {
         navId: 'nav-profile',
@@ -4918,6 +5089,8 @@
       requestAnimationFrame(function () {
         syncPivotStickyHeaderOffsets_('glSummaryDistrictTable');
         syncPivotStickyHeaderOffsets_('glSummarySubDistrictTable');
+        syncPivotStickyHeaderOffsets_('dsiDistrictTable');
+        syncPivotStickyHeaderOffsets_('dsiSubDistrictTable');
         document.querySelectorAll('.pj-rekap-table, .gl-prog-table').forEach(function (t) { syncPivotStickyHeaderOffsets_(t.id); });
       });
     }
@@ -5895,6 +6068,622 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+
+    // ══════════════════════════════════════════════════════════════
+    // ── MICRO DEMAND › SURVEY DSI ──
+    // Sumber: sheet "DSI" lewat getSurveyDsiData (1 request). Semua
+    // angka pivot, badge, chart & tabel dihitung DI SINI dari array
+    // baris yang sama, jadi klik angka pivot / badge / batang chart
+    // langsung memfilter tabel tanpa request baru.
+    //
+    // Bucket status diambil dari kolom NEW STATUS (Y) dan dikelompokkan
+    // ke Telkomsel / Telkom Akses sesuai DSI_BUCKETS di bawah. Urutan
+    // array = urutan kolom pivot. Pencocokan toleran: huruf besar/kecil,
+    // spasi, "-", "_" dan titik diabaikan ("Submited I-HLD" = "SUBMITTED
+    // IHLD"). NEW STATUS di luar daftar tetap ikut TOTAL & muncul di
+    // catatan di bawah badge supaya salah ketik/status baru ketahuan.
+    // ══════════════════════════════════════════════════════════════
+    const DSI_BLANK_ = '(KOSONG)';
+
+    const DSI_GROUPS = {
+      telkomsel:   { label: 'TELKOMSEL',    cls: 'mitra' },
+      telkomakses: { label: 'TELKOM AKSES', cls: 'sdi' }
+    };
+
+    const DSI_BUCKETS = [
+      { key: 'approvalAi',       label: 'Approval AI',       group: 'telkomsel',   color: '#0BA5EC', icon: 'fa-circle-check' },
+      { key: 'rejectedAi',       label: 'Rejected AI',       group: 'telkomsel',   color: '#F04438', icon: 'fa-circle-xmark' },
+      { key: 'approvalSurvey',   label: 'Approval Survey',   group: 'telkomsel',   color: '#12B76A', icon: 'fa-circle-check' },
+      { key: 'pending',          label: 'Pending',           group: 'telkomsel',   color: '#F79009', icon: 'fa-triangle-exclamation' },
+      { key: 'drop',             label: 'Drop',              group: 'telkomsel',   color: '#98A2B3', icon: 'fa-circle-xmark', aliases: ['DROPPED'] },
+      { key: 'submitedIhld',     label: 'Submited I-HLD',    group: 'telkomsel',   color: '#2C3979', icon: 'fa-clipboard-list', aliases: ['SUBMITTEDIHLD'] },
+      { key: 'assignPermit',     label: 'Assign Permit',     group: 'telkomakses', color: '#7A5AF8', icon: 'fa-clipboard-list' },
+      { key: 'onGoingPermit',    label: 'On Going Permit',   group: 'telkomakses', color: '#FDB022', icon: 'fa-rotate' },
+      { key: 'approvalPermit',   label: 'Approval Permit',   group: 'telkomakses', color: '#32D583', icon: 'fa-circle-check' },
+      { key: 'rejectedPermit',   label: 'Rejected Permit',   group: 'telkomakses', color: '#F97066', icon: 'fa-circle-xmark' },
+      { key: 'onGoingSurvey',    label: 'On Going Survey',   group: 'telkomakses', color: '#36BFFA', icon: 'fa-rotate' },
+      { key: 'validationSurvey', label: 'Validation Survey', group: 'telkomakses', color: '#EE46BC', icon: 'fa-eye' }
+    ];
+
+    // Index kolom terakhir grup Telkomsel -> dipakai untuk garis pemisah grup.
+    const DSI_LAST_TELKOMSEL_IDX_ = (function () {
+      let last = 0;
+      DSI_BUCKETS.forEach(function (b, i) { if (b.group === 'telkomsel') last = i; });
+      return last;
+    })();
+
+    function dsiNormKey_(v) { return String(v == null ? '' : v).toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+    const DSI_BUCKET_BY_NORM_ = (function () {
+      const map = {};
+      DSI_BUCKETS.forEach(function (b) {
+        map[dsiNormKey_(b.label)] = b;
+        (b.aliases || []).forEach(function (a) { map[dsiNormKey_(a)] = b; });
+      });
+      return map;
+    })();
+
+    const DSI_BUCKET_BY_KEY_ = (function () {
+      const map = {};
+      DSI_BUCKETS.forEach(function (b) { map[b.key] = b; });
+      return map;
+    })();
+
+    // id = id elemen <select>, key = field di row (lihat getSurveyDsiRows_ di code.gs).
+    const DSI_FILTER_FIELDS = [
+      { id: 'dsiFilterDistrict',      key: 'district',      label: 'District' },
+      { id: 'dsiFilterSubDistrict',   key: 'subDistrict',   label: 'Sub District' },
+      { id: 'dsiFilterBranch',        key: 'branch',        label: 'Branch' },
+      { id: 'dsiFilterWok',           key: 'wok',           label: 'Wok' },
+      { id: 'dsiFilterSto',           key: 'sto',           label: 'STO' },
+      { id: 'dsiFilterNextAction',    key: 'nextAction',    label: 'Next Action' },
+      { id: 'dsiFilterStatusPolygon', key: 'statusPolygon', label: 'Status Polygon' },
+      { id: 'dsiFilterNewStatus',     key: 'newStatus',     label: 'New Status' },
+      { id: 'dsiFilterTaskOrder',     key: 'taskOrder',     label: 'Task Order' }
+    ];
+
+    // 27 kolom sheet (A..AA) -> dipakai Export CSV.
+    const DSI_FULL_COLUMNS_ = [
+      { key: 'createdAt', label: 'CREATED AT' }, { key: 'district', label: 'DISTRICT' },
+      { key: 'subDistrict', label: 'SUB DISTRICT' }, { key: 'branch', label: 'BRANCH' },
+      { key: 'wok', label: 'WOK' }, { key: 'sto', label: 'STO' }, { key: 'vendor', label: 'VENDOR' },
+      { key: 'idPolygon', label: 'ID POLYGON' }, { key: 'namaPolygon', label: 'NAMA POLYGON' },
+      { key: 'taggingTarget', label: 'TAGGING TARGET' }, { key: 'interviewTarget', label: 'INTERVIEW TARGET' },
+      { key: 'nextAction', label: 'NEXT ACTION' }, { key: 'statusPolygon', label: 'STATUS POLYGON' },
+      { key: 'totalValid', label: 'TOTAL VALID' }, { key: 'lastSurveyor', label: 'LAST SURVEYOR' },
+      { key: 'lastSupervisor', label: 'LAST SUPERVISOR' }, { key: 'lastAssigned', label: 'LAST ASSIGNED' },
+      { key: 'lastDateSurvey', label: 'LAST DATE SURVEY' }, { key: 'approvedAt', label: 'APPROVED AT' },
+      { key: 'finishedSurveyAt', label: 'FINISHED SURVEY AT' }, { key: 'doneAt', label: 'DONE AT' },
+      { key: 'ihldId', label: 'IHLD ID' }, { key: 'namaProyek', label: 'NAMA PROYEK' },
+      { key: 'statusOrder', label: 'STATUS ORDER' }, { key: 'newStatus', label: 'NEW STATUS' },
+      { key: 'taskOrder', label: 'TASK ORDER' }, { key: 'lastUpdate', label: 'LAST UPDATE' }
+    ];
+
+    let dsiRows_          = [];
+    let dsiFiltered_      = [];
+    let dsiPage_          = 1;
+    let dsiPageSize_      = 10;
+    let dsiLoadedOnce_    = false;
+    let dsiLoading_       = false;
+    let dsiLastFetchTs_   = 0;
+    let dsiQuickBucket_   = '';
+    let dsiSearchTimer_   = null;
+
+    // ── Data ──────────────────────────────────────────────────────
+    function dsiPrepare_(raw) {
+      return (raw || []).map(function (r) {
+        r._pid = String(r.idPolygon || '').trim();
+        r._tag = pjToNum_(r.taggingTarget);
+        r._int = pjToNum_(r.interviewTarget);
+        const b = DSI_BUCKET_BY_NORM_[dsiNormKey_(r.newStatus)];
+        r._bk = b ? b.key : '';
+        r._search = [r.district, r.subDistrict, r.branch, r.wok, r.sto, r.idPolygon, r.namaPolygon,
+                     r.ihldId, r.namaProyek, r.nextAction, r.statusPolygon, r.statusOrder,
+                     r.newStatus, r.taskOrder].join(' ').toLowerCase();
+        return r;
+      });
+    }
+
+    async function dsiFetch_(bypass) {
+      if (dsiLoading_) return;
+      dsiLoading_ = true;
+      dsiSetLoading_(true);
+      try {
+        const res = await callGAS('getSurveyDsiData', [!!bypass]);
+        if (!res || res.success === false) {
+          throw new Error((res && res.message) || 'Gagal memuat data Survey DSI.');
+        }
+        // Refresh paksa menyimpan cache offline dengan args [true]; salin ke [false]
+        // supaya mode offline (yang membaca [false]) ikut dapat data terbaru.
+        if (bypass) writePwaOfflineCache_('getSurveyDsiData', [false], res);
+
+        dsiRows_ = dsiPrepare_(res.data || []);
+        dsiLoadedOnce_ = true;
+        dsiLastFetchTs_ = Date.now();
+        dsiPopulateFilters_();
+        dsiRenderSummary_();
+        dsiApplyFilter_(false);
+
+        const t = document.getElementById('dsiUpdatedAt');
+        if (t) t.textContent = 'Diperbarui ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      } catch (err) {
+        if (appSessionEnding_) return;
+        if (!dsiLoadedOnce_) dsiRenderError_(err.message);
+        else showAppNotif('error', err.message || 'Gagal memuat data Survey DSI.', 'Gagal Memuat');
+      } finally {
+        dsiLoading_ = false;
+        dsiSetLoading_(false);
+      }
+    }
+
+    function dsiRefresh_() { dsiFetch_(true); }
+
+    function dsiSetLoading_(on) {
+      const btn = document.getElementById('dsiRefreshBtn');
+      if (!btn) return;
+      btn.disabled = !!on;
+      btn.innerHTML = on
+        ? '<i class="fa-solid fa-spinner fa-spin"></i> Memuat...'
+        : '<i class="fa-solid fa-rotate"></i> Refresh Data';
+    }
+
+    function dsiOnEnter_() {
+      if (!dsiLoadedOnce_) dsiFetch_(false);
+      else if (Date.now() - dsiLastFetchTs_ > 180000) dsiFetch_(false);
+      syncAllPivotStickyHeaders_();
+    }
+
+    // ── Agregasi pivot ────────────────────────────────────────────
+    // Polygon = jumlah ID Polygon unik; Tagging/Interview = jumlah Target
+    // dari polygon unik itu (1 polygon dihitung sekali per sel pivot,
+    // jadi kalau sheet kebetulan punya baris ganda tidak terhitung dobel).
+    function dsiMetric_() { return { poly: 0, tag: 0, intv: 0, seen: null }; }
+
+    function dsiAddRow_(m, r) {
+      if (r._pid) {
+        if (!m.seen) m.seen = new Set();
+        if (m.seen.has(r._pid)) return;
+        m.seen.add(r._pid);
+      }
+      m.poly++; m.tag += r._tag; m.intv += r._int;
+    }
+
+    function dsiNewAgg_(label) {
+      const b = {};
+      DSI_BUCKETS.forEach(function (k) { b[k.key] = dsiMetric_(); });
+      return { label: label, total: dsiMetric_(), b: b };
+    }
+
+    function dsiAggregate_(rows, field) {
+      const map = new Map();
+      const grand = dsiNewAgg_('GRAND TOTAL');
+      rows.forEach(function (r) {
+        const label = String(r[field] || '').trim() || DSI_BLANK_;
+        let a = map.get(label);
+        if (!a) { a = dsiNewAgg_(label); map.set(label, a); }
+        dsiAddRow_(a.total, r);
+        dsiAddRow_(grand.total, r);
+        if (r._bk) { dsiAddRow_(a.b[r._bk], r); dsiAddRow_(grand.b[r._bk], r); }
+      });
+      const list = Array.from(map.values()).sort(function (x, y) {
+        if (x.label === DSI_BLANK_) return 1;
+        if (y.label === DSI_BLANK_) return -1;
+        return x.label.localeCompare(y.label);
+      });
+      return { rows: list, grand: grand };
+    }
+
+    // ── Pivot (header + baris) ────────────────────────────────────
+    const DSI_METRIC_LEAVES_ = [
+      { text: 'POLYGON',   title: 'Polygon' },
+      { text: 'TAGGING',   title: 'Tagging Target' },
+      { text: 'INTERVIEW', title: 'Interview Target' }
+    ];
+
+    function dsiTheadHtml_(firstLabel) {
+      const nTel = DSI_BUCKETS.filter(function (b) { return b.group === 'telkomsel'; }).length;
+      const nAk  = DSI_BUCKETS.length - nTel;
+      const leaf = function (cls, extraLast) {
+        return DSI_METRIC_LEAVES_.map(function (m, i) {
+          return '<th class="' + cls + (extraLast && i === 2 ? ' group-divider' : '') + '" title="' + m.title + '">' + m.text + '</th>';
+        }).join('');
+      };
+
+      const r1 = '<tr class="pivot-hdr-r1">'
+        + '<th rowspan="3" class="hdr-navy">' + firstLabel + '</th>'
+        + '<th rowspan="2" colspan="3" class="hdr-band hdr-band-total group-divider">TOTAL</th>'
+        + '<th colspan="' + (nTel * 3) + '" class="hdr-band hdr-band-mitra group-divider">' + DSI_GROUPS.telkomsel.label + '</th>'
+        + '<th colspan="' + (nAk * 3) + '" class="hdr-band hdr-band-sdi">' + DSI_GROUPS.telkomakses.label + '</th></tr>';
+
+      const r2 = '<tr class="pivot-hdr-r2">' + DSI_BUCKETS.map(function (b, i) {
+        return '<th colspan="3" class="hdr-sub-' + DSI_GROUPS[b.group].cls + (i === DSI_LAST_TELKOMSEL_IDX_ ? ' group-divider' : '') + '">' + escapeHtml(b.label.toUpperCase()) + '</th>';
+      }).join('') + '</tr>';
+
+      const r3 = '<tr class="pivot-hdr-r3">' + leaf('hdr-sub-total', true)
+        + DSI_BUCKETS.map(function (b, i) {
+            return leaf('hdr-leaf-' + DSI_GROUPS[b.group].cls, i === DSI_LAST_TELKOMSEL_IDX_);
+          }).join('') + '</tr>';
+
+      return r1 + r2 + r3;
+    }
+
+    function dsiMetricCells_(m, group, divider, highlightHit, ctx) {
+      let cls = 'num-cell cell-' + group + ((highlightHit && m.poly > 0) ? ' cell-hit' : '');
+      let attrs = '';
+      if (ctx) {
+        cls += ' cell-lop-click';
+        attrs = ' data-dsi-click="1"'
+          + ' data-label-type="' + escapeHtml(ctx.labelType || '') + '"'
+          + ' data-label="' + escapeHtml(ctx.label || '') + '"'
+          + ' data-bucket="' + escapeHtml(ctx.bucket || '') + '"'
+          + ' title="Klik untuk lihat detail datanya di tabel Survey DSI"';
+      }
+      return [m.poly, m.tag, m.intv].map(function (v, i) {
+        return '<td class="' + cls + (divider && i === 2 ? ' group-divider' : '') + '"' + attrs + '>' + formatNum_(v) + '</td>';
+      }).join('');
+    }
+
+    function dsiPivotRowHtml_(row, isGrand, labelType) {
+      const clickLabel = isGrand ? '' : row.label;
+      const ctxFor = function (bucket) { return { labelType: labelType, label: clickLabel, bucket: bucket }; };
+      let cells = dsiMetricCells_(row.total, 'total', true, false, ctxFor(''));
+      DSI_BUCKETS.forEach(function (b, i) {
+        cells += dsiMetricCells_(row.b[b.key], DSI_GROUPS[b.group].cls, i === DSI_LAST_TELKOMSEL_IDX_, !isGrand, ctxFor(b.key));
+      });
+      return '<tr' + (isGrand ? ' class="pivot-total-row"' : '') + '><td class="label-cell">' + escapeHtml(row.label) + '</td>' + cells + '</tr>';
+    }
+
+    function dsiRenderPivot_(tbodyId, agg, labelType) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      const colspan = 1 + 3 + DSI_BUCKETS.length * 3;
+      if (!agg.rows.length) {
+        tbody.innerHTML = '<tr><td colspan="' + colspan + '" class="golive-summary-empty"><i class="fa-solid fa-inbox"></i>Belum ada data Survey DSI.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = agg.rows.map(function (r) { return dsiPivotRowHtml_(r, false, labelType); }).join('')
+        + dsiPivotRowHtml_(Object.assign({}, agg.grand, { label: 'GRAND TOTAL' }), true, labelType);
+    }
+
+    // ── Badge + chart ─────────────────────────────────────────────
+    function dsiBadgeHtml_(b, v, pct) {
+      return '<div class="golive-badge-item pj-accent badge-lop-click" role="button" tabindex="0" data-dsi-click="1" data-label-type="" data-label="" data-bucket="' + b.key + '" style="--pj-c:' + b.color + ';" title="Klik untuk lihat datanya di tabel Survey DSI">'
+        + '<div class="golive-badge-icon"><i class="fa-solid ' + b.icon + '"></i></div>'
+        + '<div class="golive-badge-body"><div class="golive-badge-label">' + escapeHtml(b.label) + '</div>'
+        + '<div class="golive-badge-value">' + formatNum_(v) + '</div>'
+        + '<div class="golive-badge-pct">' + pct + '</div></div></div>';
+    }
+
+    function dsiTotalBadgeHtml_(label, value, sub) {
+      return '<div class="golive-badge-item badge-total badge-lop-click" role="button" tabindex="0" data-dsi-click="1" data-label-type="" data-label="" data-bucket="" title="Klik untuk lihat semua data di tabel Survey DSI">'
+        + '<div class="golive-badge-icon"><i class="fa-solid fa-chart-simple"></i></div>'
+        + '<div class="golive-badge-body"><div class="golive-badge-label">' + label + '</div>'
+        + '<div class="golive-badge-value">' + formatNum_(value) + '</div>'
+        + '<div class="golive-badge-pct">' + sub + '</div></div></div>';
+    }
+
+    function dsiDonutHtml_(groupKey, grand) {
+      const slices = DSI_BUCKETS.filter(function (b) { return b.group === groupKey; });
+      const values = slices.map(function (b) { return grand.b[b.key].poly; });
+      const total = values.reduce(function (a, b) { return a + b; }, 0);
+      if (total === 0) {
+        return '<div class="golive-chart-empty"><i class="fa-solid fa-chart-pie"></i>Belum ada data polygon untuk grup ini</div>';
+      }
+      let cursor = 0;
+      const stops = [];
+      const legend = slices.map(function (b, i) {
+        const v = values[i];
+        const pct = (v / total) * 100;
+        const deg = (v / total) * 360;
+        if (v > 0) stops.push(b.color + ' ' + cursor.toFixed(2) + 'deg ' + (cursor + deg).toFixed(2) + 'deg');
+        cursor += deg;
+        return '<div class="golive-chart-legend-item dsi-donut-item" role="button" tabindex="0" data-dsi-click="1" data-label-type="" data-label="" data-bucket="' + b.key + '" title="Klik untuk lihat datanya di tabel Survey DSI">'
+          + '<span class="golive-chart-legend-swatch" style="background:' + b.color + ';"></span>'
+          + '<span class="golive-chart-legend-name">' + escapeHtml(b.label) + '</span>'
+          + '<span class="golive-chart-legend-val">' + formatNum_(v) + '</span>'
+          + '<span class="golive-chart-legend-pct">' + goLiveChartPctLabel_(v, pct) + '</span></div>';
+      }).join('');
+      return '<div class="golive-donut-wrap"><div class="golive-donut" style="background:conic-gradient(' + stops.join(', ') + ');"></div>'
+        + '<div class="golive-donut-hole"><div class="dn-total">' + formatNum_(total) + '</div><div class="dn-label">POLYGON</div></div></div>'
+        + '<div class="golive-chart-legend">' + legend + '</div>';
+    }
+
+    function dsiBarHtml_(grand) {
+      const vals = DSI_BUCKETS.map(function (b) { return grand.b[b.key].poly; });
+      const max = Math.max.apply(null, vals.concat([0]));
+      return DSI_BUCKETS.map(function (b, i) {
+        const v = vals[i];
+        const h = max > 0 ? Math.max(2, Math.round((v / max) * 120)) : 2;
+        return '<div class="pj-bar-col" role="button" tabindex="0" data-dsi-click="1" data-label-type="" data-label="" data-bucket="' + b.key + '" style="--pj-c:' + b.color + ';" title="' + escapeHtml(b.label) + ' (' + DSI_GROUPS[b.group].label + '): ' + formatNum_(v) + ' polygon">'
+          + '<div class="pj-bar-val">' + formatNum_(v) + '</div>'
+          + '<div class="pj-bar" style="height:' + h + 'px;"></div>'
+          + '<div class="pj-bar-lbl">' + escapeHtml(b.label) + '<span class="dsi-bar-lbl-pic">' + (b.group === 'telkomsel' ? 'TSEL' : 'TA') + '</span></div></div>';
+      }).join('');
+    }
+
+    function dsiRenderSummary_() {
+      const distAgg = dsiAggregate_(dsiRows_, 'district');
+      const subAgg  = dsiAggregate_(dsiRows_, 'subDistrict');
+      const grand   = distAgg.grand;
+      const total   = grand.total.poly;
+
+      dsiRenderPivot_('dsiDistrictBody', distAgg, 'district');
+      dsiRenderPivot_('dsiSubDistrictBody', subAgg, 'subDistrict');
+
+      const pctOf = function (v) { return total > 0 ? Math.round((v / total) * 100) + '%' : '0%'; };
+      const groupHtml = function (groupKey) {
+        return '<div class="dsi-group-label">' + DSI_GROUPS[groupKey].label + '</div>'
+          + '<div class="dsi-badge-grid">' + DSI_BUCKETS.filter(function (b) { return b.group === groupKey; }).map(function (b) {
+              return dsiBadgeHtml_(b, grand.b[b.key].poly, pctOf(grand.b[b.key].poly));
+            }).join('') + '</div>';
+      };
+      document.getElementById('dsiBadgeArea').innerHTML =
+        '<div class="dsi-group-label">TOTAL</div>'
+        + '<div class="dsi-badge-grid dsi-total-grid">'
+        + dsiTotalBadgeHtml_('Total Polygon', total, '100%')
+        + dsiTotalBadgeHtml_('Tagging Target', grand.total.tag, 'total target')
+        + dsiTotalBadgeHtml_('Interview Target', grand.total.intv, 'total target')
+        + '</div>'
+        + groupHtml('telkomsel') + groupHtml('telkomakses');
+
+      document.getElementById('dsiBarBody').innerHTML = dsiBarHtml_(grand);
+      document.getElementById('dsiDonutTelkomsel').innerHTML = dsiDonutHtml_('telkomsel', grand);
+      document.getElementById('dsiDonutTelkomAkses').innerHTML = dsiDonutHtml_('telkomakses', grand);
+
+      // Catatan: polygon yang NEW STATUS-nya tidak masuk 12 kategori.
+      const mapped = DSI_BUCKETS.reduce(function (s, b) { return s + grand.b[b.key].poly; }, 0);
+      const unmapped = total - mapped;
+      const note = document.getElementById('dsiNote');
+      if (unmapped > 0) {
+        const counts = {};
+        dsiRows_.forEach(function (r) {
+          if (r._bk) return;
+          const k = String(r.newStatus || '').trim() || '(kosong)';
+          counts[k] = (counts[k] || 0) + 1;
+        });
+        const top = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 5)
+          .map(function (k) { return '"' + escapeHtml(k) + '" (' + formatNum_(counts[k]) + ')'; }).join(', ');
+        note.innerHTML = formatNum_(unmapped) + ' polygon dengan New Status di luar 12 kategori di atas tetap dihitung di TOTAL. Status tersebut: ' + top + '.';
+      } else {
+        note.textContent = '';
+      }
+
+      syncAllPivotStickyHeaders_();
+    }
+
+    function dsiRenderError_(msg) {
+      const err = '<div class="golive-chart-empty" style="color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat data: ' + escapeHtml(msg || 'Terjadi kesalahan.') + '</div>';
+      ['dsiBadgeArea', 'dsiBarBody', 'dsiDonutTelkomsel', 'dsiDonutTelkomAkses'].forEach(function (id) {
+        const el = document.getElementById(id); if (el) el.innerHTML = err;
+      });
+      const colspan = 1 + 3 + DSI_BUCKETS.length * 3;
+      ['dsiDistrictBody', 'dsiSubDistrictBody'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<tr><td colspan="' + colspan + '" class="golive-summary-empty" style="color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat rekap: ' + escapeHtml(msg || '') + '</td></tr>';
+      });
+      document.getElementById('dsiRowsTarget').innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px 20px;color:var(--danger-color);"><i class="fa-solid fa-triangle-exclamation" style="font-size:22px;display:block;margin-bottom:10px;"></i>Gagal memuat data Survey DSI: ' + escapeHtml(msg || '') + '</td></tr>';
+      document.getElementById('dsiPaginationBar').style.display = 'none';
+    }
+
+    // ── Filter & tabel ────────────────────────────────────────────
+    function dsiPopulateFilters_() {
+      DSI_FILTER_FIELDS.forEach(function (f) {
+        const sel = document.getElementById(f.id);
+        if (!sel) return;
+        const prev = sel.value;
+        let hasBlank = false;
+        const set = new Set();
+        dsiRows_.forEach(function (r) {
+          const v = String(r[f.key] || '').trim();
+          if (v) set.add(v); else hasBlank = true;
+        });
+        const vals = Array.from(set).sort(function (a, b) { return a.localeCompare(b); });
+        if (hasBlank) vals.push(DSI_BLANK_);
+        sel.innerHTML = '<option value="">Semua</option>' + vals.map(function (v) {
+          return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
+        }).join('');
+        if (vals.indexOf(prev) !== -1) sel.value = prev;
+      });
+    }
+
+    function dsiOnSearchInput_() {
+      const q = document.getElementById('dsiSearchInput').value.trim();
+      document.getElementById('dsiSearchClearBtn').classList.toggle('show', q.length > 0);
+      clearTimeout(dsiSearchTimer_);
+      dsiSearchTimer_ = setTimeout(function () { dsiApplyFilter_(true); }, 250);
+    }
+
+    function dsiClearSearch_() {
+      clearTimeout(dsiSearchTimer_);
+      const input = document.getElementById('dsiSearchInput');
+      input.value = '';
+      input.focus();
+      dsiApplyFilter_(true);
+    }
+
+    function dsiClearQuick_() { dsiQuickBucket_ = ''; dsiApplyFilter_(true); }
+
+    function dsiResetFilters_() {
+      clearTimeout(dsiSearchTimer_);
+      DSI_FILTER_FIELDS.forEach(function (f) { const el = document.getElementById(f.id); if (el) el.value = ''; });
+      document.getElementById('dsiSearchInput').value = '';
+      dsiQuickBucket_ = '';
+      dsiApplyFilter_(true);
+    }
+
+    function dsiApplyFilter_(resetPage) {
+      if (resetPage === undefined) resetPage = true;
+      const q = document.getElementById('dsiSearchInput').value.trim().toLowerCase();
+      document.getElementById('dsiSearchClearBtn').classList.toggle('show', q.length > 0);
+
+      const fields = DSI_FILTER_FIELDS.map(function (f) {
+        const el = document.getElementById(f.id);
+        return { key: f.key, value: el ? el.value : '' };
+      }).filter(function (f) { return f.value !== ''; });
+
+      dsiFiltered_ = dsiRows_.filter(function (r) {
+        if (dsiQuickBucket_ && r._bk !== dsiQuickBucket_) return false;
+        for (let i = 0; i < fields.length; i++) {
+          const cur = String(r[fields[i].key] || '').trim();
+          if (fields[i].value === DSI_BLANK_ ? cur !== '' : cur !== fields[i].value) return false;
+        }
+        if (q && r._search.indexOf(q) === -1) return false;
+        return true;
+      });
+
+      if (resetPage) dsiPage_ = 1;
+
+      const hint = document.getElementById('dsiFilterActiveHint');
+      const active = !!dsiQuickBucket_ || fields.length > 0 || q.length > 0;
+      if (active && dsiLoadedOnce_) {
+        const chip = dsiQuickBucket_
+          ? ' · Status: <b>' + escapeHtml(DSI_BUCKET_BY_KEY_[dsiQuickBucket_].label) + '</b> (<a href="javascript:void(0)" onclick="dsiClearQuick_()" style="text-decoration:underline;">hapus</a>)'
+          : '';
+        hint.innerHTML = 'Menampilkan ' + formatNum_(dsiFiltered_.length) + ' dari ' + formatNum_(dsiRows_.length) + ' data' + chip;
+        hint.classList.add('show');
+      } else {
+        hint.classList.remove('show');
+        hint.innerHTML = '';
+      }
+
+      dsiRenderRows_(q);
+    }
+
+    function dsiBadgeClass_(v) {
+      const b = DSI_BUCKET_BY_NORM_[dsiNormKey_(v)];
+      if (!b) return statusBadgeClass_(v);
+      if (/^(approval|submited)/.test(b.key)) return 'badge solved';
+      if (/^(rejected|drop)/.test(b.key)) return 'badge cancel';
+      if (b.key === 'pending') return 'badge pending';
+      return 'badge ongoing';
+    }
+
+    function dsiRenderRows_(query) {
+      const tbody = document.getElementById('dsiRowsTarget');
+      const bar = document.getElementById('dsiPaginationBar');
+      const data = dsiFiltered_;
+
+      if (!data.length) {
+        dsiPage_ = 1;
+        const icon = query ? 'fa-magnifying-glass' : 'fa-inbox';
+        const msg = query ? 'Tidak ada data yang cocok dengan pencarian "' + escapeHtml(query) + '".' : 'Tidak ada data Survey DSI yang sesuai filter.';
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px 20px;color:var(--text-muted);"><i class="fa-solid ' + icon + '" style="font-size:22px;opacity:0.35;display:block;margin-bottom:10px;"></i>' + msg + '</td></tr>';
+        bar.style.display = 'none';
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(data.length / dsiPageSize_));
+      if (dsiPage_ > totalPages) dsiPage_ = totalPages;
+      if (dsiPage_ < 1) dsiPage_ = 1;
+      const start = (dsiPage_ - 1) * dsiPageSize_;
+      const num = 'style="text-align:right;font-variant-numeric:tabular-nums;"';
+      const e = function (v) { return escapeHtml(v) || '-'; };
+      const badge = function (v) { return '<span class="' + dsiBadgeClass_(v) + '">' + e(v) + '</span>'; };
+
+      // URUTAN <td> HARUS sama dengan <th> di markup #dsiTableSection (13 kolom).
+      tbody.innerHTML = data.slice(start, start + dsiPageSize_).map(function (r) {
+        return '<tr>'
+          + '<td>' + e(r.idPolygon) + '</td>'
+          + '<td>' + e(r.namaPolygon) + '</td>'
+          + '<td ' + num + '>' + formatNum_(r._tag) + '</td>'
+          + '<td ' + num + '>' + formatNum_(r._int) + '</td>'
+          + '<td>' + e(r.nextAction) + '</td>'
+          + '<td>' + badge(r.statusPolygon) + '</td>'
+          + '<td ' + num + '>' + formatNum_(pjToNum_(r.totalValid)) + '</td>'
+          + '<td>' + e(r.ihldId) + '</td>'
+          + '<td>' + e(r.namaProyek) + '</td>'
+          + '<td>' + badge(r.statusOrder) + '</td>'
+          + '<td>' + badge(r.newStatus) + '</td>'
+          + '<td>' + e(r.taskOrder) + '</td>'
+          + '<td>' + e(r.lastUpdate) + '</td>'
+          + '</tr>';
+      }).join('');
+
+      bar.style.display = 'flex';
+      document.getElementById('dsiPaginationCurrent').innerText = dsiPage_ + ' / ' + totalPages;
+      document.getElementById('dsiBtnPrev').disabled = dsiPage_ <= 1;
+      document.getElementById('dsiBtnNext').disabled = dsiPage_ >= totalPages;
+    }
+
+    function dsiChangePageSize_(val) {
+      dsiPageSize_ = parseInt(val, 10) || 10;
+      dsiPage_ = 1;
+      dsiApplyFilter_(false);
+    }
+
+    function dsiGoToPage_(page) {
+      dsiPage_ = page;
+      dsiApplyFilter_(false);
+    }
+
+    // Klik angka pivot / badge / batang chart / legend donut -> filter tabel.
+    // Semua filter direset dulu supaya selalu mulai dari kondisi bersih.
+    function dsiDrill_(labelType, label, bucket) {
+      DSI_FILTER_FIELDS.forEach(function (f) { const el = document.getElementById(f.id); if (el) el.value = ''; });
+      document.getElementById('dsiSearchInput').value = '';
+      clearTimeout(dsiSearchTimer_);
+      if (label) {
+        const sel = document.getElementById(labelType === 'subDistrict' ? 'dsiFilterSubDistrict' : 'dsiFilterDistrict');
+        if (sel && Array.from(sel.options).some(function (o) { return o.value === label; })) sel.value = label;
+      }
+      dsiQuickBucket_ = bucket || '';
+      dsiApplyFilter_(true);
+      const target = document.getElementById('dsiFilterBar');
+      if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function dsiExport_() {
+      const rows = dsiFiltered_ || [];
+      if (!rows.length) {
+        showAppNotif('warning', 'Tidak ada data untuk diexport. Sesuaikan filter/pencarian terlebih dahulu.', 'Tidak Ada Data');
+        return;
+      }
+      const header = DSI_FULL_COLUMNS_.map(function (c) { return golive_csvEscape_(c.label); }).join(',');
+      const lines = rows.map(function (r) {
+        return DSI_FULL_COLUMNS_.map(function (c) { return golive_csvEscape_(r[c.key]); }).join(',');
+      });
+      const csv = '\uFEFF' + [header].concat(lines).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      const d = new Date();
+      const p = function (n) { return String(n).padStart(2, '0'); };
+      a.href = url;
+      a.download = 'survey-dsi-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function dsiInitUi_() {
+      // Kotak filter (9 dropdown)
+      const wrap = document.getElementById('dsiFilterFields');
+      if (wrap) {
+        wrap.innerHTML = DSI_FILTER_FIELDS.map(function (f) {
+          return '<div class="golive-filter-field"><label for="' + f.id + '">' + f.label + '</label>'
+            + '<select id="' + f.id + '" onchange="dsiApplyFilter_()"><option value="">Semua</option></select></div>';
+        }).join('');
+      }
+      // Header pivot (3 baris) untuk tab District & Sub District
+      const th1 = document.getElementById('dsiDistrictThead');
+      const th2 = document.getElementById('dsiSubDistrictThead');
+      if (th1) th1.innerHTML = dsiTheadHtml_('DISTRICT');
+      if (th2) th2.innerHTML = dsiTheadHtml_('SUB DISTRICT');
+
+      // Satu listener untuk semua elemen klik (pivot, badge, bar, legend donut)
+      document.addEventListener('click', function (ev) {
+        const el = ev.target.closest('[data-dsi-click="1"]');
+        if (!el) return;
+        dsiDrill_(el.getAttribute('data-label-type') || '', el.getAttribute('data-label') || '', el.getAttribute('data-bucket') || '');
+      });
+      document.addEventListener('keydown', function (ev) {
+        if ((ev.key === 'Enter' || ev.key === ' ') && ev.target && ev.target.matches && ev.target.matches('[data-dsi-click="1"][role="button"]')) {
+          ev.preventDefault();
+          ev.target.click();
+        }
+      });
+    }
+    dsiInitUi_();
   </script>
 
 
